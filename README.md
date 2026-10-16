@@ -19,6 +19,10 @@ npm run dev
 
 Build for hosting with `npm run build`. The output is in `dist/`.
 
+Run the regression tests with `npm test`. They render every preset, every
+control extreme and several screen sizes headlessly, and check for NaN
+geometry, sliding feet and paws, and config save/load.
+
 ## The dev panel
 
 Add `?dev` to the URL to load it. Visitors never download it.
@@ -66,9 +70,9 @@ src/
     sky.js             sky gradient, sun or moon, stars
     clouds.js          painted cumulus clouds
     terrain.js         mountains with facets, hills, treeline, coconut palms
-    field.js           three grass bands, batched by colour
-    character.js       the man: rig, walk cycle, shirt and mundu
-    dog.js             Juhu: state machine, walk and trot gaits
+    field.js           grass: clumped blades, cached undergrowth, wind, parting
+    character.js       the man: IK rig, feet, walk cycle, cloth springs, rim light
+    dog.js             Juhu: state machine, IK legs, walk and trot gaits
     life.js            birds, rain, leaves, haze, mist, light, paint grain
   controls/
     ControlPanel.js    Tweakpane panel (dev only)
@@ -90,15 +94,33 @@ Same seed, same world. "New layout" in the grass group picks a new seed.
 man and Juhu. The mid and front bands sit in front, which hides their
 lower legs.
 
-**The walk.** One phase value drives the legs, arms, torso bob and fabric.
-Walk speed (ground travel) and cadence (steps) are separate controls.
+**The field.** Each band has an undergrowth layer (staggered rows of fine
+tufts) under its blades, so the ground never shows through. Undergrowth is
+painted once into an offscreen bitmap per band and reused; it is redrawn
+only when the view, colours or grass settings change. Blades grow in
+fanned clumps, curve more towards the tip, and lean in a wind made of
+noise drifting downwind, so gusts roll across in patches. Blades part
+around the man's legs and Juhu's paws. Controls: **clumping** and
+**undergrowth** in the grass group.
+
+**The walk.** One phase value drives the legs, arms, torso and fabric, and
+it advances with distance walked, not time, so the legs can never run
+ahead of the ground. Walk speed and cadence (steps) are the controls;
+step length follows from them. Each foot rolls heel, flat, toe while it is
+down, and its pivot point stays fixed on the ground (two-bone IK). Hip
+height comes from the planted leg, so the body rises over each step and
+dips between them. Shoulders counter-rotate against the hips, the head
+stays level, and the mundu hem and shirt tail follow on springs. The
+**stride** control now sets how high the knee lifts. A low sun puts a rim
+light on the side of the figure that faces it.
 
 **Juhu.** Her states are `absent → approaching → together → departing`.
 She trots to catch up, eases into a walk beside him, walks one screen width
 with him, then trots ahead and leaves. She is gone for two crossings, then
 returns. Her first visit comes 20 seconds after load. Her walk uses a
-four-beat pattern; her trot moves diagonal legs together. Leg speed is tied
-to ground speed, so her feet don't skate.
+four-beat pattern; her trot moves diagonal legs together. Her legs use the
+same IK planting as the man's, so paws stay put while they carry weight.
+Her tail and ears follow her body on springs.
 
 **Sound.** All generated, so nothing to license. Wind is shaped noise that
 rises with the wind setting. Rain is filtered noise. Chirps play when a

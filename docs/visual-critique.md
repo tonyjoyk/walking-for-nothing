@@ -131,6 +131,24 @@ light are good details.
 Suggested order: 1 → 3 → 2 → 5/6 → 4 → 7 → 8. Items 1 and 3 alone fix the
 two things visitors will notice first.
 
+## Status (16 Oct 2026)
+
+All ten recommendations are implemented; `npm test` covers the measurable
+ones. Before/after captures are in `docs/compare/`.
+
+| # | Result |
+| --- | --- |
+| 1 | Gait advances with distance. Planted-foot slide: 61.7 px → 0 px per step. |
+| 2 | Feet drawn; heel–toe roll with IK; pivot point fixed on the ground (tested < 1 px). |
+| 3 | Undergrowth layer plus clumps. After visitor feedback ("hay fields are more continuous") the undergrowth became the body of the field. |
+| 4 | Curved, tapered blades; noise-field wind with per-blade stiffness; haze on far grass; backlit tips. |
+| 5 | Tapered limbs with calf and forearm shape, S-curve torso, drape creases, egg-shaped head, tapered neck. |
+| 6 | Hip height from the planted leg; shoulder counter-rotation; forward lean; level head. |
+| 7 | Springs on mundu hem, shirt tail, Juhu's tail and ears; forearms trail. |
+| 8 | Grass parts around legs and paws; sun-side rim light on the figure. |
+| 9 | Undergrowth cached as bitmaps. Median frame 26 ms vs 54 ms for v0.1 in the same browser; 60 fps live. |
+| 10 | Juhu's paws use the same IK planting (tested < 2 px). |
+
 ## 5. A light study to confirm this with real visitors
 
 - **Who:** 5–6 people who don't know the project. Include at least two
