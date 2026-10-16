@@ -4,9 +4,9 @@ import { FIELD_TOP, GROUND_Y, SCENE_H, GEN_LEFT, GEN_RIGHT, rng, css, mix, clamp
 // blades are drawn in front of them, which creates the occlusion.
 // Counts are per 1920 logical px at density 1.
 const BANDS = {
-  far:  { y0: FIELD_TOP + 2, y1: GROUND_Y - 4, per1920: 2600, w: [2.2, 4], h: (y) => 7 + (y - FIELD_TOP) * 0.95, buckets: 3, seedLen: 4 },
-  mid:  { y0: GROUND_Y + 3, y1: 978, per1920: 2300, w: [3.5, 6.5], h: (y) => 58 + (y - GROUND_Y) * 1.05, buckets: 4, seedLen: 7 },
-  fore: { y0: 992, y1: SCENE_H + 40, per1920: 520, w: [6, 11], h: (y) => 70 + (y - 992) * 0.9, buckets: 3, seedLen: 12 },
+  far:  { y0: FIELD_TOP + 2, y1: GROUND_Y - 4, per1920: 1900, w: [2.2, 4], h: (y) => 7 + (y - FIELD_TOP) * 0.95, buckets: 3, seedLen: 4 },
+  mid:  { y0: GROUND_Y + 3, y1: 978, per1920: 1700, w: [3.5, 6.5], h: (y) => 58 + (y - GROUND_Y) * 1.05, buckets: 4, seedLen: 7 },
+  fore: { y0: 992, y1: SCENE_H + 40, per1920: 420, w: [6, 11], h: (y) => 70 + (y - 992) * 0.9, buckets: 3, seedLen: 12 },
 };
 
 // Clump sizes per band: [min, max] blades sharing one root.
@@ -152,6 +152,45 @@ export function drawMass(ctx, view, P, bandName, bands, G, motion) {
     ctx.closePath();
     ctx.fill();
   }
+}
+
+// The undergrowth is thousands of tufts; filling them every frame is far too
+// slow. Each band's undergrowth is painted once into an offscreen bitmap and
+// reused, and repainted only when the view, colours or grass settings change
+// (at most a few times a second during a weather transition). The blades on
+// top carry the motion. Without a DOM (tests) it draws directly.
+const MASS_REFRESH_MS = 250;
+
+function massKey(view, pd, P, bandName, G, wind) {
+  const c = massColors(bandName, P).flat().map((v) => Math.round(v / 3));
+  return [bandName, view.x0.toFixed(1), view.w.toFixed(1), view.s.toFixed(4), pd, G.heightMul, G.mass,
+    G.occlusion, Math.round(wind * 10), ...c].join('|');
+}
+
+export function drawMassCached(ctx, view, P, bandName, bands, G, motion, pd, cache) {
+  if (typeof document === 'undefined' || !cache) { drawMass(ctx, view, P, bandName, bands, G, motion); return; }
+  if ((G.mass ?? 0) <= 0.001) return;
+  const band = bands[bandName];
+  const hMax = band.h(band.y0) * band.mass.rise * G.heightMul * G.mass * (bandName === 'mid' ? G.occlusion : 1) * 1.2 + 30;
+  const top = band.y0 - hMax;
+  const bottom = band.y1 + 4;
+  const key = massKey(view, pd, P, bandName, G, motion.wind);
+  const now = typeof performance !== 'undefined' ? performance.now() : 0;
+  if (cache.key !== key && (!cache.canvas || now - (cache.at || 0) > MASS_REFRESH_MS)) {
+    const k = view.s * pd;
+    const cw = Math.ceil((view.w + 40) * k), ch = Math.ceil((bottom - top) * k);
+    if (!cache.canvas) cache.canvas = document.createElement('canvas');
+    if (cache.canvas.width !== cw || cache.canvas.height !== ch) { cache.canvas.width = cw; cache.canvas.height = ch; }
+    const c = cache.canvas.getContext('2d');
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, cw, ch);
+    c.setTransform(k, 0, 0, k, -(view.x0 - 20) * k, -top * k);
+    // a still frame: the average lean of the wind, no per-frame sway
+    drawMass(c, view, P, bandName, bands, G, { ...motion, swayAmp: 0, swayT: 0 });
+    cache.key = key; cache.at = now; cache.x0 = view.x0 - 20; cache.top = top;
+    cache.w = view.w + 40; cache.h = bottom - top;
+  }
+  ctx.drawImage(cache.canvas, cache.x0, cache.top, cache.w, cache.h);
 }
 
 // Wind at x: gusts are a noise field drifting downwind, so patches of the

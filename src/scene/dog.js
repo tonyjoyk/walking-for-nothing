@@ -67,7 +67,22 @@ export class Dog {
 
     // stride length grows with the trot, so legs match ground speed
     const stride = lerp(46, 92, this.gait) * cfg.scale;
+    this.cycleLen = stride;
     this.psi = (this.psi + (this.speed * dt) / stride) % 1;
+
+    // secondary motion: the tail and ears follow the body on springs, so they
+    // lag the bob and swing a little when she speeds up or slows down
+    const by = dogBob(this.psi, this.gait);
+    const byVel = dt > 0 ? (by - (this.lastBy ?? by)) / dt : 0;
+    this.lastBy = by;
+    const accel = dt > 0 ? (this.speed - (this.lastSpeed ?? this.speed)) / dt : 0;
+    this.lastSpeed = this.speed;
+    const tailTarget = Math.sin(this.psi * Math.PI * 2 + 1.2) * (2 + this.gait * 2) - clamp(accel * 0.05, -6, 6);
+    const earTarget = clamp(byVel * 0.02, -0.25, 0.25) - clamp(accel * 0.002, -0.15, 0.15);
+    this.tailV = ((this.tailV || 0) + (tailTarget - (this.tail || 0)) * 60 * dt) * Math.exp(-6 * dt);
+    this.tail = (this.tail || 0) + this.tailV * dt;
+    this.earV = ((this.earV || 0) + (earTarget - (this.ear || 0)) * 180 * dt) * Math.exp(-9 * dt);
+    this.ear = (this.ear || 0) + this.earV * dt;
 
     const x = c.screenX(this.d);
     if (this.state === 'departing' && this.lastX !== null && x < this.lastX - 50) {
@@ -115,37 +130,78 @@ export function dogColors(P) {
 // Walk: four-beat lateral sequence. Trot: diagonal pairs move together.
 const WALK = [0, 0.25, 0.5, 0.75];
 const TROT = [0, 0.5, 0.5, 0];
+const FORE = { l1: 27, l2: 34 };
+const HIND = { l1: 32, l2: 36 };
+const PAW_Y = -3; // paw centre above the ground
 
-function leg(ctx, pivot, phase, fore, amp, color, wUpper, wLower) {
-  const s = Math.sin(phase * Math.PI * 2);
-  const swing = Math.pow(Math.max(0, Math.cos(phase * Math.PI * 2)), 1.5);
-  let a1, a2, l1, l2;
-  if (fore) {
-    a1 = 0.42 * amp * s;
-    a2 = a1 - (0.05 + 1.0 * amp * swing);
-    l1 = 27; l2 = 31;
-  } else {
-    a1 = 0.48 + 0.36 * amp * s;
-    a2 = a1 - (1.02 + 0.45 * amp * swing);
-    l1 = 30; l2 = 34;
-  }
-  const k = { x: pivot.x + Math.sin(a1) * l1, y: pivot.y + Math.cos(a1) * l1 };
-  const f = { x: k.x + Math.sin(a2) * l2, y: k.y + Math.cos(a2) * l2 };
+const smooth = (t) => t * t * (3 - 2 * t);
+
+// Body bob: twice per cycle, stronger in the trot.
+export function dogBob(psi, g) { return -(0.8 + 2.2 * g) * Math.cos(psi * Math.PI * 4); }
+
+// Where a paw should be. u: 0..1 for this leg (0 = touch-down, leg forward).
+// While planted the paw moves back exactly as fast as the body moves forward,
+// so it stays put on the ground. duty: share of the cycle on the ground.
+function pawTarget(u, half, duty, lift, x0) {
+  if (u < duty) return { x: x0 + half - 2 * half * (u / duty), y: PAW_Y, planted: true };
+  const t = (u - duty) / (1 - duty);
+  return { x: x0 - half + 2 * half * smooth(t), y: PAW_Y - lift * Math.sin(Math.PI * t), planted: false };
+}
+
+// Two-bone IK. bend +1 puts the joint in front of the line (stifle, elbow),
+// -1 behind it.
+function solve(pivot, target, L, bend) {
+  const dx = target.x - pivot.x, dy = target.y - pivot.y;
+  const d = clamp(Math.hypot(dx, dy), Math.abs(L.l1 - L.l2) + 1, L.l1 + L.l2 - 0.01);
+  const base = Math.atan2(dx, dy);
+  const a = Math.acos(clamp((L.l1 * L.l1 + d * d - L.l2 * L.l2) / (2 * L.l1 * d), -1, 1));
+  const ang = base + bend * a;
+  const knee = { x: pivot.x + Math.sin(ang) * L.l1, y: pivot.y + Math.cos(ang) * L.l1 };
+  const paw = { x: pivot.x + Math.sin(base) * d, y: pivot.y + Math.cos(base) * d };
+  return { knee, paw };
+}
+
+// Joint positions for all four legs, in local units (origin on the ground
+// under the body). Shared by the renderer and the tests.
+export function dogPose(dog, scale) {
+  const g = dog.gait;
+  const offs = WALK.map((w, i) => lerp(w, TROT[i], g));
+  const by = dogBob(dog.psi, g);
+  const duty = lerp(0.64, 0.5, g);
+  const half = ((dog.cycleLen || 46) * duty) / Math.max(0.1, scale) / 2;
+  const lift = 7 + 6 * g;
+  const fore = { x: 34, y: -62 + by };
+  const hind = { x: -38, y: -64 + by };
+  const legs = [
+    [hind, offs[0], HIND, 1, -36],
+    [fore, offs[1], FORE, 1, 36],
+    [{ x: hind.x - 3, y: hind.y }, offs[2], HIND, 1, -39],
+    [{ x: fore.x - 3, y: fore.y }, offs[3], FORE, 1, 33],
+  ].map(([pivot, off, L, bend, x0]) => {
+    const u = (((dog.psi + off) % 1) + 1) % 1;
+    const t = pawTarget(u, half, duty, lift, x0);
+    return { pivot, ...solve(pivot, t, L, bend), planted: t.planted };
+  });
+  return { by, fore, hind, legs };
+}
+
+function leg(ctx, L, color, wUpper, wLower) {
   ctx.strokeStyle = color;
   ctx.lineWidth = wUpper;
-  ctx.beginPath(); ctx.moveTo(pivot.x, pivot.y); ctx.lineTo(k.x, k.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(L.pivot.x, L.pivot.y); ctx.lineTo(L.knee.x, L.knee.y); ctx.stroke();
   ctx.lineWidth = wLower;
-  ctx.beginPath(); ctx.moveTo(k.x, k.y); ctx.lineTo(f.x, f.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(L.knee.x, L.knee.y); ctx.lineTo(L.paw.x, L.paw.y); ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.ellipse(L.paw.x + 2.5, L.paw.y + 0.5, 4.5, 3, 0, 0, Math.PI * 2); ctx.fill();
 }
 
 export function drawDog(ctx, x, y, scale, dog, C, time) {
   const g = dog.gait;
   const psi = dog.psi;
-  const offs = WALK.map((w, i) => lerp(w, TROT[i], g));
-  const amp = lerp(1, 1.3, g);
-  const by = -(0.8 + 2.2 * g) * Math.cos(psi * Math.PI * 4); // trot bobs twice a cycle
+  const { by, legs } = dogPose(dog, scale);
   const hb = by * 0.6 + Math.sin(psi * Math.PI * 4 + 0.8) * 0.8;
-  const tail = Math.sin(psi * Math.PI * 2 + 1.2) * (2 + g * 2) + Math.sin(time * 1.3) * 1.5;
+  const tail = (dog.tail ?? Math.sin(psi * Math.PI * 2 + 1.2) * (2 + g * 2)) + Math.sin(time * 1.3) * 1.5;
+  const ear = dog.ear || 0;
 
   ctx.save();
   ctx.translate(x, y);
@@ -153,11 +209,9 @@ export function drawDog(ctx, x, y, scale, dog, C, time) {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  const fore = { x: 34, y: -62 + by };
-  const hind = { x: -38, y: -64 + by };
   // far legs first, darker
-  leg(ctx, { x: hind.x - 3, y: hind.y }, psi + offs[2], false, amp, C.tanShade, 10, 5.5);
-  leg(ctx, { x: fore.x - 3, y: fore.y }, psi + offs[3], true, amp, C.tanShade, 8.5, 5.5);
+  leg(ctx, legs[2], C.tanShade, 10, 5.5);
+  leg(ctx, legs[3], C.tanShade, 8.5, 5.5);
 
   // tail: bushy, carried low
   ctx.fillStyle = C.saddle;
@@ -206,8 +260,8 @@ export function drawDog(ctx, x, y, scale, dog, C, time) {
   ctx.fill();
 
   // near legs, in front of the body
-  leg(ctx, hind, psi + offs[0], false, amp, C.tan, 11, 6);
-  leg(ctx, fore, psi + offs[1], true, amp, C.tan, 9.5, 6);
+  leg(ctx, legs[0], C.tan, 11, 6);
+  leg(ctx, legs[1], C.tan, 9.5, 6);
 
   // head: broad skull, strong wedge muzzle, upright ears
   ctx.fillStyle = C.tan;
@@ -233,10 +287,10 @@ export function drawDog(ctx, x, y, scale, dog, C, time) {
   ctx.ellipse(52, -122 + hb, 10, 5.5, -0.25, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath(); // far ear
-  ctx.moveTo(44, -122 + hb); ctx.lineTo(44, -139 + hb); ctx.lineTo(53, -125 + hb);
+  ctx.moveTo(44, -122 + hb); ctx.lineTo(44 - ear * 17, -139 + hb + Math.abs(ear) * 3); ctx.lineTo(53, -125 + hb);
   ctx.closePath(); ctx.fill();
   ctx.beginPath(); // near ear
-  ctx.moveTo(50, -124 + hb); ctx.lineTo(55, -141 + hb); ctx.lineTo(61, -123 + hb);
+  ctx.moveTo(50, -124 + hb); ctx.lineTo(55 - ear * 17, -141 + hb + Math.abs(ear) * 3); ctx.lineTo(61, -123 + hb);
   ctx.closePath(); ctx.fill();
   ctx.fillStyle = C.nose;
   ctx.beginPath();

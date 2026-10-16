@@ -6,7 +6,7 @@ import {
 import { drawSky, drawSun, drawStars, createStars } from './sky.js';
 import { createClouds, drawClouds } from './clouds.js';
 import { createTerrain, drawFarMountains, drawMidMountains, drawNearHills, drawTreeline, drawPalms } from './terrain.js';
-import { createField, drawFieldBase, drawBand, drawMass } from './field.js';
+import { createField, drawFieldBase, drawBand, drawMassCached } from './field.js';
 import { drawCharacter, characterColors, characterPose, CharacterMotion, STANCE } from './character.js';
 import { Dog, drawDog, dogColors } from './dog.js';
 import {
@@ -40,6 +40,7 @@ export class Scene {
     this.cloudOffsets = [0, 0, 0];
     this.dog = new Dog();
     this.manMotion = new CharacterMotion();
+    this.massCache = { far: {}, mid: {}, fore: {} };
     this.fps = 60;
     this.needsManPlacement = true;
     this.onBirdsEnter = null;
@@ -52,6 +53,7 @@ export class Scene {
     this.clouds = createClouds(seed);
     this.field = createField(seed, this.config.grass.clumping);
     this.fieldClumping = this.config.grass.clumping;
+    this.massCache = { far: {}, mid: {}, fore: {} };
     this.stars = createStars(seed);
     this.rain = createRain(seed);
     this.leaves = createLeaves(seed);
@@ -93,6 +95,7 @@ export class Scene {
     else if (cfg.grass.clumping !== this.fieldClumping) {
       this.field = createField(this.seed, cfg.grass.clumping);
       this.fieldClumping = cfg.grass.clumping;
+      this.massCache = { far: {}, mid: {}, fore: {} };
     }
     if (rawDt > 0) this.fps = lerp(this.fps, 1 / rawDt, 0.05);
 
@@ -280,7 +283,7 @@ export class Scene {
       windDir: cfg.grass.windDir, swayAmp: cfg.grass.swayAmp * reduce,
       pushers: this.grassPushers(), rim: this.rimFor(v.x0 + v.w / 2),
     };
-    drawMass(ctx, v, P, 'far', this.field, G, motion);
+    drawMassCached(ctx, v, P, 'far', this.field, G, motion, pd, this.massCache.far);
     drawBand(ctx, v, P, 'far', this.field, G, motion);
 
     // Juhu (slightly behind) then the man
@@ -295,9 +298,9 @@ export class Scene {
       }, characterColors(P));
     }
 
-    drawMass(ctx, v, P, 'mid', this.field, G, motion);
+    drawMassCached(ctx, v, P, 'mid', this.field, G, motion, pd, this.massCache.mid);
     drawBand(ctx, v, P, 'mid', this.field, G, motion);
-    drawMass(ctx, v, P, 'fore', this.field, G, motion);
+    drawMassCached(ctx, v, P, 'fore', this.field, G, motion, pd, this.massCache.fore);
     drawBand(ctx, v, P, 'fore', this.field, G, motion);
 
     // weather and light

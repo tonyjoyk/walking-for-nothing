@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { createDefaultConfig, validateConfig, PRESETS, RANGES } from '../src/config.js';
 import { Scene } from '../src/scene/Scene.js';
 import { characterPose, footPoints } from '../src/scene/character.js';
+import { dogPose } from '../src/scene/dog.js';
 import { createFakeContext } from './fakeCanvas.mjs';
 
 const presets = Object.keys(PRESETS);
@@ -69,6 +70,36 @@ test('a planted foot does not slide or float', () => {
     assert.ok(worst < 1, `foot slid ${worst.toFixed(2)} px at speed ${speed}, cadence ${cadence}`);
     assert.ok(worstY < 1, `planted foot left the ground by ${worstY.toFixed(2)} px`);
   }
+});
+
+test("Juhu's planted paws stay put while she walks with him", () => {
+  const cfg = createDefaultConfig();
+  const scene = new Scene(cfg);
+  scene.computeView(1920, 1080);
+  scene.update(1 / 60); // first frame places the man (and resets Juhu)
+  scene.callDog();
+  for (let i = 0; i < 60 * 18; i++) scene.update(1 / 60); // arrive and settle into the walk
+  assert.equal(scene.dog.state, 'together');
+  const scale = 0.98 * cfg.dog.scale;
+  const segs = [null, null, null, null]; let worst = 0; let count = 0;
+  for (let f = 0; f < 60 * 10; f++) {
+    scene.update(1 / 60);
+    if (scene.dog.gait > 0.05) continue; // only judge the settled walk
+    const dx = scene.screenX(scene.dog.d);
+    dogPose(scene.dog, scale).legs.forEach((L, i) => {
+      const wx = dx + L.paw.x * scale;
+      if (L.planted) {
+        if (segs[i]) { segs[i].min = Math.min(segs[i].min, wx); segs[i].max = Math.max(segs[i].max, wx); }
+        else segs[i] = { min: wx, max: wx };
+      } else if (segs[i]) {
+        const r = segs[i].max - segs[i].min;
+        if (r < 500) { worst = Math.max(worst, r); count++; }
+        segs[i] = null;
+      }
+    });
+  }
+  assert.ok(count > 8, 'too few paw contacts measured');
+  assert.ok(worst < 2, `a paw slid ${worst.toFixed(2)} px`);
 });
 
 test('the walk stops cleanly at zero speed', () => {
