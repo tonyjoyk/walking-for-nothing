@@ -1,0 +1,49 @@
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #a9d5e0;
+  overscroll-behavior: none;
+}
+#stage, #stage canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+}
+.sound {
+  position: fixed;
+  right: calc(18px + env(safe-area-inset-right, 0px));
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(30, 40, 30, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.4s ease, background 0.4s ease;
+  touch-action: manipulation;
+}
+.sound:hover, .sound:focus-visible { opacity: 1; }
+.sound:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.sound .wave { display: none; }
+.sound.on .wave { display: inline; }
+.sound.on .mute { display: none; }
+
+/* dev panel (only present with ?dev) */
+#devpanel {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 310px;
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  z-index: 10;
+}
+#devpanel.hidden { display: none; }
