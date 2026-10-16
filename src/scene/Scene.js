@@ -6,8 +6,8 @@ import {
 import { drawSky, drawSun, drawStars, createStars } from './sky.js';
 import { createClouds, drawClouds } from './clouds.js';
 import { createTerrain, drawFarMountains, drawMidMountains, drawNearHills, drawTreeline, drawPalms } from './terrain.js';
-import { createField, drawFieldBase, drawBand } from './field.js';
-import { drawCharacter, characterColors } from './character.js';
+import { createField, drawFieldBase, drawBand, drawMass } from './field.js';
+import { drawCharacter, characterColors, reachForSweep, STANCE } from './character.js';
 import { Dog, drawDog, dogColors } from './dog.js';
 import {
   Birds, createRain, drawRain, createLeaves, drawLeaves,
@@ -49,7 +49,8 @@ export class Scene {
     const seed = Math.round(this.config.grass.seed);
     this.terrain = createTerrain(seed);
     this.clouds = createClouds(seed);
-    this.field = createField(seed);
+    this.field = createField(seed, this.config.grass.clumping);
+    this.fieldClumping = this.config.grass.clumping;
     this.stars = createStars(seed);
     this.rain = createRain(seed);
     this.leaves = createLeaves(seed);
@@ -88,6 +89,10 @@ export class Scene {
     const cfg = this.config;
     if (cfg.activePreset !== this.appliedPreset) this.applyPreset(cfg.activePreset);
     if (Math.round(cfg.grass.seed) !== this.seed) this.buildWorld();
+    else if (cfg.grass.clumping !== this.fieldClumping) {
+      this.field = createField(this.seed, cfg.grass.clumping);
+      this.fieldClumping = cfg.grass.clumping;
+    }
     if (rawDt > 0) this.fps = lerp(this.fps, 1 / rawDt, 0.05);
 
     // Parameter easing runs even when paused, so tuning stays live.
@@ -121,10 +126,16 @@ export class Scene {
     }
     const manSpeed = C.walkSpeed;
     let crossed = false;
+    let moved = 0;
     if (cfg.playback.loop || this.manX < this.view.x0 + this.view.w + WRAP_MARGIN - 5) {
-      this.manD += manSpeed * dt;
+      moved = manSpeed * dt;
+      this.manD += moved;
     }
-    this.walkPhase += Math.PI * 2 * C.cadence * dt * (manSpeed > 0 ? 1 : 0);
+    // The gait advances with distance walked, not with time, so the legs can
+    // never run ahead of the ground. One cycle (two steps) covers
+    // walkSpeed / cadence, which keeps the cadence control meaningful.
+    const cycleLen = manSpeed / Math.max(0.05, C.cadence);
+    if (moved > 0 && cycleLen > 0) this.walkPhase += (Math.PI * 2 * moved) / cycleLen;
     const w = mod(this.manD, trackLen);
     if (this.prevWrap !== null && w < this.prevWrap - trackLen * 0.5) crossed = true;
     this.prevWrap = w;
@@ -149,6 +160,14 @@ export class Scene {
     // birds
     const birdsAllowed = cfg.birds.enabled && !!cfg.birds.presets[cfg.activePreset];
     this.birds.update(dt, cfg.birds, birdsAllowed, this.view);
+  }
+
+  // Hip swing so that a planted foot sweeps back exactly as far as the body
+  // moves while that foot is down.
+  walkReach(C) {
+    if (C.walkSpeed <= 0) return 0;
+    const cycleLen = C.walkSpeed / Math.max(0.05, C.cadence);
+    return reachForSweep((cycleLen * STANCE) / Math.max(0.1, C.scale));
   }
 
   screenX(d) {
@@ -220,6 +239,7 @@ export class Scene {
       swayT: this.swayT, windT: this.windT, wind: P.wind,
       windDir: cfg.grass.windDir, swayAmp: cfg.grass.swayAmp * reduce,
     };
+    drawMass(ctx, v, P, 'far', this.field, G, motion);
     drawBand(ctx, v, P, 'far', this.field, G, motion);
 
     // Juhu (slightly behind) then the man
@@ -230,12 +250,14 @@ export class Scene {
     if (cfg.character.visible) {
       const C = cfg.character;
       drawCharacter(ctx, this.manX, GROUND_Y, C.scale, {
-        phase: this.walkPhase, stride: C.stride, bob: C.bob, armSwing: C.armSwing,
+        phase: this.walkPhase, reach: this.walkReach(C), stride: C.stride, bob: C.bob, armSwing: C.armSwing,
         fabric: C.fabric, wind: P.wind, time: this.time,
       }, characterColors(P));
     }
 
+    drawMass(ctx, v, P, 'mid', this.field, G, motion);
     drawBand(ctx, v, P, 'mid', this.field, G, motion);
+    drawMass(ctx, v, P, 'fore', this.field, G, motion);
     drawBand(ctx, v, P, 'fore', this.field, G, motion);
 
     // weather and light

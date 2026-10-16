@@ -117,6 +117,7 @@ export function createDefaultConfig() {
     grass: {
       density: 1, heightMul: 1, heightVar: 0.45, bladeWidth: 1,
       swayAmp: 1, swaySpeed: 1, windDir: 1, occlusion: 1, seedFreq: 0.08, seed: 7,
+      clumping: 0.6, mass: 0.8,
     },
     character: {
       visible: true, x: 0.18, scale: 1, walkSpeed: 38, cadence: 0.62,
@@ -161,6 +162,7 @@ export const RANGES = {
   'grass.density': [0.1, 1, 0.01], 'grass.heightMul': [0.5, 1.6, 0.01], 'grass.heightVar': [0, 1, 0.01],
   'grass.bladeWidth': [0.5, 2, 0.01], 'grass.swayAmp': [0, 2.5, 0.01], 'grass.swaySpeed': [0, 3, 0.01],
   'grass.occlusion': [0.4, 1.6, 0.01], 'grass.seedFreq': [0, 0.4, 0.005], 'grass.seed': [1, 9999, 1],
+  'grass.clumping': [0, 1, 0.01], 'grass.mass': [0, 1.5, 0.01],
   'character.x': [0, 1, 0.01], 'character.scale': [0.5, 1.6, 0.01], 'character.walkSpeed': [0, 140, 1],
   'character.cadence': [0.1, 1.6, 0.01], 'character.stride': [0, 2, 0.01], 'character.bob': [0, 2.5, 0.01],
   'character.armSwing': [0, 2, 0.01], 'character.fabric': [0, 2.5, 0.01],

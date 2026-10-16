@@ -16,13 +16,39 @@ const SHOULDER = { x: 3, y: -212 };
 // Joint angle convention: 0 points straight down, positive swings forward (+x).
 const seg = (o, a, l) => ({ x: o.x + Math.sin(a) * l, y: o.y + Math.cos(a) * l });
 
-function legPose(phase, stride, hip) {
-  const a = 0.36 * stride * Math.sin(phase);
-  // the knee folds while the leg swings forward
-  const bend = 0.62 * stride * Math.pow(Math.max(0, Math.cos(phase)), 1.4) + 0.06;
+// Gait timing. A foot is on the ground for 60% of the cycle (real walking is
+// about 60/40), so there is a short double-support moment at each contact.
+export const STANCE = 0.6;
+const PLANT_BEND = 0.06; // slight knee flex while the foot carries weight
+const smoothstep = (t) => t * t * (3 - 2 * t);
+
+// Hip swing that keeps a planted foot still on the ground. During stance the
+// hip angle sweeps linearly from +reach to -reach, so the foot travels back at
+// a constant rate that exactly cancels the body's forward motion. The swing
+// phase eases the leg forward again with the knee folding.
+// u: 0..1 gait position (0 = this foot touches down, leg fully forward).
+function legPose(u, reachA, lift, hip) {
+  let s, bend;
+  if (u < STANCE) {
+    s = 1 - 2 * (u / STANCE);
+    bend = PLANT_BEND;
+  } else {
+    const t = (u - STANCE) / (1 - STANCE);
+    s = -1 + 2 * smoothstep(t);
+    bend = PLANT_BEND + 0.62 * lift * Math.pow(Math.sin(Math.PI * t), 1.2);
+  }
+  const a = reachA * s;
   const knee = seg(hip, a, LEN.thigh);
   const foot = seg(knee, a - bend, LEN.shin);
   return { knee, foot };
+}
+
+// Hip angle that makes one stance sweep the foot back by `sweep` units.
+// Foot x = L1 sin(a) + L2 sin(a - b), so the stance sweep is
+// 2 sin(A) (L1 + L2 cos b), which inverts directly.
+export function reachForSweep(sweep) {
+  const k = sweep / (2 * (LEN.thigh + LEN.shin * Math.cos(PLANT_BEND)));
+  return Math.asin(Math.max(-0.95, Math.min(0.95, k)));
 }
 
 function armPose(phase, swing, shoulder) {
@@ -65,16 +91,30 @@ function drawArm(ctx, sh, pose, C, far) {
   ctx.fill();
 }
 
-// pose: { phase, stride, bob, armSwing, fabric, wind, time }
-export function drawCharacter(ctx, x, y, scale, pose, C) {
+// Joint positions for a pose, in local units (origin on the walking line).
+// Shared by the renderer and by anything that needs to know where the legs
+// are (grass parting, tests).
+export function characterPose(pose) {
   const ph = pose.phase;
-  const by = -pose.bob * 4 * Math.cos(2 * ph); // highest at the passing position
+  const u = (((ph / (Math.PI * 2)) % 1) + 1) % 1;
+  // highest as each leg passes under the body (mid-stance), lowest after contact
+  const by = -pose.bob * 4 * Math.cos(Math.PI * 4 * (u - STANCE / 2));
   const hip = { x: 0, y: HIP_Y + by };
   const sh = { x: SHOULDER.x, y: SHOULDER.y + by };
-  const near = legPose(ph, pose.stride, hip);
-  const far = legPose(ph + Math.PI, pose.stride, hip);
-  const armN = armPose(ph, pose.armSwing, sh);
-  const armF = armPose(ph + Math.PI, pose.armSwing, { x: sh.x - 3, y: sh.y + 1 });
+  const near = legPose(u, pose.reach, pose.stride, hip);
+  const far = legPose((u + 0.5) % 1, pose.reach, pose.stride, hip);
+  // arms: furthest back when the same-side leg is furthest forward
+  const shF = { x: sh.x - 3, y: sh.y + 1 };
+  const armN = armPose(ph + Math.PI / 2, pose.armSwing, sh);
+  const armF = armPose(ph + Math.PI * 1.5, pose.armSwing, shF);
+  return { u, by, hip, sh, shF, near, far, armN, armF };
+}
+
+// pose: { phase, reach, stride, bob, armSwing, fabric, wind, time }
+// phase advances 2π per gait cycle (two steps). reach is the hip swing in
+// radians that matches the ground covered (see reachForSweep).
+export function drawCharacter(ctx, x, y, scale, pose, C) {
+  const { by, hip, sh, near, far, armN, armF } = characterPose(pose);
   const flutter = Math.sin(pose.time * (2.4 + pose.wind * 3)) * pose.fabric * (0.6 + pose.wind * 2.5);
 
   ctx.save();

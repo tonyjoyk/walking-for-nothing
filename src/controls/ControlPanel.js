@@ -74,6 +74,8 @@ export function createPanel(app) {
   sc(fD, 'wind', 'wind strength');
   fD.addBinding(G, 'windDir', { label: 'wind direction', options: { 'to the right': 1, 'to the left': -1 } });
   bind(fD, G, 'occlusion', 'grass.occlusion', { label: 'occlusion height' });
+  bind(fD, G, 'clumping', 'grass.clumping', { label: 'clumping' });
+  bind(fD, G, 'mass', 'grass.mass', { label: 'undergrowth' });
   bind(fD, G, 'seedFreq', 'grass.seedFreq', { label: 'seed heads' });
   bind(fD, G, 'seed', 'grass.seed', { label: 'layout seed' });
   fD.addButton({ title: 'New layout' }).on('click', () => { G.seed = 1 + Math.floor(Math.random() * 9998); pane.refresh(); });
@@ -86,7 +88,7 @@ export function createPanel(app) {
   bind(fE, Ch, 'scale', 'character.scale', { label: 'scale' });
   bind(fE, Ch, 'walkSpeed', 'character.walkSpeed', { label: 'walk speed' });
   bind(fE, Ch, 'cadence', 'character.cadence', { label: 'steps (cycles/s)' });
-  bind(fE, Ch, 'stride', 'character.stride', { label: 'stride' });
+  bind(fE, Ch, 'stride', 'character.stride', { label: 'knee lift' });
   bind(fE, Ch, 'bob', 'character.bob', { label: 'torso bob' });
   bind(fE, Ch, 'armSwing', 'character.armSwing', { label: 'arm swing' });
   bind(fE, Ch, 'fabric', 'character.fabric', { label: 'fabric motion' });
