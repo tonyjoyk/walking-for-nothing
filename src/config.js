@@ -116,8 +116,8 @@ export function createDefaultConfig() {
     clouds: { parallax: 1 },
     grass: {
       density: 1, heightMul: 1, heightVar: 0.45, bladeWidth: 1,
-      swayAmp: 1, swaySpeed: 1, windDir: 1, occlusion: 1, seedFreq: 0.08, seed: 7,
-      clumping: 0.6, mass: 0.8,
+      swayAmp: 1, swaySpeed: 1, windDir: 1, occlusion: 1, seedFreq: 0.05, seed: 7,
+      clumping: 0.35, mass: 1,
     },
     character: {
       visible: true, x: 0.18, scale: 1, walkSpeed: 38, cadence: 0.62,

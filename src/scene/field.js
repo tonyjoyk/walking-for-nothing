@@ -4,9 +4,9 @@ import { FIELD_TOP, GROUND_Y, SCENE_H, GEN_LEFT, GEN_RIGHT, rng, css, mix } from
 // blades are drawn in front of them, which creates the occlusion.
 // Counts are per 1920 logical px at density 1.
 const BANDS = {
-  far:  { y0: FIELD_TOP + 2, y1: GROUND_Y - 4, per1920: 1500, w: [2.2, 4], h: (y) => 7 + (y - FIELD_TOP) * 0.95, buckets: 3, seedLen: 4 },
-  mid:  { y0: GROUND_Y + 3, y1: 978, per1920: 1250, w: [3.5, 6.5], h: (y) => 58 + (y - GROUND_Y) * 1.05, buckets: 4, seedLen: 7 },
-  fore: { y0: 992, y1: SCENE_H + 40, per1920: 320, w: [6, 11], h: (y) => 70 + (y - 992) * 0.9, buckets: 3, seedLen: 12 },
+  far:  { y0: FIELD_TOP + 2, y1: GROUND_Y - 4, per1920: 2600, w: [2.2, 4], h: (y) => 7 + (y - FIELD_TOP) * 0.95, buckets: 3, seedLen: 4 },
+  mid:  { y0: GROUND_Y + 3, y1: 978, per1920: 2300, w: [3.5, 6.5], h: (y) => 58 + (y - GROUND_Y) * 1.05, buckets: 4, seedLen: 7 },
+  fore: { y0: 992, y1: SCENE_H + 40, per1920: 520, w: [6, 11], h: (y) => 70 + (y - 992) * 0.9, buckets: 3, seedLen: 12 },
 };
 
 // Clump sizes per band: [min, max] blades sharing one root.
@@ -14,7 +14,7 @@ const CLUMP = { far: [3, 7], mid: [5, 13], fore: [4, 9] };
 // Mass layer: a dense, low silhouette of undergrowth painted before the
 // blades so the flat ground never shows through. step = px between tufts,
 // rise = tuft height as a share of a blade at the same depth.
-const MASS = { far: { step: 3, rise: 0.5, rows: 2 }, mid: { step: 4, rise: 0.3, rows: 4 }, fore: { step: 6, rise: 0.22, rows: 3 } };
+const MASS = { far: { step: 2, rise: 0.95, rows: 4 }, mid: { step: 2.5, rise: 0.7, rows: 7 }, fore: { step: 4, rise: 0.6, rows: 5 } };
 
 // clumping 0..1: 0 scatters single blades, 1 grows everything in clumps.
 export function createField(seed, clumping = 0.75) {
@@ -72,10 +72,10 @@ export function createField(seed, clumping = 0.75) {
     // staggered rows, so the undergrowth has no single hard top edge
     const rows = [];
     for (let ri = 0; ri < M.rows; ri++) {
-      const y = B.y0 + (B.y1 - B.y0) * (ri / M.rows) * 0.8;
+      const y = B.y0 + (B.y1 - B.y0) * (ri / M.rows) * 0.9;
       const tufts = [];
       for (let x = GEN_LEFT; x <= GEN_RIGHT; x += M.step) {
-        tufts.push({ x: x + r.range(-0.4, 0.4) * M.step, k: r.range(0.35, 1), phase: r() * Math.PI * 2 });
+        tufts.push({ x: x + r.range(-0.4, 0.4) * M.step, k: r.range(0.55, 1), phase: r() * Math.PI * 2 });
       }
       rows.push({ y, tufts });
     }
