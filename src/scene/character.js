@@ -301,12 +301,19 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
   const waist = HIP_Y - 8 + by;
   const hemY = m.hemY;
   const front = m.front, back = m.back;
+  // the cloth drapes over the seat: the back edge rounds out below the
+  // waist, a little further when the rear leg swings back
+  const rearKnee = Math.min(near.knee.x, far.knee.x);
+  const seat = { x: -23 + clamp(rearKnee * 0.06, -1.5, 1), y: HIP_Y + 23 + by };
   const munduBuild = () => {
     ctx.moveTo(-18, waist);
     ctx.lineTo(18, waist);
     ctx.quadraticCurveTo(front + 2, (waist + hemY) / 2, front, hemY);
     ctx.quadraticCurveTo((front + back) / 2, hemY + 5, back, hemY + 1);
-    ctx.quadraticCurveTo(back - 3, (waist + hemY) / 2, -18, waist);
+    // the cloth hangs from the seat to the hem, rounds over the seat and
+    // runs up (under the shirt) to the waist
+    ctx.quadraticCurveTo(seat.x + 0.5, (seat.y + hemY) / 2 + 6, seat.x, seat.y);
+    ctx.bezierCurveTo(seat.x - 1.2, seat.y - 12, -22, waist + 2, -18, waist);
     ctx.closePath();
   };
   fillPath(ctx, C.mundu, munduBuild);
@@ -340,8 +347,8 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
   const torsoBuild = () => {
     ctx.moveTo(-9, -224 + by);
     ctx.bezierCurveTo(-24, -214 + by, -25, -186 + by, -18, -164 + by);
-    ctx.quadraticCurveTo(-16, -146 + by, -21 - tail, -123 + by);
-    ctx.quadraticCurveTo(0, -117 + by, 22, -124 + by);
+    ctx.quadraticCurveTo(-17, -146 + by, -23 - tail, -121 + by); // hangs over the seat
+    ctx.quadraticCurveTo(-1, -115 + by, 22, -124 + by);
     ctx.quadraticCurveTo(19, -140 + by, 20, -156 + by);
     ctx.bezierCurveTo(27, -178 + by, 25, -206 + by, 15, -224 + by);
     ctx.quadraticCurveTo(3, -232 + by, -9, -224 + by);
