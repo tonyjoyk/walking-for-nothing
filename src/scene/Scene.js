@@ -1,13 +1,13 @@
 import { PRESETS, clone } from '../config.js';
 import {
   SCENE_W, SCENE_H, HORIZON_Y, FIELD_TOP, GROUND_Y, WRAP_MARGIN,
-  hexToRgb, lerp, mod, clamp,
+  hexToRgb, lerp, mod, clamp, css, mix,
 } from './util.js';
 import { drawSky, drawSun, drawStars, createStars } from './sky.js';
 import { createClouds, drawClouds } from './clouds.js';
 import { createTerrain, drawFarMountains, drawMidMountains, drawNearHills, drawTreeline, drawPalms } from './terrain.js';
 import { createField, drawFieldBase, drawBand, drawMass } from './field.js';
-import { drawCharacter, characterColors, reachForSweep, STANCE } from './character.js';
+import { drawCharacter, characterColors, characterPose, CharacterMotion, STANCE } from './character.js';
 import { Dog, drawDog, dogColors } from './dog.js';
 import {
   Birds, createRain, drawRain, createLeaves, drawLeaves,
@@ -39,6 +39,7 @@ export class Scene {
     this.rainT = 0;
     this.cloudOffsets = [0, 0, 0];
     this.dog = new Dog();
+    this.manMotion = new CharacterMotion();
     this.fps = 60;
     this.needsManPlacement = true;
     this.onBirdsEnter = null;
@@ -136,6 +137,7 @@ export class Scene {
     // walkSpeed / cadence, which keeps the cadence control meaningful.
     const cycleLen = manSpeed / Math.max(0.05, C.cadence);
     if (moved > 0 && cycleLen > 0) this.walkPhase += (Math.PI * 2 * moved) / cycleLen;
+    this.manMotion.update(dt, this.manPose(C), this.P.wind, this.time, C.fabric);
     const w = mod(this.manD, trackLen);
     if (this.prevWrap !== null && w < this.prevWrap - trackLen * 0.5) crossed = true;
     this.prevWrap = w;
@@ -164,10 +166,26 @@ export class Scene {
 
   // Hip swing so that a planted foot sweeps back exactly as far as the body
   // moves while that foot is down.
-  walkReach(C) {
+  walkSweep(C) {
     if (C.walkSpeed <= 0) return 0;
     const cycleLen = C.walkSpeed / Math.max(0.05, C.cadence);
-    return reachForSweep((cycleLen * STANCE) / Math.max(0.1, C.scale));
+    return (cycleLen * STANCE) / Math.max(0.1, C.scale);
+  }
+
+  manPose(C) {
+    return {
+      phase: this.walkPhase, sweep: this.walkSweep(C), stride: C.stride, bob: C.bob, armSwing: C.armSwing,
+      fabric: C.fabric, wind: this.P.wind, time: this.time,
+    };
+  }
+
+  // Rim light from a low sun: on the side of the figure that faces it.
+  rimFor(x) {
+    const P = this.P;
+    const low = clamp((P.sunY - 0.15) / 0.45, 0, 1);
+    const alpha = P.sunAlpha * low * clamp(P.glow, 0, 1) * 0.75;
+    if (alpha < 0.02) return null;
+    return { dir: P.sunX * SCENE_W >= x ? 1 : -1, alpha, color: css(mix(P.sunColor, P.glowColor, 0.4)) };
   }
 
   screenX(d) {
@@ -250,8 +268,7 @@ export class Scene {
     if (cfg.character.visible) {
       const C = cfg.character;
       drawCharacter(ctx, this.manX, GROUND_Y, C.scale, {
-        phase: this.walkPhase, reach: this.walkReach(C), stride: C.stride, bob: C.bob, armSwing: C.armSwing,
-        fabric: C.fabric, wind: P.wind, time: this.time,
+        ...this.manPose(C), motion: this.manMotion, rim: this.rimFor(this.manX),
       }, characterColors(P));
     }
 

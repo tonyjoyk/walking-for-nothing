@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefaultConfig, validateConfig, PRESETS, RANGES } from '../src/config.js';
 import { Scene } from '../src/scene/Scene.js';
-import { characterPose, STANCE } from '../src/scene/character.js';
+import { characterPose, footPoints } from '../src/scene/character.js';
 import { createFakeContext } from './fakeCanvas.mjs';
 
 const presets = Object.keys(PRESETS);
@@ -39,30 +39,35 @@ test('renders at phone, tall and ultra-wide sizes', () => {
   }
 });
 
-test('a planted foot does not slide along the ground', () => {
-  for (const [speed, cadence, scale] of [[38, 0.62, 1], [80, 0.9, 1.3], [20, 0.3, 0.7]]) {
+test('a planted foot does not slide or float', () => {
+  for (const [speed, cadence, scale] of [[38, 0.62, 1], [70, 0.9, 1.3], [20, 0.3, 0.7]]) {
     const cfg = createDefaultConfig();
     Object.assign(cfg.character, { walkSpeed: speed, cadence, scale });
     const scene = new Scene(cfg);
     scene.computeView(1920, 1080);
     scene.update(1 / 60);
     const C = cfg.character;
-    let stance = null; const slides = [];
+    let seg = null; let worst = 0; let worstY = 0; let segments = 0;
     for (let f = 0; f < 60 * 20; f++) {
       scene.update(1 / 60);
-      const p = characterPose({ phase: scene.walkPhase, reach: scene.walkReach(C), stride: C.stride, bob: C.bob, armSwing: 1 });
-      const fx = scene.manX + p.near.foot.x * C.scale;
-      if (p.u > 0.03 && p.u < STANCE - 0.03) {
-        stance ??= { min: fx, max: fx };
-        stance.min = Math.min(stance.min, fx); stance.max = Math.max(stance.max, fx);
-      } else if (stance) {
-        // ignore the wrap from the right edge back to the left
-        if (stance.max - stance.min < 500) slides.push(stance.max - stance.min);
-        stance = null;
-      }
+      const leg = characterPose(scene.manPose(C)).near;
+      const kind = leg.planted ? leg.pinKind : null;
+      if (kind) {
+        // the point the foot pivots on, measured from the solved (IK) ankle
+        const pt = footPoints(leg)[kind];
+        const wx = scene.manX + pt.x * C.scale;
+        worstY = Math.max(worstY, Math.abs(pt.y) * C.scale);
+        if (seg && seg.kind === kind) { seg.min = Math.min(seg.min, wx); seg.max = Math.max(seg.max, wx); }
+        else { if (seg) close(seg); seg = { kind, min: wx, max: wx }; }
+      } else if (seg) { close(seg); seg = null; }
     }
-    const worst = Math.max(...slides);
-    assert.ok(worst < 1.5, `foot slid ${worst.toFixed(2)} px at speed ${speed}, cadence ${cadence}`);
+    function close(s) {
+      if (s.max - s.min > 500) return; // wrapped from the right edge to the left
+      worst = Math.max(worst, s.max - s.min); segments++;
+    }
+    assert.ok(segments > 10, 'too few stances measured');
+    assert.ok(worst < 1, `foot slid ${worst.toFixed(2)} px at speed ${speed}, cadence ${cadence}`);
+    assert.ok(worstY < 1, `planted foot left the ground by ${worstY.toFixed(2)} px`);
   }
 });
 
