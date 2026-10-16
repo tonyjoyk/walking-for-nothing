@@ -42,6 +42,20 @@ export function wobble(t, seed = 0) {
   );
 }
 
+// Smooth 1D gradient noise in roughly -1..1 (Perlin style, deterministic).
+const GRAD = Array.from({ length: 256 }, (_, i) => {
+  const v = Math.sin(i * 127.1 + 311.7) * 43758.5453;
+  return (v - Math.floor(v)) * 2 - 1;
+});
+export function noise1(x) {
+  const i = Math.floor(x);
+  const f = x - i;
+  const a = GRAD[i & 255] * f;
+  const b = GRAD[(i + 1) & 255] * (f - 1);
+  const u = f * f * f * (f * (f * 6 - 15) + 10);
+  return (a + (b - a) * u) * 2;
+}
+
 // ---- colour -------------------------------------------------------------
 export function hexToRgb(hex) {
   const n = parseInt(hex.slice(1), 16);

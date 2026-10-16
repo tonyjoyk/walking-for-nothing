@@ -179,6 +179,28 @@ export class Scene {
     };
   }
 
+  // Legs and paws push the grass aside as they move through it.
+  grassPushers() {
+    const cfg = this.config;
+    const out = [];
+    if (cfg.character.visible) {
+      const C = cfg.character;
+      const p = characterPose(this.manPose(C));
+      const k = C.scale;
+      out.push({ x: this.manX, y: GROUND_Y + 8, r: 46 * k, k: 0.16 });
+      for (const leg of [p.near, p.far]) {
+        out.push({ x: this.manX + leg.ankle.x * k, y: GROUND_Y + 8, r: 30 * k, k: leg.planted ? 0.22 : 0.34 });
+      }
+    }
+    if (this.dog.state !== 'absent') {
+      const dx = this.screenX(this.dog.d);
+      const k = 0.98 * cfg.dog.scale;
+      out.push({ x: dx - 36 * k, y: GROUND_Y + 5, r: 26 * k, k: 0.35 });
+      out.push({ x: dx + 34 * k, y: GROUND_Y + 5, r: 26 * k, k: 0.35 });
+    }
+    return out;
+  }
+
   // Rim light from a low sun: on the side of the figure that faces it.
   rimFor(x) {
     const P = this.P;
@@ -256,6 +278,7 @@ export class Scene {
     const motion = {
       swayT: this.swayT, windT: this.windT, wind: P.wind,
       windDir: cfg.grass.windDir, swayAmp: cfg.grass.swayAmp * reduce,
+      pushers: this.grassPushers(), rim: this.rimFor(v.x0 + v.w / 2),
     };
     drawMass(ctx, v, P, 'far', this.field, G, motion);
     drawBand(ctx, v, P, 'far', this.field, G, motion);

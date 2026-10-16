@@ -1,4 +1,4 @@
-import { FIELD_TOP, GROUND_Y, SCENE_H, GEN_LEFT, GEN_RIGHT, rng, css, mix } from './util.js';
+import { FIELD_TOP, GROUND_Y, SCENE_H, GEN_LEFT, GEN_RIGHT, rng, css, mix, clamp, noise1 } from './util.js';
 
 // Three depth bands. Far blades sit behind the characters; mid and fore
 // blades are drawn in front of them, which creates the occlusion.
@@ -71,11 +71,14 @@ export function createField(seed, clumping = 0.75) {
     const M = MASS[name];
     // staggered rows, so the undergrowth has no single hard top edge
     const rows = [];
+    const rowGap = ((B.y1 - B.y0) * 0.9) / M.rows;
     for (let ri = 0; ri < M.rows; ri++) {
       const y = B.y0 + (B.y1 - B.y0) * (ri / M.rows) * 0.9;
       const tufts = [];
       for (let x = GEN_LEFT; x <= GEN_RIGHT; x += M.step) {
-        tufts.push({ x: x + r.range(-0.4, 0.4) * M.step, k: r.range(0.55, 1), phase: r() * Math.PI * 2 });
+        // each tuft roots a little above or below the row line, so rows never
+        // show as straight horizontal edges
+        tufts.push({ x: x + r.range(-0.4, 0.4) * M.step, k: r.range(0.55, 1), phase: r() * Math.PI * 2, dy: r.range(-0.5, 0.5) * rowGap });
       }
       rows.push({ y, tufts });
     }
@@ -138,11 +141,11 @@ export function drawMass(ctx, view, P, bandName, bands, G, motion) {
     for (const t of row.tufts) {
       if (t.x < left - M.step || t.x > right + M.step) continue;
       const h = hBase * t.k;
-      const gust = wind * (0.55 + 0.45 * Math.sin(windT - windDir * t.x * 0.0045));
+      const gust = gustAt(t.x, windT, wind, windDir);
       const sway = Math.sin(swayT * 1.6 + t.x * 0.013 + t.phase) * 0.06 * swayAmp * (1 + wind);
       const dx = (windDir * gust * 0.7 + sway + 0.05) * h;
-      ctx.lineTo(t.x - M.step * 0.45, top + 1);
-      ctx.lineTo(t.x + dx, top - h);
+      ctx.lineTo(t.x - M.step * 0.45, top + t.dy + 1);
+      ctx.lineTo(t.x + dx, top + t.dy - h);
     }
     ctx.lineTo(right + M.step, top);
     ctx.lineTo(right + M.step, band.y1 + 2);
@@ -151,17 +154,47 @@ export function drawMass(ctx, view, P, bandName, bands, G, motion) {
   }
 }
 
-// motion: { swayT, windT, wind, windDir, swayAmp }
+// Wind at x: gusts are a noise field drifting downwind, so patches of the
+// field lean together and the pattern rolls across instead of the whole
+// field moving as one sheet.
+function gustAt(x, windT, wind, windDir) {
+  const n = 0.5 + 0.5 * noise1(x * 0.0042 - windT * 0.9 * windDir);
+  const n2 = 0.5 + 0.5 * noise1(x * 0.013 - windT * 1.7 * windDir + 40);
+  return wind * (0.3 + 0.55 * n + 0.15 * n2);
+}
+
+// Sideways push from legs and paws moving through the grass. pushers:
+// [{ x, y, r, k }] in scene units; blades lean away from each one.
+function pushAt(x, y, pushers) {
+  let p = 0;
+  for (const q of pushers) {
+    const dy = Math.abs(y - q.y);
+    if (dy > q.r) continue;
+    const dx = x - q.x;
+    const d = Math.abs(dx);
+    if (d > q.r) continue;
+    const f = 1 - d / q.r;
+    p += Math.sign(dx || 1) * q.k * f * f * (1 - dy / q.r);
+  }
+  return clamp(p, -0.9, 0.9);
+}
+
+// motion: { swayT, windT, wind, windDir, swayAmp, pushers, rim }
 export function drawBand(ctx, view, P, bandName, bands, G, motion) {
   const band = bands[bandName];
-  const colors = bucketColors(bandName, P);
+  let colors = bucketColors(bandName, P);
+  // atmospheric perspective: the far band picks up a little of the haze
+  if (bandName === 'far') colors = colors.map((c) => mix(c, P.haze, 0.18 * P.hazeAmount));
   const left = view.x0 - 40;
   const right = view.x0 + view.w + 40;
   const occl = bandName === 'mid' ? G.occlusion : 1;
   const hMul = G.heightMul * occl;
   const wMul = G.bladeWidth * (bandName === 'fore' ? 1.1 : 1);
   const { swayT, windT, wind, windDir, swayAmp } = motion;
+  const pushers = bandName === 'fore' ? [] : (motion.pushers || []);
+  const rim = motion.rim;
   const seedTips = [];
+  const glowTips = [];
 
   for (let bi = 0; bi < band.byBucket.length; bi++) {
     ctx.fillStyle = css(colors[bi]);
@@ -170,23 +203,40 @@ export function drawBand(ctx, view, P, bandName, bands, G, motion) {
       if (b.rank > G.density || b.x < left || b.x > right) continue;
       const h = b.h * hMul * (1 + G.heightVar * b.hv * 0.6);
       const w = b.w * wMul;
-      // coherent gust wave travelling in the wind direction
-      const gust = wind * (0.55 + 0.45 * Math.sin(windT - windDir * b.x * 0.0045));
-      const sway = Math.sin(swayT * 1.6 + b.x * 0.013 + b.phase) * 0.07 * swayAmp * (1 + wind);
-      const bend = b.lean + windDir * gust * 0.9 + sway;
+      const stiff = b.stiff || 1;
+      const gust = gustAt(b.x, windT, wind, windDir) / stiff;
+      const sway = Math.sin(swayT * 1.6 + b.x * 0.013 + b.phase) * 0.07 * swayAmp * (1 + wind) / stiff;
+      const push = pushers.length ? pushAt(b.x, b.y, pushers) : 0;
+      const bend = b.lean + windDir * gust * 0.9 + sway + push;
       const dx = bend * h;
       const tipX = b.x + dx;
       const tipY = b.y - Math.sqrt(Math.max(h * h - dx * dx * 0.55, h * h * 0.3));
-      const kx = b.x + dx * 0.35;
-      const ky = b.y - (b.y - tipY) * 0.55;
+      // a curved, tapering leaf: the control point sits low and only a
+      // little way over, so the bend grows towards the tip
+      const cx = b.x + dx * 0.22;
+      const cy = b.y - (b.y - tipY) * 0.62;
       ctx.moveTo(b.x - w * 0.5, b.y);
-      ctx.lineTo(kx - w * 0.3, ky);
-      ctx.lineTo(tipX, tipY);
-      ctx.lineTo(kx + w * 0.3, ky);
-      ctx.lineTo(b.x + w * 0.5, b.y);
-      if (b.seedRoll < G.seedFreq) seedTips.push(tipX, tipY, Math.atan2(tipY - ky, tipX - kx));
+      ctx.quadraticCurveTo(cx - w * 0.32, cy, tipX, tipY);
+      ctx.quadraticCurveTo(cx + w * 0.32, cy, b.x + w * 0.5, b.y);
+      if (b.seedRoll < G.seedFreq) seedTips.push(tipX, tipY, Math.atan2(tipY - cy, tipX - cx));
+      else if (rim && b.seedRoll > 0.7) glowTips.push(cx, cy, tipX, tipY, w);
     }
     ctx.fill();
+  }
+
+  // backlight: with a low sun some blade tips catch a warm edge
+  if (glowTips.length && bandName !== 'fore') {
+    ctx.strokeStyle = rim.color;
+    ctx.globalAlpha = rim.alpha * (bandName === 'far' ? 0.5 : 0.8);
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    for (let i = 0; i < glowTips.length; i += 5) {
+      const cx = glowTips[i], cy = glowTips[i + 1], tx = glowTips[i + 2], ty = glowTips[i + 3];
+      ctx.moveTo(cx + (tx - cx) * 0.45, cy + (ty - cy) * 0.45);
+      ctx.lineTo(tx, ty);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
   }
 
   if (seedTips.length) {
