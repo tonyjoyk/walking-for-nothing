@@ -9,6 +9,8 @@ const BANDS = {
   fore: { y0: 992, y1: SCENE_H + 40, per1920: 420, w: [6, 11], h: (y) => 70 + (y - 992) * 0.9, buckets: 3, seedLen: 12 },
 };
 
+export const MAX_DENSITY = 2;
+
 // Clump sizes per band: [min, max] blades sharing one root.
 const CLUMP = { far: [3, 7], mid: [5, 13], fore: [4, 9] };
 // Mass layer: a dense, low silhouette of undergrowth painted before the
@@ -22,7 +24,8 @@ export function createField(seed, clumping = 0.75) {
   const span = GEN_RIGHT - GEN_LEFT;
   const bands = {};
   for (const [name, B] of Object.entries(BANDS)) {
-    const count = Math.round(B.per1920 * (span / 1920));
+    // twice the default count is generated; density 1 draws half of them
+    const count = Math.round(B.per1920 * (span / 1920) * MAX_DENSITY);
     const blades = [];
     const [cMin, cMax] = CLUMP[name];
     const spread = B.w[1] * 3.2; // how far blades in a clump sit from its root
@@ -56,7 +59,7 @@ export function createField(seed, clumping = 0.75) {
           phase: n === 1 ? r() * Math.PI * 2 : cPhase + r.range(-0.5, 0.5),
           // most blades share the clump's tone; a few catch the light differently
           bucket: r() < 0.75 ? cBucket : Math.floor(r() * B.buckets),
-          rank: r(),       // density selection: drawn when rank < density
+          rank: r() * MAX_DENSITY, // density selection: drawn when rank < density
           seedRoll: r(),   // seed head when seedRoll < seedFreq
           stiff: r.range(0.75, 1.25), // per-blade stiffness for wind response
         });
@@ -130,7 +133,8 @@ export function drawMass(ctx, view, P, bandName, bands, G, motion) {
   const [c0, c1] = massColors(bandName, P);
   for (const row of band.rows) {
     const top = row.y;
-    const hBase = band.h(top) * M.rise * G.heightMul * amount * occl;
+    const thick = 1 + Math.max(0, G.density - 1) * 0.35;
+  const hBase = band.h(top) * M.rise * G.heightMul * amount * occl * thick;
     const g = ctx.createLinearGradient(0, top - hBase, 0, top + 30);
     g.addColorStop(0, css(c0));
     g.addColorStop(1, css(c1));
@@ -163,7 +167,7 @@ const MASS_REFRESH_MS = 250;
 
 function massKey(view, pd, P, bandName, G, wind) {
   const c = massColors(bandName, P).flat().map((v) => Math.round(v / 3));
-  return [bandName, view.x0.toFixed(1), view.w.toFixed(1), view.s.toFixed(4), pd, G.heightMul, G.mass,
+  return [bandName, view.x0.toFixed(1), view.w.toFixed(1), view.s.toFixed(4), pd, G.heightMul, G.mass, G.density.toFixed(2),
     G.occlusion, Math.round(wind * 10), ...c].join('|');
 }
 
@@ -171,7 +175,7 @@ export function drawMassCached(ctx, view, P, bandName, bands, G, motion, pd, cac
   if (typeof document === 'undefined' || !cache) { drawMass(ctx, view, P, bandName, bands, G, motion); return; }
   if ((G.mass ?? 0) <= 0.001) return;
   const band = bands[bandName];
-  const hMax = band.h(band.y0) * band.mass.rise * G.heightMul * G.mass * (bandName === 'mid' ? G.occlusion : 1) * 1.2 + 30;
+  const hMax = band.h(band.y0) * band.mass.rise * G.heightMul * G.mass * (bandName === 'mid' ? G.occlusion : 1) * (1 + Math.max(0, G.density - 1) * 0.35) * 1.2 + 30;
   const top = band.y0 - hMax;
   const bottom = band.y1 + 4;
   const key = massKey(view, pd, P, bandName, G, motion.wind);

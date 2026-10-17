@@ -190,16 +190,17 @@ export class Scene {
       const C = cfg.character;
       const p = characterPose(this.manPose(C));
       const k = C.scale;
-      out.push({ x: this.manX, y: GROUND_Y + 8, r: 46 * k, k: 0.16 });
+      out.push({ x: this.manX, y: GROUND_Y + 8 + C.groundOffset, r: 46 * k, k: 0.16 });
       for (const leg of [p.near, p.far]) {
-        out.push({ x: this.manX + leg.ankle.x * k, y: GROUND_Y + 8, r: 30 * k, k: leg.planted ? 0.22 : 0.34 });
+        out.push({ x: this.manX + leg.ankle.x * k, y: GROUND_Y + 8 + C.groundOffset, r: 30 * k, k: leg.planted ? 0.22 : 0.34 });
       }
     }
     if (this.dog.state !== 'absent') {
       const dx = this.screenX(this.dog.d);
       const k = 0.98 * cfg.dog.scale;
-      out.push({ x: dx - 36 * k, y: GROUND_Y + 5, r: 26 * k, k: 0.35 });
-      out.push({ x: dx + 34 * k, y: GROUND_Y + 5, r: 26 * k, k: 0.35 });
+      const gy = GROUND_Y + 5 + cfg.character.groundOffset;
+      out.push({ x: dx - 36 * k, y: gy, r: 26 * k, k: 0.35 });
+      out.push({ x: dx + 34 * k, y: gy, r: 26 * k, k: 0.35 });
     }
     return out;
   }
@@ -247,6 +248,9 @@ export class Scene {
 
   // ---- render -----------------------------------------------------------
   render(ctx, cw, ch, pd) {
+    // a hidden tab or pane can report a zero-size canvas; drawing then would
+    // poison the view (and the man's position) with NaN
+    if (!(cw > 0 && ch > 0)) return;
     this.computeView(cw, ch);
     const v = this.view;
     const P = this.P;
@@ -289,11 +293,11 @@ export class Scene {
     // Juhu (slightly behind) then the man
     if (this.dog.state !== 'absent') {
       const dx = this.screenX(this.dog.d);
-      drawDog(ctx, dx, GROUND_Y - 3, 0.98 * cfg.dog.scale, this.dog, dogColors(P), this.time);
+      drawDog(ctx, dx, GROUND_Y - 3 + cfg.character.groundOffset, 0.98 * cfg.dog.scale, this.dog, dogColors(P), this.time);
     }
     if (cfg.character.visible) {
       const C = cfg.character;
-      drawCharacter(ctx, this.manX, GROUND_Y, C.scale, {
+      drawCharacter(ctx, this.manX, GROUND_Y + C.groundOffset, C.scale, {
         ...this.manPose(C), motion: this.manMotion, rim: this.rimFor(this.manX),
       }, characterColors(P));
     }

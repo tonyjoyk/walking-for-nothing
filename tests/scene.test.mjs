@@ -102,6 +102,30 @@ test("Juhu's planted paws stay put while she walks with him", () => {
   assert.ok(worst < 2, `a paw slid ${worst.toFixed(2)} px`);
 });
 
+test('a zero-size canvas (hidden tab) does not break the view or lose the man', () => {
+  const scene = new Scene(createDefaultConfig());
+  const ctx = createFakeContext();
+  scene.update(1 / 60);
+  scene.render(ctx, 0, 0, 1);
+  scene.update(1 / 60);
+  scene.render(ctx, 1280, 720, 1);
+  for (let i = 0; i < 30; i++) scene.update(1 / 60);
+  scene.render(ctx, 1280, 720, 1);
+  assert.ok(Number.isFinite(scene.view.s) && scene.view.s > 0);
+  assert.ok(Number.isFinite(scene.manX));
+  assert.deepEqual([...new Set(ctx.stats.bad)], []);
+});
+
+test('density above 1 draws more blades; density 1 matches the default field', () => {
+  const count = (d) => {
+    const cfg = createDefaultConfig(); cfg.grass.density = d;
+    const scene = new Scene(cfg); const ctx = createFakeContext();
+    scene.update(1 / 60); scene.render(ctx, 1920, 1080, 1);
+    return ctx.stats.calls;
+  };
+  assert.ok(count(2) > count(1) * 1.3);
+});
+
 test('the walk stops cleanly at zero speed', () => {
   const cfg = createDefaultConfig();
   cfg.character.walkSpeed = 0;

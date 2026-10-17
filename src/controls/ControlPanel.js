@@ -86,6 +86,7 @@ export function createPanel(app) {
   fE.addBinding(Ch, 'visible', { label: 'visible' });
   bind(fE, Ch, 'x', 'character.x', { label: 'start position' });
   bind(fE, Ch, 'scale', 'character.scale', { label: 'scale' });
+  bind(fE, Ch, 'groundOffset', 'character.groundOffset', { label: 'ground offset (man + Juhu)' });
   bind(fE, Ch, 'walkSpeed', 'character.walkSpeed', { label: 'walk speed' });
   bind(fE, Ch, 'cadence', 'character.cadence', { label: 'steps (cycles/s)' });
   bind(fE, Ch, 'stride', 'character.stride', { label: 'knee lift' });
