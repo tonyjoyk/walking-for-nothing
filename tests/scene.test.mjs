@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefaultConfig, validateConfig, PRESETS, RANGES } from '../src/config.js';
 import { Scene } from '../src/scene/Scene.js';
-import { characterPose, footPoints } from '../src/scene/character.js';
+import { characterPose, footPoints, munduGeometry } from '../src/scene/character.js';
 import { dogPose } from '../src/scene/dog.js';
 import { createFakeContext } from './fakeCanvas.mjs';
 
@@ -211,6 +211,34 @@ test('grass parting strength 0 turns parting off', () => {
   const scene = new Scene(cfg);
   scene.update(1 / 60);
   assert.equal(scene.grassPushers().length, 0);
+});
+
+test('mundu: the border is built from the cloth, and the full length keeps the shins hidden', () => {
+  for (const state of ['full', 'folded']) {
+    const cfg = createDefaultConfig();
+    cfg.character.munduLength = state;
+    const scene = new Scene(cfg);
+    scene.computeView(1920, 1080);
+    let highestHem = Infinity, lowestHem = -Infinity;
+    for (let f = 0; f < 60 * 10; f++) {
+      scene.update(1 / 60);
+      if (f < 60) continue;
+      const cloth = scene.manMotion.cloth;
+      const g = munduGeometry(cloth);
+      const P = cloth.pts;
+      // hem and wrapped edge are the cloth's own points, every frame
+      assert.deepEqual(g.hem, P.map((c) => ({ x: c[c.length - 1].x, y: c[c.length - 1].y })).reverse());
+      assert.deepEqual(g.wrapEdge, P[P.length - 2].map((p) => ({ x: p.x, y: p.y })));
+      for (const p of g.hem) { highestHem = Math.min(highestHem, p.y); lowestHem = Math.max(lowestHem, p.y); }
+    }
+    if (state === 'full') {
+      // ankles sit at y = -8; the shin starts a few units above
+      assert.ok(highestHem > -26, `full mundu hem rose to ${highestHem.toFixed(1)}`);
+    } else {
+      // folded: the hem is around the knees (knees sit near y = -68), clear of the ankles
+      assert.ok(lowestHem < -40 && highestHem > -110, `folded hem ${highestHem.toFixed(1)}..${lowestHem.toFixed(1)}`);
+    }
+  }
 });
 
 test('the walk stops cleanly at zero speed', () => {

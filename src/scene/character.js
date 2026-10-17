@@ -1,5 +1,5 @@
 import { css, tint, hexToRgb, clamp, lerp } from './util.js';
-import { MunduCloth, MUNDU_LENGTHS } from './mundu.js';
+import { MunduCloth, MUNDU_STATES } from './mundu.js';
 import { HIP, KNEE, ANKLE, sampleGait } from './gaitData.js';
 
 // Local coordinates: origin at the walking line under the body, facing +x,
@@ -8,7 +8,8 @@ const BASE = {
   shirt: hexToRgb('#7b4a2c'), shirtShade: hexToRgb('#5c3620'), cuff: hexToRgb('#95603f'),
   skin: hexToRgb('#8e5c3d'), skinShade: hexToRgb('#6b4029'),
   hair: hexToRgb('#1c1613'), beard: hexToRgb('#2b1f18'),
-  mundu: hexToRgb('#f3efe4'), munduShade: hexToRgb('#d4cebe'), kasavu: hexToRgb('#c6a24d'),
+  mundu: hexToRgb('#f3efe4'), munduShade: hexToRgb('#d4cebe'), kasavu: hexToRgb('#2e6b4e'),
+  sandal: hexToRgb('#3a2a20'),
 };
 
 const LEN = { thigh: 64, shin: 66, upper: 50, fore: 46 };
@@ -267,9 +268,9 @@ export class CharacterMotion {
 
   update(dt, pose, wind, time, fabric, opts = {}) {
     const p = characterPose(pose);
-    const length = MUNDU_LENGTHS[opts.length] || MUNDU_LENGTHS.folded;
-    if (!this.cloth.pts || this.cloth.length !== length) {
-      this.cloth.reset(waistY(p), length);
+    const state = MUNDU_STATES[opts.length] ? opts.length : 'full';
+    if (!this.cloth.pts || this.cloth.state !== state) {
+      this.cloth.reset(waistY(p), state);
       dt = 1 / 60;
       for (let i = 0; i < 40; i++) this.stepCloth(dt, p, wind, time, fabric, opts);
       return;
@@ -355,7 +356,7 @@ function footPath(ctx, ankle, th) {
   ctx.closePath();
 }
 
-function drawLeg(ctx, hip, leg, color, rim, thigh) {
+function drawLeg(ctx, hip, leg, color, rim, thigh, sandal) {
   const parts = [
     // shin with the calf on the back of the leg (-x side)
     () => limbPath(ctx, leg.knee, leg.ankle, 11.5, 6.5, 2.2, leg.knee.y < leg.ankle.y ? 1 : -1),
@@ -365,6 +366,17 @@ function drawLeg(ctx, hip, leg, color, rim, thigh) {
   // each part on its own: overlapping subpaths with opposite winding would cut holes
   parts.forEach((b) => fillPath(ctx, color, b));
   rimLight(ctx, rim, parts, 2);
+  if (sandal) {
+    // a dark sole under the foot and one strap over the instep
+    const P = (x, y) => add(leg.ankle, rot({ x, y }, leg.footAngle));
+    const h = P(-7.5, ANKLE_H + 0.8), t = P(18.5, ANKLE_H + 0.8);
+    ctx.strokeStyle = sandal;
+    ctx.lineWidth = 2.6;
+    ctx.beginPath(); ctx.moveTo(h.x, h.y); ctx.lineTo(t.x, t.y); ctx.stroke();
+    const a = P(8, 1.5), b = P(11, ANKLE_H);
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
 }
 
 function drawArm(ctx, sh, pose, C, far, rim) {
@@ -391,6 +403,136 @@ function drawArm(ctx, sh, pose, C, far, rim) {
   if (!far) fillPath(ctx, C.shirtShade, () => limbPath(ctx, sh, cuff, 17, 16));
   fillPath(ctx, cloth, () => limbPath(ctx, sh, cuff, 15, 14.5));
   fillPath(ctx, far ? C.shirtShade : C.cuff, () => limbPath(ctx, { x: cuff.x * 0.93 + sh.x * 0.07, y: cuff.y * 0.93 + sh.y * 0.07 }, cuff, 14.5, 14.5));
+}
+
+// ---------------------------------------------------------------------------
+// The mundu's construction, in cloth points. A Kerala mundu is one long
+// rectangle wrapped round the waist: the outer layer overlaps at the front,
+// its free edge runs from the waist to the hem, and a border runs along that
+// edge and along the hem. Everything here is built from the simulated cloth
+// points, so the border and folds move with the cloth and cannot detach.
+// ---------------------------------------------------------------------------
+export function munduGeometry(cloth) {
+  const o = cloth.outline();
+  return {
+    back: o.back,                              // waist to hem
+    front: o.front,                            // waist to hem
+    hem: o.hem.slice().reverse(),              // front to back
+    wrapEdge: o.inner[o.inner.length - 1],     // the outer layer's free edge, waist to hem
+    inner: o.inner,
+    waist: [o.back[0], o.front[0]],
+  };
+}
+
+// Smooth curve through points (quadratic midpoints), continuing the path.
+function curveThrough(ctx, pts) {
+  for (let i = 1; i < pts.length - 1; i++) {
+    ctx.quadraticCurveTo(pts[i].x, pts[i].y, (pts[i].x + pts[i + 1].x) / 2, (pts[i].y + pts[i + 1].y) / 2);
+  }
+  ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+}
+
+function drawMundu(ctx, cloth, C, rim, state) {
+  const g = munduGeometry(cloth);
+  const folded = state === 'folded';
+  const outline = () => {
+    ctx.moveTo(g.back[0].x, g.back[0].y);
+    ctx.lineTo(g.front[0].x, g.front[0].y);
+    curveThrough(ctx, g.front);
+    // the hem dips a little between chains, like hanging cloth
+    for (let i = 1; i < g.hem.length; i++) {
+      const a = g.hem[i - 1], b = g.hem[i];
+      ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 + 0.8, b.x, b.y);
+    }
+    curveThrough(ctx, g.back.slice().reverse());
+    ctx.closePath();
+  };
+  fillPath(ctx, C.mundu, outline);
+
+  ctx.save();
+  ctx.beginPath(); outline(); ctx.clip();
+  // the back of the cloth turns away from the light
+  const bx = g.back[3].x, fx = g.front[3].x;
+  const sg = ctx.createLinearGradient(bx - 2, 0, fx, 0);
+  sg.addColorStop(0, C.munduShade);
+  sg.addColorStop(0.45, C.mundu);
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = sg;
+  ctx.fillRect(bx - 10, g.waist[0].y - 4, fx - bx + 20, 220);
+  ctx.globalAlpha = 1;
+
+  // the outer layer overlaps at the front: a soft shadow just behind its
+  // free edge, then the layer itself on top
+  const edge = g.wrapEdge.slice(1);
+  ctx.strokeStyle = C.munduShade;
+  ctx.globalAlpha = 0.6;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(edge[0].x - 1.5, edge[0].y);
+  curveThrough(ctx, edge.map((p) => ({ x: p.x - 1.5, y: p.y })));
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  fillPath(ctx, C.mundu, () => {
+    ctx.moveTo(edge[0].x, edge[0].y);
+    curveThrough(ctx, edge);
+    ctx.lineTo(g.hem[0].x, g.hem[0].y);
+    ctx.lineTo(g.front[g.front.length - 1].x, g.front[g.front.length - 1].y);
+    curveThrough(ctx, g.front.slice(1).reverse());
+    ctx.closePath();
+  });
+
+  // a few broad folds, following the cloth: one long fold in the body of
+  // the cloth; when folded, the gathered cloth adds two shorter diagonal
+  // folds running back from the tuck
+  ctx.strokeStyle = C.munduShade;
+  ctx.lineWidth = 1.3;
+  ctx.globalAlpha = 0.55;
+  ctx.beginPath();
+  const body = g.inner[0].slice(Math.floor(g.inner[0].length * 0.35));
+  ctx.moveTo(body[0].x, body[0].y);
+  curveThrough(ctx, body);
+  if (folded) {
+    const w = g.waist[1], b0 = g.back[2], b1 = g.back[3];
+    ctx.moveTo(w.x - 4, w.y + 7);
+    ctx.quadraticCurveTo((w.x + b0.x) / 2, w.y + 9, b0.x + 6, b0.y + 4);
+    ctx.moveTo(w.x - 2, w.y + 15);
+    ctx.quadraticCurveTo((w.x + b1.x) / 2 + 3, w.y + 20, b1.x + 8, b1.y + 2);
+  }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // the border: along the hem and up the outer layer's free edge, drawn as
+  // part of the cloth (inside its outline)
+  ctx.strokeStyle = C.kasavu;
+  ctx.lineCap = 'butt';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(g.hem[0].x, g.hem[0].y - 2);
+  curveThrough(ctx, g.hem.map((p) => ({ x: p.x, y: p.y - 2 })));
+  ctx.moveTo(edge[edge.length - 1].x + 1.6, edge[edge.length - 1].y);
+  curveThrough(ctx, edge.slice().reverse().map((p) => ({ x: p.x + 1.6, y: p.y })));
+  ctx.stroke();
+  ctx.lineCap = 'round';
+
+  // waistband: the rolled top of the cloth, thicker when it is folded up,
+  // with a small tuck at the front where it is secured
+  const [wb, wf] = g.waist;
+  ctx.strokeStyle = C.munduShade;
+  ctx.lineWidth = folded ? 7 : 4.5;
+  ctx.beginPath();
+  ctx.moveTo(wb.x - 2, wb.y + 1);
+  ctx.quadraticCurveTo((wb.x + wf.x) / 2, wb.y + 3, wf.x + 2, wf.y + 1);
+  ctx.stroke();
+  ctx.strokeStyle = C.mundu;
+  ctx.lineWidth = folded ? 3.5 : 2;
+  ctx.stroke();
+  fillPath(ctx, C.munduShade, () => {
+    ctx.moveTo(wf.x - 7, wf.y + 2);
+    ctx.quadraticCurveTo(wf.x - 1, wf.y + (folded ? 16 : 11), wf.x + 2, wf.y + 2);
+    ctx.closePath();
+  });
+  ctx.restore();
+  rimLight(ctx, rim, outline, 2.5);
 }
 
 // pose: { phase, sweep, stride, bob, armSwing, fabric, wind, time, motion, rim }
@@ -422,71 +564,10 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
   leanIn();
   drawArm(ctx, shF, armF, C, true, null);
   ctx.restore();
-  drawLeg(ctx, hip, far, C.skinShade, null, true);
-  drawLeg(ctx, hip, near, C.skin, rim, true);
+  drawLeg(ctx, hip, far, C.skinShade, null, true, C.sandal);
+  drawLeg(ctx, hip, near, C.skin, rim, true, C.sandal);
 
-  // mundu: the cloth simulation's outline, filled opaque. Shading and folds
-  // follow the cloth itself, never the legs.
-  const cloth = motion.cloth.outline();
-  const smoothThrough = (pts, first) => {
-    if (first) ctx.lineTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < pts.length - 1; i++) {
-      ctx.quadraticCurveTo(pts[i].x, pts[i].y, (pts[i].x + pts[i + 1].x) / 2, (pts[i].y + pts[i + 1].y) / 2);
-    }
-    ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-  };
-  const hemFrontToBack = cloth.hem.slice().reverse();
-  const munduBuild = () => {
-    ctx.moveTo(cloth.back[0].x, cloth.back[0].y);
-    ctx.lineTo(cloth.front[0].x, cloth.front[0].y);
-    smoothThrough(cloth.front, false);
-    // the hem dips a little between chains, like hanging cloth
-    for (let i = 1; i < hemFrontToBack.length; i++) {
-      const a = hemFrontToBack[i - 1], b = hemFrontToBack[i];
-      ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 + 0.8, b.x, b.y);
-    }
-    smoothThrough(cloth.back.slice().reverse(), false);
-    ctx.closePath();
-  };
-  fillPath(ctx, C.mundu, munduBuild);
-  ctx.save();
-  ctx.beginPath(); munduBuild(); ctx.clip();
-  // turning away from the light at the back edge
-  const bx = cloth.back[3].x, fx = cloth.front[3].x;
-  const sg = ctx.createLinearGradient(bx - 2, 0, fx, 0);
-  sg.addColorStop(0, C.munduShade);
-  sg.addColorStop(0.4, C.mundu);
-  sg.addColorStop(1, C.mundu);
-  ctx.globalAlpha = 0.85;
-  ctx.fillStyle = sg;
-  ctx.fillRect(bx - 10, cloth.back[0].y - 4, fx - bx + 20, 200);
-  ctx.globalAlpha = 1;
-  // two soft folds hang from below the waistband: one long one where the
-  // cloth wraps over, one short one near the back; both follow the cloth
-  ctx.strokeStyle = C.munduShade;
-  ctx.lineWidth = 1.3;
-  ctx.globalAlpha = 0.55;
-  ctx.beginPath();
-  const wrap = cloth.inner[cloth.inner.length - 1].slice(1);
-  ctx.moveTo(wrap[0].x, wrap[0].y);
-  smoothThrough(wrap, false);
-  const short = cloth.inner[0].slice(Math.floor(cloth.inner[0].length * 0.45));
-  ctx.moveTo(short[0].x, short[0].y);
-  smoothThrough(short, false);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-  ctx.restore();
-  rimLight(ctx, rim, munduBuild, 2.5);
-  // kasavu border along the hem
-  ctx.strokeStyle = C.kasavu;
-  ctx.lineWidth = 1.7;
-  ctx.beginPath();
-  ctx.moveTo(hemFrontToBack[0].x - 1, hemFrontToBack[0].y - 2);
-  for (let i = 1; i < hemFrontToBack.length; i++) {
-    const a = hemFrontToBack[i - 1], b = hemFrontToBack[i];
-    ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 + 0.5, b.x + (i === hemFrontToBack.length - 1 ? 1 : 0), b.y - 2);
-  }
-  ctx.stroke();
+  drawMundu(ctx, motion.cloth, C, rim, motion.cloth.state);
 
   leanIn();
   // loose shirt, untucked over the mundu. The back curves (upper back round,

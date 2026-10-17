@@ -106,7 +106,7 @@ export function createPanel(app) {
 
   const fMundu = fE.addFolder({ title: 'Mundu', expanded: false });
   fMundu.addBinding(Ch, 'munduColor', { label: 'colour' });
-  fMundu.addBinding(Ch, 'kasavuColor', { label: 'kasavu border' });
+  fMundu.addBinding(Ch, 'kasavuColor', { label: 'border' });
   fMundu.addBinding(Ch, 'munduLength', { label: 'length', options: { 'folded (knee)': 'folded', 'full (ankle)': 'full' } });
   bind(fMundu, Ch, 'clothStiffness', 'character.clothStiffness', { label: 'cloth stiffness' });
   bind(fMundu, Ch, 'fabric', 'character.fabric', { label: 'wind response' });

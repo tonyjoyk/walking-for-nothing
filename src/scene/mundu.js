@@ -16,23 +16,29 @@ const SUBSTEPS = 2;
 const LEG_MARGIN = 3;    // cloth sits this far outside the leg surface
 const WAIST_HALF = 18;   // half the waistband width
 
-export const MUNDU_LENGTHS = { folded: 86, full: 132 }; // waist to hem
+// Waist-to-hem length and, per chain from back to front, a share of it.
+// Unfolded (full): an even hem just above the ankles. Folded: the cloth is
+// hitched up and tucked at the front, so the hem rises towards the front.
+export const MUNDU_STATES = {
+  full: { length: 132, profile: [1, 1, 1, 1, 0.99] },
+  folded: { length: 86, profile: [1.04, 1, 0.93, 0.85, 0.77] },
+};
 
 export class MunduCloth {
-  constructor() { this.pts = null; this.length = null; }
+  constructor() { this.pts = null; this.state = null; }
 
-  // pins: waistband y; legs: [{ a, b, r }] capsules (thigh, shin);
-  // seat: { x, y, r } circle the back edge drapes over.
-  reset(waistY, length) {
-    this.length = length;
-    this.n = Math.max(6, Math.round(length / SPACING) + 1); // points per chain, incl. the pin
-    this.seg = length / (this.n - 1);
+  // state: 'full' | 'folded' (see MUNDU_STATES)
+  reset(waistY, state) {
+    const S = MUNDU_STATES[state] || MUNDU_STATES.full;
+    this.state = state;
+    this.n = Math.max(6, Math.round(S.length / SPACING) + 1); // points per chain, incl. the pin
+    this.segs = S.profile.map((f) => (S.length * f) / (this.n - 1)); // per chain
     this.pts = [];
     for (let c = 0; c < CHAINS; c++) {
       const chain = [];
       const x = -WAIST_HALF + (2 * WAIST_HALF * c) / (CHAINS - 1);
       for (let k = 0; k < this.n; k++) {
-        const p = { x: x * (1 + 0.25 * k / (this.n - 1)), y: waistY + k * this.seg };
+        const p = { x: x * (1 + 0.25 * k / (this.n - 1)), y: waistY + k * this.segs[c] };
         chain.push({ x: p.x, y: p.y, px: p.x, py: p.y });
       }
       this.pts.push(chain);
@@ -65,9 +71,9 @@ export class MunduCloth {
 
   solve(waistY, legs, seat, stiffness) {
     const P = this.pts;
-    const seg = this.seg;
     for (let c = 0; c < CHAINS; c++) {
       const chain = P[c];
+      const seg = this.segs[c];
       for (let k = 0; k < this.n - 1; k++) link(chain[k], chain[k + 1], seg, 1, k === 0);
       // bending: keep every other point roughly apart, so it folds like cloth, not rope
       for (let k = 0; k < this.n - 2; k++) link(chain[k], chain[k + 2], seg * 1.9, 0.25 * stiffness, k === 0);

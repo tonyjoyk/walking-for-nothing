@@ -125,7 +125,7 @@ export function createDefaultConfig() {
       munduLength: 'full', clothStiffness: 0.59,
       // look
       build: 0.95, skinColor: '#8e5c3d', hairColor: '#1c1613', beard: true, beardColor: '#2b1f18',
-      shirtColor: '#7b4a2c', sleeve: 'elbow', shirtLoose: 1, munduColor: '#f3efe4', kasavuColor: '#c6a24d',
+      shirtColor: '#7b4a2c', sleeve: 'elbow', shirtLoose: 1, munduColor: '#f3efe4', kasavuColor: '#2e6b4e',
     },
     dog: {
       enabled: true,
