@@ -84,16 +84,39 @@ export function createPanel(app) {
   const Ch = config.character;
   const fE = pane.addFolder({ title: 'Character', expanded: false });
   fE.addBinding(Ch, 'visible', { label: 'visible' });
-  bind(fE, Ch, 'x', 'character.x', { label: 'start position' });
-  bind(fE, Ch, 'scale', 'character.scale', { label: 'scale' });
-  bind(fE, Ch, 'groundOffset', 'character.groundOffset', { label: 'ground offset (man + Juhu)' });
-  bind(fE, Ch, 'walkSpeed', 'character.walkSpeed', { label: 'walk speed' });
-  bind(fE, Ch, 'cadence', 'character.cadence', { label: 'steps (cycles/s)' });
-  bind(fE, Ch, 'stride', 'character.stride', { label: 'knee lift' });
-  bind(fE, Ch, 'bob', 'character.bob', { label: 'torso bob' });
-  bind(fE, Ch, 'armSwing', 'character.armSwing', { label: 'arm swing' });
-  bind(fE, Ch, 'fabric', 'character.fabric', { label: 'fabric motion' });
-  bind(fE, G, 'occlusion', 'grass.occlusion', { label: 'grass occlusion' });
+  fE.addButton({ title: 'Restart walk' }).on('click', () => scene.restartCharacter());
+
+  const fBody = fE.addFolder({ title: 'Body', expanded: false });
+  bind(fBody, Ch, 'scale', 'character.scale', { label: 'height' });
+  bind(fBody, Ch, 'build', 'character.build', { label: 'build' });
+  fBody.addBinding(Ch, 'skinColor', { label: 'skin' });
+  bind(fBody, Ch, 'groundOffset', 'character.groundOffset', { label: 'ground offset (man + Juhu)' });
+  bind(fBody, Ch, 'x', 'character.x', { label: 'start position' });
+
+  const fHair = fE.addFolder({ title: 'Hair', expanded: false });
+  fHair.addBinding(Ch, 'hairColor', { label: 'hair' });
+  fHair.addBinding(Ch, 'beard', { label: 'beard' });
+  fHair.addBinding(Ch, 'beardColor', { label: 'beard colour' });
+
+  const fShirt = fE.addFolder({ title: 'Shirt', expanded: false });
+  fShirt.addBinding(Ch, 'shirtColor', { label: 'colour' });
+  fShirt.addBinding(Ch, 'sleeve', { label: 'sleeve', options: { short: 'short', 'to the elbow': 'elbow', long: 'long' } });
+  bind(fShirt, Ch, 'shirtLoose', 'character.shirtLoose', { label: 'looseness' });
+
+  const fMundu = fE.addFolder({ title: 'Mundu', expanded: false });
+  fMundu.addBinding(Ch, 'munduColor', { label: 'colour' });
+  fMundu.addBinding(Ch, 'kasavuColor', { label: 'kasavu border' });
+  fMundu.addBinding(Ch, 'munduLength', { label: 'length', options: { 'folded (knee)': 'folded', 'full (ankle)': 'full' } });
+  bind(fMundu, Ch, 'clothStiffness', 'character.clothStiffness', { label: 'cloth stiffness' });
+  bind(fMundu, Ch, 'fabric', 'character.fabric', { label: 'wind response' });
+
+  const fWalk = fE.addFolder({ title: 'Walk', expanded: false });
+  bind(fWalk, Ch, 'walkSpeed', 'character.walkSpeed', { label: 'walk speed' });
+  bind(fWalk, Ch, 'cadence', 'character.cadence', { label: 'steps (cycles/s)' });
+  bind(fWalk, Ch, 'armSwing', 'character.armSwing', { label: 'arm swing' });
+  bind(fWalk, Ch, 'stride', 'character.stride', { label: 'knee lift' });
+  bind(fWalk, Ch, 'bob', 'character.bob', { label: 'body bob' });
+  bind(fWalk, G, 'occlusion', 'grass.occlusion', { label: 'grass occlusion' });
 
   // F. Juhu -------------------------------------------------------------
   const D = config.dog;

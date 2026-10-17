@@ -178,12 +178,27 @@ class ArmPendulum {
   }
 }
 
-export function characterColors(P) {
+// Colours for the figure: the chosen look (config.character), tinted by the
+// scene's light. look is optional; without it the defaults are used.
+export function characterColors(P, look) {
+  const base = { ...BASE };
+  if (look) {
+    const skin = hexToRgb(look.skinColor), shirt = hexToRgb(look.shirtColor), mundu = hexToRgb(look.munduColor);
+    Object.assign(base, {
+      skin, skinShade: shadeRgb(skin, 0.75),
+      shirt, shirtShade: shadeRgb(shirt, 0.75), cuff: mixRgb(shirt, [255, 255, 255], 0.12),
+      hair: hexToRgb(look.hairColor), beard: hexToRgb(look.beardColor),
+      mundu, munduShade: shadeRgb(mundu, 0.87), kasavu: hexToRgb(look.kasavuColor),
+    });
+  }
   const k = P.charBrightness;
   const out = {};
-  for (const [key, c] of Object.entries(BASE)) out[key] = css(tint(c, P.charTint, k));
+  for (const [key, c] of Object.entries(base)) out[key] = css(tint(c, P.charTint, k));
+  if (look) Object.assign(out, { beardOn: look.beard, sleeve: look.sleeve, build: look.build, loose: look.shirtLoose });
   return out;
 }
+const shadeRgb = (c, k) => [c[0] * k, c[1] * k, c[2] * k];
+const mixRgb = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 
 // Joint positions for a pose, in local units (origin on the walking line).
 // Shared by the renderer, the secondary-motion springs, grass parting and
@@ -364,8 +379,15 @@ function drawArm(ctx, sh, pose, C, far, rim) {
   ];
   parts.forEach((b) => fillPath(ctx, skin, b));
   if (!far) rimLight(ctx, rim, parts.slice(0, 1), 1.6);
-  // short loose sleeve, wider at the cuff
-  const cuff = { x: sh.x + (pose.elbow.x - sh.x) * 0.92, y: sh.y + (pose.elbow.y - sh.y) * 0.92 };
+  // loose sleeve, wider at the cuff: short, to the elbow, or full length
+  if (C.sleeve === 'long') {
+    fillPath(ctx, cloth, () => limbPath(ctx, pose.elbow, pose.hand, 12.5, 10.5));
+    fillPath(ctx, far ? C.shirtShade : C.cuff, () => limbPath(ctx, {
+      x: pose.elbow.x + (pose.hand.x - pose.elbow.x) * 0.85, y: pose.elbow.y + (pose.hand.y - pose.elbow.y) * 0.85,
+    }, pose.hand, 10.8, 10.5));
+  }
+  const reach = C.sleeve === 'short' ? 0.6 : C.sleeve === 'long' ? 1.02 : 0.92;
+  const cuff = { x: sh.x + (pose.elbow.x - sh.x) * reach, y: sh.y + (pose.elbow.y - sh.y) * reach };
   if (!far) fillPath(ctx, C.shirtShade, () => limbPath(ctx, sh, cuff, 17, 16));
   fillPath(ctx, cloth, () => limbPath(ctx, sh, cuff, 15, 14.5));
   fillPath(ctx, far ? C.shirtShade : C.cuff, () => limbPath(ctx, { x: cuff.x * 0.93 + sh.x * 0.07, y: cuff.y * 0.93 + sh.y * 0.07 }, cuff, 14.5, 14.5));
@@ -470,11 +492,16 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
   // loose shirt, untucked over the mundu. The back curves (upper back round,
   // small of the back in), the chest is fuller than the belly.
   const tail = motion.tail;
+  const loose = (C.loose ?? 1) - 1;
+  const build = C.build ?? 1;
+  // build widens the torso about the spine
+  ctx.save();
+  ctx.scale(build, 1);
   const torsoBuild = () => {
     ctx.moveTo(-9, -224 + by);
     ctx.bezierCurveTo(-24, -214 + by, -25, -186 + by, -18, -164 + by);
-    ctx.quadraticCurveTo(-17, -146 + by, -23 - tail, -121 + by); // hangs over the seat
-    ctx.quadraticCurveTo(-1, -115 + by, 22, -124 + by);
+    ctx.quadraticCurveTo(-17 - loose * 4, -146 + by, -23 - tail - loose * 8, -121 + by); // hangs over the seat
+    ctx.quadraticCurveTo(-1, -115 + by + loose * 2, 22 + loose * 6, -124 + by);
     ctx.quadraticCurveTo(19, -140 + by, 20, -156 + by);
     ctx.bezierCurveTo(27, -178 + by, 25, -206 + by, 15, -224 + by);
     ctx.quadraticCurveTo(3, -232 + by, -9, -224 + by);
@@ -520,6 +547,8 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
   ctx.stroke();
   ctx.globalAlpha = 1;
 
+  ctx.restore(); // build
+
   // near arm over the torso
   drawArm(ctx, sh, armN, C, false, rim);
 
@@ -555,7 +584,7 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
   fillPath(ctx, C.skin, headBuild);
   rimLight(ctx, rim, headBuild, 2.2);
   fillPath(ctx, C.skinShade, () => ctx.ellipse(-1, -241 + hy, 3.2, 4.4, 0, 0, Math.PI * 2)); // ear
-  fillPath(ctx, C.beard, () => { // beard along the jaw
+  if (C.beardOn !== false) fillPath(ctx, C.beard, () => { // beard along the jaw
     ctx.moveTo(-1, -238 + hy);
     ctx.quadraticCurveTo(0, -225 + hy, 10, -223 + hy);
     ctx.quadraticCurveTo(19, -225 + hy, 20, -233 + hy);

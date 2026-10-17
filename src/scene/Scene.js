@@ -386,7 +386,7 @@ export class Scene {
       const C = cfg.character;
       drawCharacter(ctx, this.manX, GROUND_Y + C.groundOffset, C.scale, {
         ...this.manPose(C), motion: this.manMotion, rim: this.rimFor(this.manX),
-      }, characterColors(P));
+      }, characterColors(P, C));
     }
 
     drawMassCached(ctx, v, P, 'mid', this.field, G, motion, pd, this.massCache.mid);

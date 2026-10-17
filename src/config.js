@@ -123,6 +123,9 @@ export function createDefaultConfig() {
       visible: true, x: 0.18, scale: 1, walkSpeed: 70, cadence: 0.5,
       stride: 1, bob: 1, armSwing: 1, fabric: 1, groundOffset: 0,
       munduLength: 'folded', clothStiffness: 1,
+      // look
+      build: 1, skinColor: '#8e5c3d', hairColor: '#1c1613', beard: true, beardColor: '#2b1f18',
+      shirtColor: '#7b4a2c', sleeve: 'elbow', shirtLoose: 1, munduColor: '#f3efe4', kasavuColor: '#c6a24d',
     },
     dog: {
       enabled: true,
@@ -168,6 +171,7 @@ export const RANGES = {
   'character.cadence': [0.1, 1.6, 0.01], 'character.stride': [0, 2, 0.01], 'character.bob': [0, 2.5, 0.01],
   'character.armSwing': [0, 2, 0.01], 'character.fabric': [0, 2.5, 0.01],
   'character.groundOffset': [-20, 20, 0.5], 'character.clothStiffness': [0.2, 2, 0.01],
+  'character.build': [0.85, 1.2, 0.01], 'character.shirtLoose': [0.5, 1.6, 0.01],
   'dog.aloneCrossings': [0, 8, 1], 'dog.togetherCrossings': [1, 6, 1], 'dog.firstVisitDelay': [0, 180, 1],
   'dog.approachSpeed': [20, 220, 1], 'dog.easeSeconds': [0.3, 8, 0.1], 'dog.spacing': [40, 220, 1],
   'dog.scale': [0.6, 1.4, 0.01],
@@ -183,6 +187,7 @@ export const OPTIONS = {
   'playback.quality': ['low', 'medium', 'high'],
   'grass.windDir': [1, -1],
   'character.munduLength': ['folded', 'full'],
+  'character.sleeve': ['short', 'elbow', 'long'],
 };
 
 // ---------------------------------------------------------------------------

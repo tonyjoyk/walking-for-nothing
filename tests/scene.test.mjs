@@ -165,6 +165,23 @@ test('the legs never show outside the mundu above its hem', () => {
   }
 });
 
+test('every character look option renders without NaN', () => {
+  const looks = [
+    { sleeve: 'short' }, { sleeve: 'long' }, { beard: false }, { munduLength: 'full' },
+    { build: 0.85, shirtLoose: 0.5 }, { build: 1.2, shirtLoose: 1.6 }, { shirtColor: '#2f5d7c', skinColor: '#c08a63' },
+  ];
+  for (const look of looks) {
+    const cfg = createDefaultConfig();
+    Object.assign(cfg.character, look);
+    const scene = new Scene(cfg);
+    const ctx = createFakeContext();
+    run(scene, 2, ctx);
+    assert.deepEqual([...new Set(ctx.stats.bad)], [], JSON.stringify(look));
+  }
+  const bad = validateConfig({ character: { sleeve: 'cape', munduLength: 'mini', skinColor: 'blue' } });
+  assert.ok(['character.sleeve', 'character.munduLength', 'character.skinColor'].every((k) => bad.warnings.includes(k)));
+});
+
 test('the walk stops cleanly at zero speed', () => {
   const cfg = createDefaultConfig();
   cfg.character.walkSpeed = 0;
