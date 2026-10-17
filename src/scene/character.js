@@ -1,4 +1,5 @@
 import { css, tint, hexToRgb, clamp, lerp } from './util.js';
+import { MunduCloth, MUNDU_LENGTHS } from './mundu.js';
 
 // Local coordinates: origin at the walking line under the body, facing +x,
 // y negative is up. Total height is ~262 units at scale 1.
@@ -152,31 +153,49 @@ export function characterPose(pose) {
 }
 
 // ---------------------------------------------------------------------------
-// Secondary motion: spring–damper followers for the mundu hem and shirt tail,
-// so cloth trails the legs and settles instead of snapping to them.
+// Secondary motion: the mundu is a Verlet cloth (mundu.js) that collides with
+// the legs; the shirt tail follows on a spring.
 // ---------------------------------------------------------------------------
-function munduTargets(p, wind, time, fabric) {
-  const flutter = Math.sin(time * (2.4 + wind * 3)) * fabric * (0.6 + wind * 2.5);
-  return {
-    front: Math.max(p.near.knee.x, p.far.knee.x) + 8,
-    back: Math.min(p.near.knee.x, p.far.knee.x) - 9 - flutter * 0.6,
-    hemY: Math.min(p.near.knee.y, p.far.knee.y) + 4,
-    tail: flutter * 0.8 + wind * fabric * 3,
-  };
+const waistY = (p) => HIP_Y - 8 + p.by;
+
+// What the cloth collides with: thigh and shin capsules for both legs, and
+// a circle for the seat the back of the cloth drapes over.
+function clothColliders(p) {
+  const legs = [];
+  for (const L of [p.near, p.far]) {
+    legs.push({ a: p.hip, b: L.knee, r: 8.5 });
+    legs.push({ a: L.knee, b: L.ankle, r: 5.8 });
+  }
+  return { legs, seat: { x: -12, y: HIP_Y + 18 + p.by, r: 13 } };
 }
 
+// opts: { length: 'folded' | 'full', drag, windDir, stiffness }
 export class CharacterMotion {
-  constructor() { this.x = null; this.v = {}; }
+  constructor() { this.cloth = new MunduCloth(); this.tail = 0; this.tailV = 0; }
 
-  update(dt, pose, wind, time, fabric) {
-    const target = munduTargets(characterPose(pose), wind, time, fabric);
-    if (!this.x || dt <= 0) { if (!this.x) this.x = { ...target }; return; }
-    const k = 140, c = 11; // stiffness and damping: a soft, slightly heavy cloth
-    for (const key of Object.keys(target)) {
-      const v = (this.v[key] || 0) + (target[key] - this.x[key]) * k * dt;
-      this.v[key] = v * Math.exp(-c * dt);
-      this.x[key] += this.v[key] * dt;
+  update(dt, pose, wind, time, fabric, opts = {}) {
+    const p = characterPose(pose);
+    const length = MUNDU_LENGTHS[opts.length] || MUNDU_LENGTHS.folded;
+    if (!this.cloth.pts || this.cloth.length !== length) {
+      this.cloth.reset(waistY(p), length);
+      dt = 1 / 60;
+      for (let i = 0; i < 40; i++) this.stepCloth(dt, p, wind, time, fabric, opts);
+      return;
     }
+    if (dt <= 0) return;
+    this.stepCloth(Math.min(dt, 1 / 30), p, wind, time, fabric, opts);
+    // shirt tail: a spring towards a gentle wind flutter
+    const target = Math.sin(time * (2.4 + wind * 3)) * fabric * (0.6 + wind * 2.5) * 0.8 + wind * fabric * 3;
+    this.tailV = (this.tailV + (target - this.tail) * 140 * dt) * Math.exp(-11 * dt);
+    this.tail += this.tailV * dt;
+  }
+
+  stepCloth(dt, p, wind, time, fabric, opts) {
+    const { legs, seat } = clothColliders(p);
+    const gust = Math.sin(time * (1.7 + wind * 2.3)) * 0.5 + 0.5;
+    // walking through still air pushes the cloth back; wind pushes it downwind
+    const ax = -(opts.drag || 0) * 1.6 + (opts.windDir || 1) * wind * fabric * (300 + 500 * gust);
+    this.cloth.step(dt, waistY(p), legs, seat, ax, 0, opts.stiffness ?? 1);
   }
 }
 
@@ -277,7 +296,12 @@ function drawArm(ctx, sh, pose, C, far, rim) {
 export function drawCharacter(ctx, x, y, scale, pose, C) {
   const p = characterPose(pose);
   const { by, hip, sh, shF, near, far, armN, armF, lean } = p;
-  const m = pose.motion?.x ?? munduTargets(p, pose.wind, pose.time, pose.fabric);
+  // without a running simulation (tests, one-off renders) settle a cloth for this pose
+  let motion = pose.motion;
+  if (!motion || !motion.cloth.pts) {
+    motion = new CharacterMotion();
+    motion.update(0, pose, pose.wind || 0, pose.time || 0, pose.fabric ?? 1, { length: pose.munduLength });
+  }
   const rim = pose.rim;
 
   ctx.save();
@@ -296,54 +320,73 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
   drawLeg(ctx, hip, far, C.skinShade, null, true);
   drawLeg(ctx, hip, near, C.skin, rim, true);
 
-  // mundu: from the waist to about the knee, wrapping both thighs with a
-  // little A-line flare; its hem follows the knees on a spring
-  const waist = HIP_Y - 8 + by;
-  const hemY = m.hemY;
-  const front = m.front, back = m.back;
-  // the cloth drapes over the seat: the back edge rounds out below the
-  // waist, a little further when the rear leg swings back
-  const rearKnee = Math.min(near.knee.x, far.knee.x);
-  const seat = { x: -23 + clamp(rearKnee * 0.06, -1.5, 1), y: HIP_Y + 23 + by };
+  // mundu: the cloth simulation's outline, filled opaque. Shading and folds
+  // follow the cloth itself, never the legs.
+  const cloth = motion.cloth.outline();
+  const smoothThrough = (pts, first) => {
+    if (first) ctx.lineTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length - 1; i++) {
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, (pts[i].x + pts[i + 1].x) / 2, (pts[i].y + pts[i + 1].y) / 2);
+    }
+    ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+  };
+  const hemFrontToBack = cloth.hem.slice().reverse();
   const munduBuild = () => {
-    ctx.moveTo(-18, waist);
-    ctx.lineTo(18, waist);
-    ctx.quadraticCurveTo(front + 2, (waist + hemY) / 2, front, hemY);
-    ctx.quadraticCurveTo((front + back) / 2, hemY + 5, back, hemY + 1);
-    // the cloth hangs from the seat to the hem, rounds over the seat and
-    // runs up (under the shirt) to the waist
-    ctx.quadraticCurveTo(seat.x + 0.5, (seat.y + hemY) / 2 + 6, seat.x, seat.y);
-    ctx.bezierCurveTo(seat.x - 1.2, seat.y - 12, -22, waist + 2, -18, waist);
+    ctx.moveTo(cloth.back[0].x, cloth.back[0].y);
+    ctx.lineTo(cloth.front[0].x, cloth.front[0].y);
+    smoothThrough(cloth.front, false);
+    // the hem dips a little between chains, like hanging cloth
+    for (let i = 1; i < hemFrontToBack.length; i++) {
+      const a = hemFrontToBack[i - 1], b = hemFrontToBack[i];
+      ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 + 0.8, b.x, b.y);
+    }
+    smoothThrough(cloth.back.slice().reverse(), false);
     ctx.closePath();
   };
   fillPath(ctx, C.mundu, munduBuild);
-  // a soft shade on the back half, folds and the kasavu hem
   ctx.save();
   ctx.beginPath(); munduBuild(); ctx.clip();
-  ctx.globalAlpha = 0.45;
-  fillPath(ctx, C.munduShade, () => { ctx.rect(back - 10, waist, (front - back) * 0.38 + 10, hemY - waist + 12); });
+  // turning away from the light at the back edge
+  const bx = cloth.back[3].x, fx = cloth.front[3].x;
+  const sg = ctx.createLinearGradient(bx - 2, 0, fx, 0);
+  sg.addColorStop(0, C.munduShade);
+  sg.addColorStop(0.4, C.mundu);
+  sg.addColorStop(1, C.mundu);
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = sg;
+  ctx.fillRect(bx - 10, cloth.back[0].y - 4, fx - bx + 20, 200);
+  ctx.globalAlpha = 1;
+  // two soft folds hang from below the waistband: one long one where the
+  // cloth wraps over, one short one near the back; both follow the cloth
+  ctx.strokeStyle = C.munduShade;
+  ctx.lineWidth = 1.3;
+  ctx.globalAlpha = 0.55;
+  ctx.beginPath();
+  const wrap = cloth.inner[cloth.inner.length - 1].slice(1);
+  ctx.moveTo(wrap[0].x, wrap[0].y);
+  smoothThrough(wrap, false);
+  const short = cloth.inner[0].slice(Math.floor(cloth.inner[0].length * 0.45));
+  ctx.moveTo(short[0].x, short[0].y);
+  smoothThrough(short, false);
+  ctx.stroke();
   ctx.globalAlpha = 1;
   ctx.restore();
   rimLight(ctx, rim, munduBuild, 2.5);
-  ctx.strokeStyle = C.munduShade;
-  ctx.lineWidth = 1.6;
-  ctx.beginPath();
-  ctx.moveTo(3, waist + 6);
-  ctx.quadraticCurveTo(near.knee.x * 0.5 + 2, (waist + hemY) / 2, near.knee.x * 0.8, hemY + 1);
-  ctx.moveTo(-6, waist + 10);
-  ctx.quadraticCurveTo(far.knee.x * 0.4 - 4, (waist + hemY) / 2 + 4, far.knee.x * 0.6 - 2, hemY);
-  ctx.stroke();
+  // kasavu border along the hem
   ctx.strokeStyle = C.kasavu;
-  ctx.lineWidth = 1.6;
+  ctx.lineWidth = 1.7;
   ctx.beginPath();
-  ctx.moveTo(back + 1, hemY - 1);
-  ctx.quadraticCurveTo((front + back) / 2, hemY + 3.5, front - 1, hemY - 2);
+  ctx.moveTo(hemFrontToBack[0].x - 1, hemFrontToBack[0].y - 2);
+  for (let i = 1; i < hemFrontToBack.length; i++) {
+    const a = hemFrontToBack[i - 1], b = hemFrontToBack[i];
+    ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 + 0.5, b.x + (i === hemFrontToBack.length - 1 ? 1 : 0), b.y - 2);
+  }
   ctx.stroke();
 
   leanIn();
   // loose shirt, untucked over the mundu. The back curves (upper back round,
   // small of the back in), the chest is fuller than the belly.
-  const tail = m.tail;
+  const tail = motion.tail;
   const torsoBuild = () => {
     ctx.moveTo(-9, -224 + by);
     ctx.bezierCurveTo(-24, -214 + by, -25, -186 + by, -18, -164 + by);

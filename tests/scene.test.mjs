@@ -126,6 +126,45 @@ test('density above 1 draws more blades; density 1 matches the default field', (
   assert.ok(count(2) > count(1) * 1.3);
 });
 
+test('the legs never show outside the mundu above its hem', () => {
+  for (const [preset, length] of [['sunny', 'folded'], ['wind', 'folded'], ['sunny', 'full']]) {
+    const cfg = createDefaultConfig();
+    cfg.character.munduLength = length;
+    const scene = new Scene(cfg);
+    scene.applyPreset(preset); scene.snapParams();
+    scene.computeView(1920, 1080);
+    let worst = 0;
+    // x of an edge polyline at height y (null if outside its span)
+    const edgeAt = (pts, y) => {
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i], b = pts[i + 1];
+        if ((y - a.y) * (y - b.y) <= 0 && a.y !== b.y) return a.x + ((y - a.y) / (b.y - a.y)) * (b.x - a.x);
+      }
+      return null;
+    };
+    for (let f = 0; f < 60 * 12; f++) {
+      scene.update(1 / 60);
+      if (f < 60) continue;
+      const pose = characterPose(scene.manPose(cfg.character));
+      const o = scene.manMotion.cloth.outline();
+      const hemTop = Math.min(...o.hem.map((p) => p.y)) - 3;
+      for (const leg of [pose.near, pose.far]) {
+        // sample along the thigh and shin, at the leg surface on both sides
+        for (const [a, b, r] of [[pose.hip, leg.knee, 8.5], [leg.knee, leg.ankle, 5.8]]) {
+          for (let t = 0; t <= 1; t += 0.1) {
+            const x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t;
+            if (y > hemTop || y < o.front[0].y + 4) continue;
+            const fx = edgeAt(o.front, y), bx = edgeAt(o.back, y);
+            if (fx !== null) worst = Math.max(worst, x + r - fx);
+            if (bx !== null) worst = Math.max(worst, bx - (x - r));
+          }
+        }
+      }
+    }
+    assert.ok(worst < 1.5, `a leg showed ${worst.toFixed(2)} units outside the ${length} mundu in ${preset}`);
+  }
+});
+
 test('the walk stops cleanly at zero speed', () => {
   const cfg = createDefaultConfig();
   cfg.character.walkSpeed = 0;

@@ -140,7 +140,10 @@ export class Scene {
     // walkSpeed / cadence, which keeps the cadence control meaningful.
     const cycleLen = manSpeed / Math.max(0.05, C.cadence);
     if (moved > 0 && cycleLen > 0) this.walkPhase += (Math.PI * 2 * moved) / cycleLen;
-    this.manMotion.update(dt, this.manPose(C), this.P.wind, this.time, C.fabric);
+    this.manMotion.update(dt, this.manPose(C), this.P.wind, this.time, C.fabric, {
+      length: C.munduLength, drag: moved > 0 ? manSpeed / Math.max(0.1, C.scale) : 0,
+      windDir: cfg.grass.windDir, stiffness: C.clothStiffness,
+    });
     const w = mod(this.manD, trackLen);
     if (this.prevWrap !== null && w < this.prevWrap - trackLen * 0.5) crossed = true;
     this.prevWrap = w;
@@ -178,7 +181,7 @@ export class Scene {
   manPose(C) {
     return {
       phase: this.walkPhase, sweep: this.walkSweep(C), stride: C.stride, bob: C.bob, armSwing: C.armSwing,
-      fabric: C.fabric, wind: this.P.wind, time: this.time,
+      fabric: C.fabric, wind: this.P.wind, time: this.time, munduLength: C.munduLength,
     };
   }
 
