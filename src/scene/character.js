@@ -1,5 +1,6 @@
 import { css, tint, hexToRgb, clamp, lerp } from './util.js';
 import { MunduCloth, MUNDU_LENGTHS } from './mundu.js';
+import { HIP, KNEE, ANKLE, sampleGait } from './gaitData.js';
 
 // Local coordinates: origin at the walking line under the body, facing +x,
 // y negative is up. Total height is ~262 units at scale 1.
@@ -11,8 +12,7 @@ const BASE = {
 };
 
 const LEN = { thigh: 64, shin: 66, upper: 50, fore: 46 };
-const STANCE_REACH = (64 + 66) * 0.98; // hip to ankle on a planted, nearly straight leg
-const HIP_TOP = -8 - STANCE_REACH;     // hip height over a planted foot (ankle at -8)
+const HIP_TOP = -8 - (64 + 66);  // hip height over a planted foot with a straight knee (ankle at -8)
 const HIP_Y = HIP_TOP;
 const SHOULDER = { x: 3, y: -212 };
 const ANKLE_H = 8; // ankle height above the sole
@@ -22,17 +22,22 @@ const HEEL = { x: -7, y: ANKLE_H };
 const TOE = { x: 17, y: ANKLE_H };
 const FOOT = [[-4, -4], [-8, 2], [-7, ANKLE_H], [18, ANKLE_H], [17, 4.5], [8, 1], [3, -3]];
 
-// Gait timing. A foot is on the ground for 60% of the cycle (real walking is
-// about 60/40), so both feet are down for a moment after each contact.
-export const STANCE = 0.6;
+// Gait timing. A foot is on the ground for 62% of the cycle, as in the gait
+// data (gaitData.js), so both feet are down for a moment after each contact.
+export const STANCE = 0.62;
 const HEEL_STRIKE = 0.12; // share of stance spent rolling from heel to flat
 const TOE_OFF = 0.72;     // share of stance where the heel starts to lift
 const HEEL_UP = 0.5;      // foot pitch at toe-off (radians, heel up)
 const TOE_UP = -0.22;     // foot pitch at heel strike (radians, toe up)
-const FOOT_AHEAD = 3;     // planted feet sit slightly ahead of the hips
+// Where the stance sits relative to the hips. In the data the foot lands
+// about 45 units ahead of the hip and leaves about 58 behind it (the knee is
+// already bending at push-off), so the stance is centred slightly behind.
+const AHEAD = -0.15;      // share of the half-sweep the stance is shifted (+ forward, - back)
+const LOAD_FLEX = 0.75;   // share of the data's knee flex used while loading (slow walk)
+const KNEE_SWING = 0.85;  // share of the data's swing knee flex (slow walk)
+const DEG = Math.PI / 180;
 
 const smoothstep = (t) => t * t * (3 - 2 * t);
-const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
 // Joint angle convention: 0 points straight down, positive swings forward (+x).
 const seg = (o, a, l) => ({ x: o.x + Math.sin(a) * l, y: o.y + Math.cos(a) * l });
@@ -46,7 +51,7 @@ const sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
 // body's speed, so in world space it does not move at all.
 // s: 0..1 through stance. half: half the stance sweep in local units.
 function stanceFoot(s, half) {
-  const flatX = half + FOOT_AHEAD - 2 * half * s; // ankle x if the foot were flat
+  const flatX = half * (1 + AHEAD) - 2 * half * s; // ankle x if the foot were flat
   if (s < HEEL_STRIKE) {
     const th = TOE_UP * (1 - smoothstep(s / HEEL_STRIKE));
     const heel = { x: flatX + HEEL.x, y: 0 };
@@ -73,19 +78,36 @@ function solveLeg(hip, target) {
   return { knee, ankle };
 }
 
+// Hip-to-ankle distance for a given knee flexion (radians).
+const legSpan = (k) => Math.sqrt(LEN.thigh ** 2 + LEN.shin ** 2 + 2 * LEN.thigh * LEN.shin * Math.cos(k));
+
 // Where this foot should be. u: 0..1 gait position for this leg
 // (0 = heel strike, leg forward). half: half the stance sweep. lift: knee lift.
-function footTarget(u, half, lift) {
+// While planted, the foot is pinned (stanceFoot). In swing, the hip and knee
+// follow the measured gait curves, scaled to this step length, and blend into
+// the toe-off and heel-strike positions at either end so the foot leaves and
+// lands exactly where it is pinned.
+function footTarget(u, half, lift, hip) {
   if (u < STANCE) return { ...stanceFoot(u / STANCE, half), planted: true };
-  // swing: carry the foot forward on a low arc from toe-off to the next heel strike
   const t = (u - STANCE) / (1 - STANCE);
   const a = stanceFoot(1, half), b = stanceFoot(0, half);
-  const h = (6 + 12 * lift) * Math.pow(Math.sin(Math.PI * t), 0.8);
-  return {
-    ankle: { x: lerp(a.ankle.x, b.ankle.x, easeInOut(t)), y: lerp(a.ankle.y, b.ankle.y, t) - h },
-    th: lerp(HEEL_UP, TOE_UP, smoothstep(t)) + 0.25 * Math.sin(Math.PI * t) * lift,
-    pin: null, pinKind: null, planted: false,
-  };
+  // scale the data's hip angles so heel strike lands at our contact point
+  const hsAngle = Math.atan2(b.ankle.x - hip.x, b.ankle.y - hip.y);
+  const hipScale = hsAngle / (HIP[0] * DEG);
+  const a1 = sampleGait(HIP, u) * DEG * hipScale;
+  const k = sampleGait(KNEE, u) * DEG * KNEE_SWING * lift;
+  const knee = seg(hip, a1, LEN.thigh);
+  const a2 = a1 - k;
+  let ankle = seg(knee, a2, LEN.shin);
+  const wa = 1 - smoothstep(Math.min(1, t / 0.25));
+  const wb = smoothstep(Math.max(0, (t - 0.7) / 0.3));
+  ankle = { x: lerp(lerp(ankle.x, a.ankle.x, wa), b.ankle.x, wb), y: lerp(lerp(ankle.y, a.ankle.y, wa), b.ankle.y, wb) };
+  // keep the toes clear of the ground
+  ankle.y = Math.min(ankle.y, -ANKLE_H - 3 * Math.sin(Math.PI * t));
+  // foot pitch: square to the shin, plus the ankle angle from the data
+  const thFK = -a2 - sampleGait(ANKLE, u) * DEG;
+  const th = lerp(lerp(thFK, HEEL_UP, wa), TOE_UP, wb);
+  return { ankle, th, pin: null, pinKind: null, planted: false };
 }
 
 function legPose(foot, hip) {
@@ -124,19 +146,22 @@ export function characterPose(pose) {
   const ph = pose.phase;
   const u = (((ph / (Math.PI * 2)) % 1) + 1) % 1;
   const half = Math.max(0, pose.sweep || 0) / 2;
-  const nearFoot = footTarget(u, half, pose.stride);
-  const farFoot = footTarget((u + 0.5) % 1, half, pose.stride);
-  // Hip height comes from the planted legs (an inverted pendulum): as high
-  // as the nearly straight stance leg allows, so it rises over the foot and
-  // dips when both feet are down. bob scales that motion.
-  let hipY = HIP_TOP;
-  for (const f of [nearFoot, farFoot]) {
-    if (!f.planted) continue;
-    const dx = f.ankle.x;
-    hipY = Math.max(hipY, f.ankle.y - Math.sqrt(Math.max(0, STANCE_REACH * STANCE_REACH - dx * dx)));
+  const uFar = (u + 0.5) % 1;
+  // Hip height comes from the leg that is taking weight (an inverted
+  // pendulum): its knee flexes a little after heel strike, as in the data,
+  // then straightens, so the body dips after each contact and rises over the
+  // foot. bob scales that motion. The trailing leg just bends to follow.
+  let hipY = -Infinity;
+  for (const lu of [u, uFar]) {
+    if (lu >= 0.5) continue;
+    const f = stanceFoot(lu / STANCE, half);
+    const d = legSpan(sampleGait(KNEE, lu) * DEG * LOAD_FLEX);
+    hipY = Math.max(hipY, f.ankle.y - Math.sqrt(Math.max(0, d * d - f.ankle.x * f.ankle.x)));
   }
   const by = (hipY - HIP_TOP) * pose.bob;
   const hip = { x: 0, y: HIP_TOP + by };
+  const nearFoot = footTarget(u, half, pose.stride, hip);
+  const farFoot = footTarget(uFar, half, pose.stride, hip);
   const near = legPose(nearFoot, hip);
   const far = legPose(farFoot, hip);
   // the near shoulder moves forward as the near arm swings forward, against

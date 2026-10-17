@@ -120,7 +120,7 @@ export function createDefaultConfig() {
       clumping: 0.35, mass: 1,
     },
     character: {
-      visible: true, x: 0.18, scale: 1, walkSpeed: 38, cadence: 0.62,
+      visible: true, x: 0.18, scale: 1, walkSpeed: 70, cadence: 0.5,
       stride: 1, bob: 1, armSwing: 1, fabric: 1, groundOffset: 0,
       munduLength: 'folded', clothStiffness: 1,
     },
