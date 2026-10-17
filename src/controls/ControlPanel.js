@@ -37,6 +37,24 @@ export function createPanel(app) {
   fA.addButton({ title: 'Restart character' }).on('click', () => scene.restartCharacter());
   fA.addButton({ title: 'Reset to preset' }).on('click', () => { scene.resetToPreset(); pane.refresh(); });
 
+  // A2. Opening scene and journey -----------------------------------
+  const fO = pane.addFolder({ title: 'Opening and journey', expanded: false });
+  const openingOptions = {
+    'from the weather': 'auto', 'time of day only': 'time-of-day', Daylight: 'sunny', Overcast: 'overcast',
+    Rain: 'rain', Windy: 'wind', Dawn: 'dawn', Sunset: 'twilight', Night: 'night',
+  };
+  fO.addBinding(config.opening, 'liveWeather', { label: 'live weather' });
+  fO.addBinding(config.opening, 'force', { label: 'opening scene', options: openingOptions })
+    .on('change', () => app.chooseOpening?.());
+  fO.addButton({ title: 'Re-run opening' }).on('click', () => app.chooseOpening?.());
+  fO.addBinding(config.cycle, 'enabled', { label: 'cycle scenes' });
+  bind(fO, config.cycle, 'crossingsPerScene', 'cycle.crossingsPerScene', { label: 'crossings per scene' });
+  if (app.weatherStatus) {
+    fO.addBinding(app.weatherStatus, 'opening', { label: 'opened on', readonly: true });
+    fO.addBinding(app.weatherStatus, 'source', { label: 'chosen from', readonly: true });
+    fO.addBinding(app.weatherStatus, 'detail', { label: 'because', readonly: true });
+  }
+
   // B. Lighting and palette --------------------------------------------
   const fB = pane.addFolder({ title: 'Lighting and palette', expanded: false });
   sc(fB, 'skyTop', 'sky top'); sc(fB, 'skyMid', 'sky middle'); sc(fB, 'skyHorizon', 'sky horizon');

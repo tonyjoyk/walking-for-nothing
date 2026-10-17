@@ -97,6 +97,22 @@ export const PRESET_LABELS = {
   sunny: 'Sunny', twilight: 'Twilight', night: 'Night', rain: 'Rain', wind: 'Wind', dawn: 'Dawn',
 };
 
+// The overcast look: the Rain scene with the rain itself switched off.
+export const OVERCAST = { rain: 0, rainSpeed: 1, leaves: 0 };
+
+// How the opening scene is chosen from the weather (docs/spec-live-weather.md).
+// Times are in minutes, Kerala time. The location is a placeholder until the
+// place is decided.
+export const WEATHER_RULES = {
+  location: { name: 'Kochi (placeholder)', lat: 9.9312, lon: 76.2673 },
+  windKmh: 30, gustKmh: 45,         // at or above: Windy
+  nightMargin: 45,                  // night = more than this after sunset or before sunrise
+  dawnWindow: 45,                   // dawn = within this of sunrise
+  sunsetBefore: 75, sunsetAfter: 45, // sunset scene window
+  maxAgeHours: 3,                   // older weather is ignored
+  fetchTimeoutMs: 2000,             // later than this, the weather is ignored for the visit
+};
+
 // ---------------------------------------------------------------------------
 // Defaults for everything that is not a preset value.
 // ---------------------------------------------------------------------------
@@ -139,6 +155,10 @@ export function createDefaultConfig() {
       flockSize: 5, interval: 28, speed: 70, altitude: 0.7, wingSpeed: 1, scale: 1, chirps: true,
     },
     weather: { rainDensity: 0.7 },
+    // Opening scene from Kerala's weather, then one scene per crossing
+    // (docs/spec-live-weather.md).
+    opening: { liveWeather: true, force: 'auto' },
+    cycle: { enabled: true, crossingsPerScene: 1 },
     finish: { grain: 0.1 },
     audio: {
       enabled: false, muted: false, master: 0.5,
@@ -178,6 +198,7 @@ export const RANGES = {
   'birds.flockSize': [1, 12, 1], 'birds.interval': [5, 180, 1], 'birds.speed': [20, 180, 1],
   'birds.altitude': [0, 1, 0.01], 'birds.wingSpeed': [0.3, 3, 0.01], 'birds.scale': [0.5, 2, 0.01],
   'weather.rainDensity': [0.1, 1, 0.01],
+  'cycle.crossingsPerScene': [1, 6, 1],
   'finish.grain': [0, 0.4, 0.005],
   'audio.master': [0, 1, 0.01], 'audio.wind': [0, 1, 0.01], 'audio.rain': [0, 1, 0.01], 'audio.birds': [0, 1, 0.01],
 };
@@ -188,6 +209,7 @@ export const OPTIONS = {
   'grass.windDir': [1, -1],
   'character.munduLength': ['folded', 'full'],
   'character.sleeve': ['short', 'elbow', 'long'],
+  'opening.force': ['auto', 'time-of-day', 'sunny', 'overcast', 'rain', 'wind', 'dawn', 'twilight', 'night'],
 };
 
 // ---------------------------------------------------------------------------

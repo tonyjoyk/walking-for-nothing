@@ -171,6 +171,27 @@ rises with the wind setting. Rain is filtered noise. Chirps play when a
 flock enters, with a cooldown. Sound starts only after a tap on the button
 in the corner.
 
+## Opening scene and the journey
+
+On load, the site opens on the scene for Kerala's time of day (night, dawn,
+day or sunset, from the sun's times at the location), with no waiting.
+It then reads `weather.json` from the site. If that file is switched on, at
+most 3 hours old, and arrives within 2 seconds, the scene eases into the
+current weather: rain, overcast, windy or clear. After that, each time he
+walks off the right and comes back in on the left, the scene moves to the
+next one: Dawn → Daylight → Windy → Rain → Sunset → Night.
+
+- `public/weather.json` is a placeholder (switched off) until a scheduled
+  job publishes real data. See `docs/spec-live-weather.md`.
+- `?weather=rain` (or `sunny`, `overcast`, `wind`, `dawn`, `twilight`,
+  `night`) forces the opening scene. `?weather=live` uses the weather even
+  when the file is switched off, to preview it.
+- In the dev panel, **Opening and journey** has live weather on/off, a forced
+  opening scene, cycling on/off, crossings per scene, and shows what the
+  site opened on and why.
+- The rules (wind thresholds, dawn and sunset windows, maximum age, location)
+  are `WEATHER_RULES` in `src/config.js`.
+
 ## Credits
 
 Gait curves are the mean of the unbraced trials in the UCI Machine Learning

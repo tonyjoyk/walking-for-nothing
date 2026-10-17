@@ -1,5 +1,6 @@
 import p5 from 'p5';
-import { createDefaultConfig } from './config.js';
+import { createDefaultConfig, WEATHER_RULES } from './config.js';
+import { chooseOpeningScene, validateWeather, SCENE_NAMES } from './weather.js';
 import { Scene } from './scene/Scene.js';
 import { AudioManager } from './audio.js';
 import './styles/main.css';
@@ -12,6 +13,55 @@ config.playback.reducedMotion = reduce.matches;
 
 const scene = new Scene(config);
 const audio = new AudioManager(config);
+
+// ---------------------------------------------------------------------------
+// Opening scene (docs/spec-live-weather.md). The first frame never waits:
+// it opens on the scene for Kerala's time of day, then, if this morning's
+// weather.json arrives within the time limit, eases into the weather scene.
+//   ?weather=rain (or any scene name)  force that opening scene
+//   ?weather=live                      use the weather even if switched off
+// ---------------------------------------------------------------------------
+const params = new URLSearchParams(window.location.search);
+const weatherParam = params.get('weather');
+const weatherStatus = { opening: '', source: '', detail: '' };
+
+function forcedScene() {
+  if (weatherParam && SCENE_NAMES.includes(weatherParam)) return weatherParam;
+  return SCENE_NAMES.includes(config.opening.force) ? config.opening.force : null;
+}
+
+function openOn(name, reason, snap) {
+  scene.applyScene(name);
+  if (snap) scene.snapParams();
+  weatherStatus.opening = name;
+  weatherStatus.detail = reason;
+}
+
+async function chooseOpening() {
+  const now = new Date();
+  const forced = forcedScene();
+  if (forced) { openOn(forced, 'forced', true); weatherStatus.source = 'forced'; return; }
+  const local = chooseOpeningScene(null, now);
+  openOn(local.scene, local.reason, true);
+  weatherStatus.source = 'time of day';
+  if (config.opening.force === 'time-of-day' || !config.opening.liveWeather) return;
+  try {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), WEATHER_RULES.fetchTimeoutMs);
+    const res = await fetch(`${import.meta.env.BASE_URL}weather.json`, { cache: 'no-cache', signal: ctl.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const weather = validateWeather(await res.json(), new Date(), { allowDisabled: weatherParam === 'live' });
+    if (!weather) { weatherStatus.source = 'time of day (weather missing, off or stale)'; return; }
+    const pick = chooseOpeningScene(weather, new Date());
+    weatherStatus.source = `weather, observed ${weather.observedAt.toISOString().slice(11, 16)} UTC`;
+    if (pick.scene !== scene.sceneName) openOn(pick.scene, pick.reason, false); // eases in
+    else weatherStatus.detail = pick.reason;
+  } catch (e) {
+    weatherStatus.source = `time of day (${e.name === 'AbortError' ? 'weather too slow' : 'weather unavailable'})`;
+  }
+}
+chooseOpening();
 scene.onBirdsEnter = () => audio.chirpFlock();
 
 const DENSITY_CAP = { low: 1, medium: 1.5, high: 2 };
@@ -75,7 +125,7 @@ soundBtn.addEventListener('click', async () => {
 });
 syncSoundButton();
 
-const app = { config, scene, audio, syncSoundButton, onAudioChange: null };
+const app = { config, scene, audio, syncSoundButton, onAudioChange: null, weatherStatus, chooseOpening };
 window.__landscape = app; // handy in the console while tuning
 
 // Dev panel: loaded only with ?dev, as a separate chunk visitors never fetch.

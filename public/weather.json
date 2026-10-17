@@ -1,0 +1,11 @@
+{
+  "enabled": false,
+  "location": "Kochi (placeholder)",
+  "observedAt": "2026-10-17T00:00:00Z",
+  "weatherCode": 3,
+  "windKmh": 10,
+  "gustKmh": 18,
+  "sunrise": "06:11",
+  "sunset": "18:05",
+  "note": "Placeholder until the scheduled job (Phase B) publishes real data. Off and stale, so the site uses Kerala's time of day."
+}

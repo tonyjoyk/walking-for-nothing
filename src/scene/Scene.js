@@ -1,4 +1,5 @@
-import { PRESETS, clone } from '../config.js';
+import { PRESETS, OVERCAST, clone } from '../config.js';
+import { nextScene } from '../weather.js';
 import {
   SCENE_W, SCENE_H, HORIZON_Y, FIELD_TOP, GROUND_Y, WRAP_MARGIN,
   hexToRgb, lerp, mod, clamp, css, mix, shade,
@@ -28,6 +29,8 @@ export class Scene {
     this.P = {};                   // current (smoothed) scene parameters
     this.snapParams();
     this.appliedPreset = config.activePreset;
+    this.sceneName = config.activePreset;
+    this.crossingsInScene = 0;
     this.view = { x0: 0, y0: 0, w: SCENE_W, h: SCENE_H, s: 1 };
     this.time = 0;
     this.walkPhase = 0;
@@ -81,6 +84,19 @@ export class Scene {
 
   resetToPreset() { this.applyPreset(this.config.activePreset); }
 
+  // A named scene: one of the six presets, or 'overcast' (Rain without the
+  // rain). Values ease over the transition time as with any preset change.
+  applyScene(name) {
+    if (name === 'overcast') {
+      this.applyPreset('rain');
+      Object.assign(this.config.scene, OVERCAST);
+    } else {
+      this.applyPreset(name);
+    }
+    this.sceneName = name;
+    this.crossingsInScene = 0;
+  }
+
   restartCharacter() { this.needsManPlacement = true; }
   callDog() { this.dog.callNow = true; }
   spawnBirds() { this.birds.spawnNow = true; }
@@ -90,7 +106,12 @@ export class Scene {
   // ---- update -----------------------------------------------------------
   update(rawDt) {
     const cfg = this.config;
-    if (cfg.activePreset !== this.appliedPreset) this.applyPreset(cfg.activePreset);
+    if (cfg.activePreset !== this.appliedPreset) {
+      // the preset was changed by hand (dev panel): the journey continues from it
+      this.applyPreset(cfg.activePreset);
+      this.sceneName = cfg.activePreset;
+      this.crossingsInScene = 0;
+    }
     if (Math.round(cfg.grass.seed) !== this.seed) this.buildWorld();
     else if (cfg.grass.clumping !== this.fieldClumping) {
       this.field = createField(this.seed, cfg.grass.clumping);
@@ -147,6 +168,13 @@ export class Scene {
     const w = mod(this.manD, trackLen);
     if (this.prevWrap !== null && w < this.prevWrap - trackLen * 0.5) crossed = true;
     this.prevWrap = w;
+
+    // The journey: each crossing (as he re-enters from the left) moves on to
+    // the next scene, easing over the transition time.
+    if (crossed && cfg.cycle.enabled) {
+      this.crossingsInScene = (this.crossingsInScene || 0) + 1;
+      if (this.crossingsInScene >= cfg.cycle.crossingsPerScene) this.applyScene(nextScene(this.sceneName || cfg.activePreset));
+    }
     this.manX = this.screenX(this.manD);
 
     // environment clocks
