@@ -1,7 +1,7 @@
 import { PRESETS, clone } from '../config.js';
 import {
   SCENE_W, SCENE_H, HORIZON_Y, FIELD_TOP, GROUND_Y, WRAP_MARGIN,
-  hexToRgb, lerp, mod, clamp, css, mix,
+  hexToRgb, lerp, mod, clamp, css, mix, shade,
 } from './util.js';
 import { drawSky, drawSun, drawStars, createStars } from './sky.js';
 import { createClouds, drawClouds } from './clouds.js';
@@ -205,6 +205,89 @@ export class Scene {
     return out;
   }
 
+  // How strongly a low sun throws long shadows (0 at noon or with no sun).
+  lowSun() {
+    const P = this.P;
+    return clamp((P.sunY - 0.2) / 0.4, 0, 1) * P.sunAlpha * clamp(P.glow + 0.3, 0, 1);
+  }
+
+  // A soft contact shadow under the man and Juhu, drawn on the ground before them.
+  drawContactShadows(ctx, P, cfg) {
+    const C = cfg.character;
+    const col = shade(mix(mix(P.grassMid, P.fieldTop, 0.3), P.skyTop, 0.25), 0.45);
+    const contact = (x, y, rx, ry, a) => {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, rx);
+      g.addColorStop(0, css(col, a));
+      g.addColorStop(1, css(col, 0));
+      ctx.save();
+      ctx.translate(x, y); ctx.scale(1, ry / rx); ctx.translate(-x, -y);
+      ctx.fillStyle = g;
+      ctx.fillRect(x - rx, y - rx, rx * 2, rx * 2);
+      ctx.restore();
+    };
+    if (this.dog.state !== 'absent') {
+      const k = 0.98 * cfg.dog.scale;
+      contact(this.screenX(this.dog.d), GROUND_Y - 1 + C.groundOffset, 62 * k, 9 * k, 0.3);
+    }
+    if (C.visible) contact(this.manX, GROUND_Y + 1 + C.groundOffset, 34 * C.scale, 7 * C.scale, 0.38);
+  }
+
+  // Long shadows when the sun is low: the figures' own silhouettes,
+  // flattened onto the ground and skewed away from the sun (towards the
+  // viewer, since the sun sits behind the scene). Drawn into an offscreen
+  // layer so overlapping limbs don't double up, faded with distance from
+  // the feet, then multiplied over the grass they fall on.
+  drawCastShadows(ctx, P, cfg, pd) {
+    const low = this.lowSun();
+    if (low < 0.05 || typeof document === 'undefined') return;
+    const C = cfg.character;
+    const v = this.view, s = v.s * pd;
+    const cw = Math.round(v.w * s), ch = Math.round(v.h * s);
+    if (!this.shadowLayer) this.shadowLayer = document.createElement('canvas');
+    const L = this.shadowLayer;
+    if (L.width !== cw || L.height !== ch) { L.width = cw; L.height = ch; }
+    const c = L.getContext('2d');
+    const col = css(shade(mix(P.grassMid, P.skyTop, 0.45), 0.55));
+    const flat = new Proxy({}, { get: () => col });
+    const cast = (x, y, scale, draw) => {
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.clearRect(0, 0, cw, ch);
+      c.setTransform(s, 0, 0, s, -v.x0 * s, -v.y0 * s);
+      const dir = P.sunX * SCENE_W >= x ? -1 : 1;
+      const skew = dir * (0.35 + low * 0.45);
+      c.save();
+      c.translate(x, y);
+      c.transform(1, 0, -skew, -0.3, 0, 0); // y' = -0.3·y, x' = x - skew·y
+      draw();
+      c.restore();
+      // fade: strongest at the feet, gone by the far end
+      const len = 270 * scale;
+      c.save();
+      c.globalCompositeOperation = 'destination-in';
+      const g = c.createLinearGradient(x, y, x + skew * len, y + 0.3 * len);
+      g.addColorStop(0, 'rgba(0,0,0,1)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = g;
+      c.fillRect(x - len * 2, y - 20, len * 4, len);
+      c.restore();
+      // one figure at a time: the fade pass clears everything outside its rect
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.globalAlpha = 0.55 * low;
+      ctx.drawImage(L, 0, 0);
+      ctx.restore();
+    };
+    if (this.dog.state !== 'absent') {
+      const dx = this.screenX(this.dog.d), k = 0.98 * cfg.dog.scale;
+      cast(dx, GROUND_Y - 3 + C.groundOffset, k, () => drawDog(c, 0, 0, k, this.dog, flat, this.time));
+    }
+    if (C.visible) {
+      cast(this.manX, GROUND_Y + C.groundOffset, C.scale,
+        () => drawCharacter(c, 0, 0, C.scale, { ...this.manPose(C), motion: this.manMotion, rim: null }, flat));
+    }
+  }
+
   // Rim light from a low sun: on the side of the figure that faces it.
   rimFor(x) {
     const P = this.P;
@@ -290,7 +373,8 @@ export class Scene {
     drawMassCached(ctx, v, P, 'far', this.field, G, motion, pd, this.massCache.far);
     drawBand(ctx, v, P, 'far', this.field, G, motion);
 
-    // Juhu (slightly behind) then the man
+    // shadows on the ground first, then Juhu (slightly behind) and the man
+    this.drawContactShadows(ctx, P, cfg);
     if (this.dog.state !== 'absent') {
       const dx = this.screenX(this.dog.d);
       drawDog(ctx, dx, GROUND_Y - 3 + cfg.character.groundOffset, 0.98 * cfg.dog.scale, this.dog, dogColors(P), this.time);
@@ -304,6 +388,7 @@ export class Scene {
 
     drawMassCached(ctx, v, P, 'mid', this.field, G, motion, pd, this.massCache.mid);
     drawBand(ctx, v, P, 'mid', this.field, G, motion);
+    this.drawCastShadows(ctx, P, cfg, pd);
     drawMassCached(ctx, v, P, 'fore', this.field, G, motion, pd, this.massCache.fore);
     drawBand(ctx, v, P, 'fore', this.field, G, motion);
 

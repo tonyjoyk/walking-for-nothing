@@ -1,4 +1,4 @@
-import { FIELD_TOP, GROUND_Y, SCENE_H, GEN_LEFT, GEN_RIGHT, rng, css, mix, clamp, noise1 } from './util.js';
+import { FIELD_TOP, GROUND_Y, SCENE_H, GEN_LEFT, GEN_RIGHT, rng, css, mix, shade, clamp, noise1 } from './util.js';
 
 // Three depth bands. Far blades sit behind the characters; mid and fore
 // blades are drawn in front of them, which creates the occlusion.
@@ -134,7 +134,14 @@ export function drawMass(ctx, view, P, bandName, bands, G, motion) {
   for (const row of band.rows) {
     const top = row.y;
     const thick = 1 + Math.max(0, G.density - 1) * 0.35;
-  const hBase = band.h(top) * M.rise * G.heightMul * amount * occl * thick;
+    const hBase = band.h(top) * M.rise * G.heightMul * amount * occl * thick;
+    // soft shadow at the roots: painted first, so it shows only in the gaps
+    // between this row's tufts, where light would not reach
+    const sg = ctx.createLinearGradient(0, top - hBase * 0.5, 0, top + 6);
+    sg.addColorStop(0, css(c1, 0));
+    sg.addColorStop(1, css(shade(c1, 0.7), 0.35));
+    ctx.fillStyle = sg;
+    ctx.fillRect(left - M.step, top - hBase * 0.5, right - left + 2 * M.step, hBase * 0.5 + 6);
     const g = ctx.createLinearGradient(0, top - hBase, 0, top + 30);
     g.addColorStop(0, css(c0));
     g.addColorStop(1, css(c1));
@@ -239,8 +246,18 @@ export function drawBand(ctx, view, P, bandName, bands, G, motion) {
   const seedTips = [];
   const glowTips = [];
 
+  // blades darken towards their roots (ambient occlusion), so they grow out
+  // of the undergrowth instead of sitting on it: one vertical gradient per
+  // colour, from full colour at typical tip height to the root colour
+  const tipY = band.y0 - band.h(band.y0) * hMul * 0.7;
+  const rootY = band.y1;
+  const rootCol = massColors(bandName, P)[1];
   for (let bi = 0; bi < band.byBucket.length; bi++) {
-    ctx.fillStyle = css(colors[bi]);
+    const grad = ctx.createLinearGradient(0, tipY, 0, rootY);
+    grad.addColorStop(0, css(colors[bi]));
+    grad.addColorStop(0.55, css(colors[bi]));
+    grad.addColorStop(1, css(mix(colors[bi], rootCol, 0.55)));
+    ctx.fillStyle = grad;
     ctx.beginPath();
     for (const b of band.byBucket[bi]) {
       if (b.rank > G.density || b.x < left || b.x > right) continue;
