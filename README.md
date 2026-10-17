@@ -19,7 +19,7 @@ npm run dev
 
 Build for hosting with `npm run build`. The output is in `dist/`.
 
-**Hosting:** GitHub Pages, deployed by `.github/workflows/deploy.yml` on
+**Hosting:** GitHub Pages at https://tonyjoyk.github.io/walking-for-nothing/, deployed by `.github/workflows/deploy.yml` on
 every push to `main` and every 30 minutes (to refresh Pala's weather).
 Live weather stays off until the repository variable `LIVE_WEATHER` is set
 to `true`; setting it to anything else is the kill switch.

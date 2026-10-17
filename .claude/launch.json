@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "walking-towards-nothing",
+      "name": "walking-for-nothing",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["vite", "--port", "5180", "--strictPort"],
       "port": 5180
