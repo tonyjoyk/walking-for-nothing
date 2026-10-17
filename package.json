@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test \"tests/*.test.mjs\""
+    "test": "node --test \"tests/*.test.mjs\"",
+    "capture": "node tools/capture.mjs"
   },
   "dependencies": {
     "p5": "1.11.3",
