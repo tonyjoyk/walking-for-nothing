@@ -125,6 +125,11 @@ seconds per screen crossing.
 - **Mundu:** a small Verlet cloth (five chains from the waistband) that
   collides with the legs and drapes over the seat, so the legs never show
   through above the hem. Choose folded (knee) or full (ankle) length.
+- **Head and arms:** the head is one profile (skull, brow, projecting nose,
+  lips, chin, jaw) with a single beard shape along the jaw and hair that
+  follows the skull; inside it there is only an eye and a brow. Each arm is
+  one continuous tapered shape with a smooth elbow, a small hand and a
+  sleeve cut square at a rolled cuff.
 - **Light:** a low sun puts a rim light on the side of the figure facing it.
 
 The **Character** section of the dev panel has groups for body, hair,
