@@ -107,7 +107,7 @@ around the man's legs and Juhu's paws. Controls: **clumping** and
 
 **The walk.** One phase value drives the whole body, and it advances with
 distance walked, not time, so the legs can never run ahead of the ground.
-The default is a slow stroll: 0.47 m steps at 60 steps a minute, about 33
+The default is a slow stroll: 0.42 m steps at about 67 steps a minute, about 33
 seconds per screen crossing.
 - **Legs:** hip, knee and ankle follow joint angles measured from real
   walkers (`gaitData.js`), scaled to the step length. While a foot is down

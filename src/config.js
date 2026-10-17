@@ -116,15 +116,15 @@ export function createDefaultConfig() {
     clouds: { parallax: 1 },
     grass: {
       density: 1, heightMul: 1, heightVar: 0.45, bladeWidth: 1,
-      swayAmp: 1, swaySpeed: 1, windDir: 1, occlusion: 1, seedFreq: 0.05, seed: 7,
+      swayAmp: 1, swaySpeed: 1, windDir: 1, occlusion: 0.9, seedFreq: 0.05, seed: 7,
       clumping: 0.35, mass: 1,
     },
     character: {
-      visible: true, x: 0.18, scale: 1, walkSpeed: 70, cadence: 0.5,
-      stride: 1, bob: 1, armSwing: 1, fabric: 1, groundOffset: 0,
-      munduLength: 'folded', clothStiffness: 1,
+      visible: true, x: 0.18, scale: 1, walkSpeed: 70, cadence: 0.56,
+      stride: 0.41, bob: 0.54, armSwing: 0.67, fabric: 0.49, groundOffset: 20,
+      munduLength: 'full', clothStiffness: 0.59,
       // look
-      build: 1, skinColor: '#8e5c3d', hairColor: '#1c1613', beard: true, beardColor: '#2b1f18',
+      build: 0.95, skinColor: '#8e5c3d', hairColor: '#1c1613', beard: true, beardColor: '#2b1f18',
       shirtColor: '#7b4a2c', sleeve: 'elbow', shirtLoose: 1, munduColor: '#f3efe4', kasavuColor: '#c6a24d',
     },
     dog: {
