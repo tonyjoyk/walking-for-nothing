@@ -17,15 +17,15 @@ test('Kerala time is UTC+5:30', () => {
   assert.equal(keralaMinutes(new Date('2026-10-17T18:30:00Z')), 0);
 });
 
-test('approximate sunrise and sunset for Kochi are within the real range all year', () => {
+test('approximate sunrise and sunset for Pala are within the real range all year', () => {
   for (let month = 0; month < 12; month++) {
     const { sunrise, sunset } = approxSunTimes(at(hm(12), 15, month));
     assert.ok(sunrise > hm(5, 50) && sunrise < hm(6, 50), `sunrise ${sunrise} in month ${month + 1}`);
     assert.ok(sunset > hm(17, 50) && sunset < hm(18, 55), `sunset ${sunset} in month ${month + 1}`);
   }
-  // mid October in Kochi: about 06:12 and 18:05
+  // mid October in Pala: about 06:10 and 18:04
   const oct = approxSunTimes(at(hm(12)));
-  assert.ok(Math.abs(oct.sunrise - hm(6, 12)) < 8 && Math.abs(oct.sunset - hm(18, 5)) < 8);
+  assert.ok(Math.abs(oct.sunrise - hm(6, 10)) < 8 && Math.abs(oct.sunset - hm(18, 4)) < 8);
 });
 
 test('the opening scene follows the rules, in priority order', () => {
@@ -135,4 +135,23 @@ test('opening and cycle settings save and load, and bad values are rejected', ()
   const bad = validateConfig({ opening: { force: 'snow', liveWeather: 'yes' }, cycle: { crossingsPerScene: 50 } });
   assert.ok(bad.warnings.includes('opening.force') && bad.warnings.includes('opening.liveWeather'));
   assert.equal(bad.config.cycle.crossingsPerScene, 6);
+});
+
+test('the weather job turns an Open-Meteo response into weather.json the page accepts', async () => {
+  const { toWeatherDoc, openMeteoUrl } = await import('../scripts/fetch-weather.mjs');
+  const om = {
+    utc_offset_seconds: 19800,
+    current: { time: '2026-10-17T22:45', interval: 900, weather_code: 51, wind_speed_10m: 5.64, wind_gusts_10m: 10.4 },
+    daily: { time: ['2026-10-17'], sunrise: ['2026-10-17T06:11'], sunset: ['2026-10-17T18:05'] },
+  };
+  const doc = toWeatherDoc(om, { enabled: true, location: 'Pala, Kottayam' });
+  assert.equal(doc.observedAt, '2026-10-17T17:15:00Z'); // 22:45 IST
+  assert.deepEqual([doc.weatherCode, doc.windKmh, doc.gustKmh, doc.sunrise, doc.sunset], [51, 5.6, 10.4, '06:11', '18:05']);
+  // the page accepts it and opens on rain
+  const v = validateWeather(doc, new Date('2026-10-17T17:30:00Z'));
+  assert.equal(chooseOpeningScene(v, new Date('2026-10-17T17:30:00Z')).scene, 'rain');
+  // switched off unless LIVE_WEATHER is exactly true
+  assert.equal(toWeatherDoc(om, {}).enabled, false);
+  assert.equal(toWeatherDoc({}, { enabled: true }), null);
+  assert.match(openMeteoUrl(), /latitude=9\.71306&longitude=76\.68331/);
 });

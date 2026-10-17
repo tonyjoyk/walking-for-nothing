@@ -55,6 +55,7 @@ async function chooseOpening() {
     if (!weather) { weatherStatus.source = 'time of day (weather missing, off or stale)'; return; }
     const pick = chooseOpeningScene(weather, new Date());
     weatherStatus.source = `weather, observed ${weather.observedAt.toISOString().slice(11, 16)} UTC`;
+    document.getElementById('credit')?.removeAttribute('hidden'); // data used: credit it
     if (pick.scene !== scene.sceneName) openOn(pick.scene, pick.reason, false); // eases in
     else weatherStatus.detail = pick.reason;
   } catch (e) {

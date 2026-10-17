@@ -19,6 +19,11 @@ npm run dev
 
 Build for hosting with `npm run build`. The output is in `dist/`.
 
+**Hosting:** GitHub Pages, deployed by `.github/workflows/deploy.yml` on
+every push to `main` and every 30 minutes (to refresh Pala's weather).
+Live weather stays off until the repository variable `LIVE_WEATHER` is set
+to `true`; setting it to anything else is the kill switch.
+
 Run `npm run capture` (with the dev server running) to render every scene
 beside the reference sheet, the walk in both mundu states and the field
 depth strip into `captures/`.
@@ -181,8 +186,9 @@ current weather: rain, overcast, windy or clear. After that, each time he
 walks off the right and comes back in on the left, the scene moves to the
 next one: Dawn → Daylight → Windy → Rain → Sunset → Night.
 
-- `public/weather.json` is a placeholder (switched off) until a scheduled
-  job publishes real data. See `docs/spec-live-weather.md`.
+- `public/weather.json` is a placeholder (switched off). The deploy workflow
+  replaces it with Pala's current weather (`scripts/fetch-weather.mjs`) every
+  30 minutes. See `docs/spec-live-weather.md`.
 - `?weather=rain` (or `sunny`, `overcast`, `wind`, `dawn`, `twilight`,
   `night`) forces the opening scene. `?weather=live` uses the weather even
   when the file is switched off, to preview it.
@@ -193,6 +199,10 @@ next one: Dawn → Daylight → Windy → Rain → Sunset → Night.
   are `WEATHER_RULES` in `src/config.js`.
 
 ## Credits
+
+Live weather: data by [Open-Meteo.com](https://open-meteo.com/), licensed
+CC BY 4.0. A small credit appears on the page when the opening scene comes
+from it.
 
 Gait curves are the mean of the unbraced trials in the UCI Machine Learning
 Repository "Multivariate Gait Data"

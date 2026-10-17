@@ -1,6 +1,6 @@
 # Spec: opening on today's weather
 
-**Status:** Phase A built (17 Oct 2026); Phase B waits on the location and hosting · **Owner:** Tony · **Decision:** Kerala's weather (option A)
+**Status:** Phase A built (17 Oct 2026); Phase B built: Pala, Kottayam; GitHub Pages · **Owner:** Tony · **Decision:** Kerala's weather (option A)
 
 ## Summary
 

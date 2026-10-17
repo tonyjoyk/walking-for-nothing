@@ -101,10 +101,9 @@ export const PRESET_LABELS = {
 export const OVERCAST = { rain: 0, rainSpeed: 1, leaves: 0 };
 
 // How the opening scene is chosen from the weather (docs/spec-live-weather.md).
-// Times are in minutes, Kerala time. The location is a placeholder until the
-// place is decided.
+// Times are in minutes, Kerala time.
 export const WEATHER_RULES = {
-  location: { name: 'Kochi (placeholder)', lat: 9.9312, lon: 76.2673 },
+  location: { name: 'Pala, Kottayam', lat: 9.71306, lon: 76.68331 },
   windKmh: 30, gustKmh: 45,         // at or above: Windy
   nightMargin: 45,                  // night = more than this after sunset or before sunrise
   dawnWindow: 45,                   // dawn = within this of sunrise

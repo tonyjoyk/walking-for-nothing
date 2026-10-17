@@ -47,3 +47,16 @@ html, body {
   z-index: 10;
 }
 #devpanel.hidden { display: none; }
+
+/* Credit for the live weather data (Open-Meteo, CC BY 4.0): shown only when
+   the opening scene came from it. Small and quiet, bottom left. */
+.credit {
+  position: fixed;
+  left: max(10px, env(safe-area-inset-left));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  font: 11px/1.2 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.credit:hover, .credit:focus-visible { color: rgba(255, 255, 255, 0.9); }

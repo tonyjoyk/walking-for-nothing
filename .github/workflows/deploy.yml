@@ -1,0 +1,57 @@
+# Builds and publishes the site to GitHub Pages, and refreshes Pala's
+# weather (weather.json) every 30 minutes (docs/spec-live-weather.md).
+#
+# Live weather is OFF until the repository variable LIVE_WEATHER is set to
+# "true" (Settings > Secrets and variables > Actions > Variables). Setting it
+# back to anything else switches live weather off at the next run: the kill
+# switch, no code change needed. ?weather=live previews it while off.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Fetch the weather for Pala
+        run: node scripts/fetch-weather.mjs public/weather.json
+        env:
+          LIVE_WEATHER: ${{ vars.LIVE_WEATHER }}
+      - run: npm run build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
