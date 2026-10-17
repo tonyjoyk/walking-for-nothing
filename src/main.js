@@ -10,6 +10,13 @@ p5.disableFriendlyErrors = true; // faster; the scene does its own validation
 const config = createDefaultConfig();
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 config.playback.reducedMotion = reduce.matches;
+const isDev = new URLSearchParams(window.location.search).has('dev');
+
+// Phones and tablets start at medium quality (fewer blades, lower pixel
+// density); any device steps down further if it can't hold a smooth frame
+// rate (see adaptQuality). The dev panel's own choice is always respected.
+const coarse = window.matchMedia('(pointer: coarse)').matches;
+if (coarse || Math.min(window.innerWidth, window.innerHeight) < 600) config.playback.quality = 'medium';
 
 const scene = new Scene(config);
 const audio = new AudioManager(config);
@@ -86,16 +93,36 @@ new p5((p) => {
     c.elt.setAttribute('role', 'img');
     applyQuality();
     p.frameRate(60);
+    // know the screen before the first update, so the man starts on screen
+    scene.computeView(p.width, p.height);
   };
   p.windowResized = () => p.resizeCanvas(window.innerWidth, window.innerHeight);
   p.draw = () => {
     applyQuality();
     const dt = Math.min(p.deltaTime / 1000, 0.05);
+    adaptQuality(dt);
     scene.update(dt);
     scene.render(p.drawingContext, p.width, p.height, p.pixelDensity());
     audio.update(scene.P, dt);
   };
 });
+
+// If the frame rate stays below ~40 fps for a few seconds (after a short
+// warm-up), step quality down one level, at most twice. Stops adapting once
+// someone picks a quality in the dev panel.
+const STEPS = ['high', 'medium', 'low'];
+let adaptClock = 0, slowFor = 0, expected = config.playback.quality;
+function adaptQuality(dt) {
+  if (config.playback.quality !== expected) return; // changed by hand: leave it
+  adaptClock += dt;
+  if (adaptClock < 4 || document.hidden) return;
+  slowFor = scene.fps < 40 ? slowFor + dt : 0;
+  const i = STEPS.indexOf(config.playback.quality);
+  if (slowFor > 3 && i >= 0 && i < STEPS.length - 1) {
+    config.playback.quality = expected = STEPS[i + 1];
+    slowFor = 0; adaptClock = 0;
+  }
+}
 
 // Pause everything when the tab is hidden (battery on phones).
 document.addEventListener('visibilitychange', () => {
@@ -130,6 +157,6 @@ const app = { config, scene, audio, syncSoundButton, onAudioChange: null, weathe
 window.__landscape = app; // handy in the console while tuning
 
 // Dev panel: loaded only with ?dev, as a separate chunk visitors never fetch.
-if (new URLSearchParams(window.location.search).has('dev')) {
+if (isDev) {
   import('./controls/ControlPanel.js').then((m) => m.createPanel(app));
 }
