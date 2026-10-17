@@ -1,4 +1,4 @@
-import { HORIZON_Y, GEN_LEFT, GEN_RIGHT, rng, css, mix, shade } from './util.js';
+import { HORIZON_Y, SCENE_W, SCENE_H, GEN_LEFT, GEN_RIGHT, rng, css, mix, shade } from './util.js';
 
 // ---------------------------------------------------------------------------
 // Mountains: hand-placed peaks inside the 1920 frame for composition,
@@ -107,12 +107,27 @@ function fillRidge(ctx, pts, color, haze, base) {
   ctx.fill();
 }
 
-// Low-poly hint: each peak gets one lit face and one shadow face.
-function facets(ctx, pts, color, P, base, strength) {
+// Deterministic jitter so the faces never flicker.
+const jit = (x, k) => {
+  const v = Math.sin(x * 12.9898 + k * 78.233) * 43758.5453;
+  return (v - Math.floor(v)) * 2 - 1;
+};
+
+// Faceted light and shade that follows the terrain. For each peak:
+// - the shadow face runs along the actual ridge from the peak down to the
+//   saddle on the side away from the sun, then down a jittered gully to the
+//   base, and back up a spine line under the peak;
+// - the lit face takes the upper part of the sun-facing slope.
+// Each face's strength comes from how its slope faces the sun (Lambert, as
+// in hillshading). Shadow is lit by the sky, so it takes the sky's hue
+// instead of just darkening; the lit side warms towards the sun.
+// contrast: 1 for the nearest range, lower for distant ones (atmospheric
+// perspective).
+function facets(ctx, pts, color, P, base, strength, contrast = 1, rim = 0) {
   if (strength <= 0.01) return;
-  const lightOnRight = P.sunX >= 0.5;
-  const lit = mix(color, P.skyHorizon, 0.5);
-  const dark = shade(color, 0.82);
+  const shadowCol = shade(mix(color, P.skyTop, 0.4), 0.8);
+  const litCol = mix(mix(color, P.sunColor, 0.3), P.skyHorizon, 0.25);
+  const sun = { x: P.sunX * SCENE_W, y: P.sunY * SCENE_H };
   ctx.save();
   ctx.beginPath();
   ctx.moveTo(pts[0].x, base);
@@ -120,44 +135,121 @@ function facets(ctx, pts, color, P, base, strength) {
   ctx.lineTo(pts[pts.length - 1].x, base);
   ctx.closePath();
   ctx.clip();
+
+  // how much a run of ridge points faces the sun, 0..1
+  const facing = (from, to) => {
+    let sum = 0, n = 0;
+    const step = from < to ? 1 : -1;
+    for (let i = from; i !== to; i += step) {
+      const a = pts[i], b = pts[i + step];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const len = Math.hypot(dx, dy) || 1;
+      // outward normal of the slope (pointing up and out of the mountain)
+      let nx = dy / len, ny = -dx / len;
+      if (ny > 0) { nx = -nx; ny = -ny; }
+      const lx = sun.x - (a.x + b.x) / 2, ly = sun.y - (a.y + b.y) / 2;
+      const ll = Math.hypot(lx, ly) || 1;
+      sum += Math.max(0, (nx * lx + ny * ly) / ll); n++;
+    }
+    return n ? sum / n : 0.5;
+  };
+
   for (let i = 1; i < pts.length - 1; i++) {
     const p = pts[i];
     if (!p.peak) continue;
     let li = i - 1; while (li > 0 && pts[li].mid) li--;
     let ri = i + 1; while (ri < pts.length - 1 && pts[ri].mid) ri++;
-    const L = pts[li];
-    const R = pts[ri];
-    const litSide = lightOnRight ? R : L;
-    const darkSide = lightOnRight ? L : R;
-    const footLit = p.x + (litSide.x - p.x) * 0.22;
-    ctx.fillStyle = css(lit, 0.42 * strength);
+    const sunRight = sun.x >= p.x;
+    const shadowEnd = sunRight ? li : ri; // saddle away from the sun
+    const litEnd = sunRight ? ri : li;
+    const sd = sunRight ? -1 : 1;          // shadow side direction
+    const h = base - p.y;
+    const width = Math.abs(pts[shadowEnd].x - p.x);
+
+    // spine: from the peak down towards the viewer, leaning into the shadow side
+    const spine = [];
+    for (let k = 0; k <= 4; k++) {
+      const u = k / 4;
+      spine.push({ x: p.x + sd * width * 0.18 * u + jit(p.x, k) * width * 0.05 * u, y: p.y + h * u });
+    }
+    // gully: from the shadow-side saddle down to the base
+    const sad = pts[shadowEnd];
+    const gully = [];
+    for (let k = 0; k <= 3; k++) {
+      const u = k / 3;
+      gully.push({ x: sad.x - sd * width * 0.12 * u + jit(sad.x, k + 7) * width * 0.04 * u, y: sad.y + (base - sad.y) * u });
+    }
+
+    const kShadow = facing(i, shadowEnd);
+    const shadowA = strength * contrast * (0.55 + 0.45 * (1 - kShadow));
+    const g = ctx.createLinearGradient(0, p.y, 0, base);
+    g.addColorStop(0, css(shadowCol, shadowA));
+    g.addColorStop(1, css(shadowCol, shadowA * 0.35));
+    ctx.fillStyle = g;
     ctx.beginPath();
     ctx.moveTo(p.x, p.y);
-    ctx.lineTo(litSide.x, litSide.y);
-    ctx.lineTo(litSide.x + (litSide.x - p.x) * 0.15, base);
-    ctx.lineTo(footLit, base);
+    for (let j = i + (sunRight ? -1 : 1); j !== shadowEnd + (sunRight ? -1 : 1); j += sunRight ? -1 : 1) ctx.lineTo(pts[j].x, pts[j].y);
+    for (const q of gully) ctx.lineTo(q.x, q.y);
+    for (let k = spine.length - 1; k >= 0; k--) ctx.lineTo(spine[k].x, spine[k].y);
     ctx.closePath();
     ctx.fill();
-    const footDark = p.x + (darkSide.x - p.x) * 0.55;
-    ctx.fillStyle = css(dark, 0.35 * strength);
+
+    // lit face: the upper part of the sun-facing slope
+    const kLit = facing(i, litEnd);
+    const litA = strength * contrast * 0.7 * (0.4 + 0.6 * kLit);
+    const lg = ctx.createLinearGradient(0, p.y, 0, p.y + h * 0.7);
+    lg.addColorStop(0, css(litCol, litA));
+    lg.addColorStop(1, css(litCol, 0));
+    ctx.fillStyle = lg;
     ctx.beginPath();
     ctx.moveTo(p.x, p.y);
-    ctx.lineTo(footDark, base);
-    ctx.lineTo(p.x + (darkSide.x - p.x) * 0.2, base);
+    const ls = sunRight ? 1 : -1;
+    for (let j = i + ls; j !== litEnd + ls; j += ls) ctx.lineTo(pts[j].x, pts[j].y);
+    ctx.lineTo(pts[litEnd].x - ls * Math.abs(pts[litEnd].x - p.x) * 0.3, base);
+    for (let k = spine.length - 1; k >= 0; k--) ctx.lineTo(spine[k].x, spine[k].y);
     ctx.closePath();
     ctx.fill();
+
+    // a faint secondary fold from the lit-side saddle
+    const ls2 = pts[litEnd];
+    ctx.fillStyle = css(shadowCol, strength * contrast * 0.25);
+    ctx.beginPath();
+    ctx.moveTo(ls2.x, ls2.y);
+    ctx.lineTo(ls2.x + ls * 14 + jit(ls2.x, 3) * 6, base);
+    ctx.lineTo(ls2.x - ls * 22, base);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // rim light: a thin warm line along crests that face a low sun
+  if (rim > 0.02) {
+    ctx.strokeStyle = css(mix(P.sunColor, [255, 255, 255], 0.4), rim);
+    ctx.lineWidth = 1.6;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      const facesSun = (sun.x >= Math.max(a.x, b.x) && b.y > a.y) || (sun.x <= Math.min(a.x, b.x) && b.y < a.y);
+      if (!facesSun) continue;
+      ctx.moveTo(a.x, a.y + 0.8);
+      ctx.lineTo(b.x, b.y + 0.8);
+    }
+    ctx.stroke();
   }
   ctx.restore();
 }
 
+// How low (and present) the sun is, 0..1: drives rim light.
+const lowSun = (P) => Math.min(1, Math.max(0, (P.sunY - 0.2) / 0.4)) * P.sunAlpha;
+
 export function drawFarMountains(ctx, P, T) {
   fillRidge(ctx, T.far, P.mtnFar, P.haze, HORIZON_Y);
-  facets(ctx, T.far, P.mtnFar, P, HORIZON_Y, P.facet * 0.8);
+  facets(ctx, T.far, P.mtnFar, P, HORIZON_Y, P.facet * 1.6, 0.45, 0);
 }
 
 export function drawMidMountains(ctx, P, T) {
   fillRidge(ctx, T.mid, P.mtnMid, P.haze, HORIZON_Y);
-  facets(ctx, T.mid, P.mtnMid, P, HORIZON_Y, P.facet);
+  facets(ctx, T.mid, P.mtnMid, P, HORIZON_Y, P.facet * 1.6, 1, 0.55 * lowSun(P));
 }
 
 export function drawNearHills(ctx, P, T) {
