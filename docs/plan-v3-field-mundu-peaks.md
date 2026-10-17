@@ -1,6 +1,6 @@
 # Plan: field depth, mundu and peaks
 
-**Status:** proposed, not started. **Date:** 17 Oct 2026.
+**Status:** Phases 0 and 1 done (17 Oct 2026). Phases 2–4 next.
 
 ## Goals
 
@@ -223,7 +223,13 @@ This is kept separate so the three goals above land first.
 Each phase is pushed after its tests pass, so any step can be reverted on
 its own.
 
-## Decisions to confirm
+## Decisions (confirmed 17 Oct 2026)
+
+All three as proposed: parting near zero when raised and gentler overall
+(default strength 0.6) with a control; dark green border by default; full
+length stays the default mundu.
+
+## Decisions to confirm (original)
 
 1. **Parting:** near zero when he's up, rising as he goes down. Overall
    gentler than today, with a strength control. Is that right?

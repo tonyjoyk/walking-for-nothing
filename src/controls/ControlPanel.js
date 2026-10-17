@@ -76,6 +76,7 @@ export function createPanel(app) {
   bind(fD, G, 'occlusion', 'grass.occlusion', { label: 'occlusion height' });
   bind(fD, G, 'clumping', 'grass.clumping', { label: 'clumping' });
   bind(fD, G, 'mass', 'grass.mass', { label: 'undergrowth' });
+  bind(fD, G, 'parting', 'grass.parting', { label: 'grass parting' });
   bind(fD, G, 'seedFreq', 'grass.seedFreq', { label: 'seed heads' });
   bind(fD, G, 'seed', 'grass.seed', { label: 'layout seed' });
   fD.addButton({ title: 'New layout' }).on('click', () => { G.seed = 1 + Math.floor(Math.random() * 9998); pane.refresh(); });
@@ -90,7 +91,7 @@ export function createPanel(app) {
   bind(fBody, Ch, 'scale', 'character.scale', { label: 'height' });
   bind(fBody, Ch, 'build', 'character.build', { label: 'build' });
   fBody.addBinding(Ch, 'skinColor', { label: 'skin' });
-  bind(fBody, Ch, 'groundOffset', 'character.groundOffset', { label: 'ground offset (man + Juhu)' });
+  bind(fBody, Ch, 'groundOffset', 'character.groundOffset', { label: 'ground offset (− on grass · + in hay)' });
   bind(fBody, Ch, 'x', 'character.x', { label: 'start position' });
 
   const fHair = fE.addFolder({ title: 'Hair', expanded: false });

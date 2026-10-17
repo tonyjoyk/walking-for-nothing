@@ -185,25 +185,48 @@ export class Scene {
     };
   }
 
-  // Legs and paws push the grass aside as they move through it.
+  // How deep the man and Juhu are in the field, from the ground offset:
+  // 0 = raised, walking on a grassy field; 1 = lowered, wading through hay.
+  // Grass height in front of them, grass parting and contact shadows all
+  // follow it, so the offset alone moves between the two feels.
+  fieldDepth() {
+    return clamp((this.config.character.groundOffset + 20) / 40, 0, 1);
+  }
+
+  // Grass settings as drawn: quality scales density, and the band in front
+  // of the figures is shorter the higher they stand.
+  grassSettings() {
+    const cfg = this.config;
+    return {
+      ...cfg.grass,
+      density: cfg.grass.density * this.quality.grassScale,
+      occlusion: cfg.grass.occlusion * lerp(0.55, 1, this.fieldDepth()),
+    };
+  }
+
+  // Legs and paws push the grass aside as they move through it: barely when
+  // walking on top of the field, more when wading through it. Both feet push
+  // equally, so the grass moves as a calm wake, not a step-by-step twitch.
   grassPushers() {
     const cfg = this.config;
     const out = [];
+    const strength = (cfg.grass.parting ?? 1) * lerp(0.1, 1, this.fieldDepth());
+    if (strength < 0.005) return out;
     if (cfg.character.visible) {
       const C = cfg.character;
       const p = characterPose(this.manPose(C));
       const k = C.scale;
-      out.push({ x: this.manX, y: GROUND_Y + 8 + C.groundOffset, r: 46 * k, k: 0.16 });
+      out.push({ x: this.manX, y: GROUND_Y + 8 + C.groundOffset, r: 46 * k, k: 0.16 * strength });
       for (const leg of [p.near, p.far]) {
-        out.push({ x: this.manX + leg.ankle.x * k, y: GROUND_Y + 8 + C.groundOffset, r: 30 * k, k: leg.planted ? 0.22 : 0.34 });
+        out.push({ x: this.manX + leg.ankle.x * k, y: GROUND_Y + 8 + C.groundOffset, r: 30 * k, k: 0.26 * strength });
       }
     }
     if (this.dog.state !== 'absent') {
       const dx = this.screenX(this.dog.d);
       const k = 0.98 * cfg.dog.scale;
       const gy = GROUND_Y + 5 + cfg.character.groundOffset;
-      out.push({ x: dx - 36 * k, y: gy, r: 26 * k, k: 0.35 });
-      out.push({ x: dx + 34 * k, y: gy, r: 26 * k, k: 0.35 });
+      out.push({ x: dx - 36 * k, y: gy, r: 26 * k, k: 0.35 * strength });
+      out.push({ x: dx + 34 * k, y: gy, r: 26 * k, k: 0.35 * strength });
     }
     return out;
   }
@@ -228,11 +251,14 @@ export class Scene {
       ctx.fillRect(x - rx, y - rx, rx * 2, rx * 2);
       ctx.restore();
     };
+    // standing on the grass: a tighter, darker shadow; in the hay: soft and diffuse
+    const d = this.fieldDepth();
+    const size = lerp(0.85, 1.15, d), dark = lerp(1.35, 0.85, d);
     if (this.dog.state !== 'absent') {
-      const k = 0.98 * cfg.dog.scale;
-      contact(this.screenX(this.dog.d), GROUND_Y - 1 + C.groundOffset, 62 * k, 9 * k, 0.3);
+      const k = 0.98 * cfg.dog.scale * size;
+      contact(this.screenX(this.dog.d), GROUND_Y - 1 + C.groundOffset, 62 * k, 9 * k, 0.3 * dark);
     }
-    if (C.visible) contact(this.manX, GROUND_Y + 1 + C.groundOffset, 34 * C.scale, 7 * C.scale, 0.38);
+    if (C.visible) contact(this.manX, GROUND_Y + 1 + C.groundOffset, 34 * C.scale * size, 7 * C.scale * size, 0.38 * dark);
   }
 
   // Long shadows when the sun is low: the figures' own silhouettes,
@@ -367,7 +393,7 @@ export class Scene {
     // field
     drawFieldBase(ctx, v, P);
     const reduce = cfg.playback.reducedMotion ? 0.35 : 1;
-    const G = { ...cfg.grass, density: cfg.grass.density * Q.grassScale };
+    const G = this.grassSettings();
     const motion = {
       swayT: this.swayT, windT: this.windT, wind: P.wind,
       windDir: cfg.grass.windDir, swayAmp: cfg.grass.swayAmp * reduce,

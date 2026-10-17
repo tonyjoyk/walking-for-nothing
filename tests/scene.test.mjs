@@ -182,6 +182,37 @@ test('every character look option renders without NaN', () => {
   assert.ok(['character.sleeve', 'character.munduLength', 'character.skinColor'].every((k) => bad.warnings.includes(k)));
 });
 
+test('ground offset moves between a grassy field (up) and a hay field (down)', () => {
+  const at = (offset) => {
+    const cfg = createDefaultConfig();
+    cfg.character.groundOffset = offset;
+    const scene = new Scene(cfg);
+    scene.computeView(1920, 1080);
+    scene.callDog();
+    for (let i = 0; i < 60 * 12; i++) scene.update(1 / 60);
+    const push = scene.grassPushers().reduce((a, p) => a + p.k, 0);
+    return { cfg, depth: scene.fieldDepth(), occlusion: scene.grassSettings().occlusion, push };
+  };
+  const up = at(-20), mid = at(0), down = at(20);
+  assert.equal(up.depth, 0); assert.equal(down.depth, 1);
+  // in the hay the grass in front is exactly the configured height
+  assert.equal(down.occlusion, down.cfg.grass.occlusion);
+  // on the grass it is clearly shorter, and in between it is in between
+  assert.ok(up.occlusion < down.occlusion * 0.6);
+  assert.ok(up.occlusion < mid.occlusion && mid.occlusion < down.occlusion);
+  // parting is near zero on top of the field and grows with depth
+  assert.ok(up.push < down.push * 0.15, `parting up ${up.push} vs down ${down.push}`);
+  assert.ok(mid.push > up.push && mid.push < down.push);
+});
+
+test('grass parting strength 0 turns parting off', () => {
+  const cfg = createDefaultConfig();
+  cfg.grass.parting = 0;
+  const scene = new Scene(cfg);
+  scene.update(1 / 60);
+  assert.equal(scene.grassPushers().length, 0);
+});
+
 test('the walk stops cleanly at zero speed', () => {
   const cfg = createDefaultConfig();
   cfg.character.walkSpeed = 0;
