@@ -1,6 +1,6 @@
 # Plan: field depth, mundu and peaks
 
-**Status:** Phases 0 and 1 done (17 Oct 2026). Phases 2–4 next.
+**Status:** Phases 0–3 done (17 Oct 2026). Phase 4 (head and arms) optional, not started.
 
 ## Goals
 

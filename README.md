@@ -19,6 +19,10 @@ npm run dev
 
 Build for hosting with `npm run build`. The output is in `dist/`.
 
+Run `npm run capture` (with the dev server running) to render every scene
+beside the reference sheet, the walk in both mundu states and the field
+depth strip into `captures/`.
+
 Run the regression tests with `npm test`. They render every preset, every
 control extreme and several screen sizes headlessly, and check for NaN
 geometry, sliding feet and paws, and config save/load.
@@ -129,11 +133,25 @@ sleeve and looseness, mundu and kasavu colours, mundu length, cloth
 stiffness, walking speed, steps per minute, arm swing, knee lift, bob,
 and a **ground offset** that moves the man and Juhu up or down together.
 
-**Light and shadow.** Mountain faces follow each ridge from the peak down
-to its saddle and gullies. Each face is shaded by how its slope faces the
-sun, with sky-tinted shadows and less contrast on distant ranges. The man
-and Juhu have soft contact shadows, and long shadows that fall across the
-grass when the sun is low. Grass blades darken towards their roots.
+**Light and shadow.** The mountains follow flat landscape illustration:
+one dominant peak with smaller peaks beside it (more continue past the
+frame on wide screens). Each peak's sun-facing side is a single lit plane
+that fades into the haze, and distant ranges are paler with less contrast.
+The man and Juhu have soft contact shadows, and long shadows that fall
+across the grass when the sun is low. Grass blades darken towards their
+roots.
+
+**Field depth.** The ground offset (Character → Body) also sets how deep
+the figures are in the field. Raised, the grass in front of them is short
+and barely moves, so he walks on a grassy field; lowered, the hay is tall
+and parts as he wades through it. **Grass parting** (Field and grass) sets
+the strongest it gets.
+
+**The mundu** has two states. **Full** reaches the ankles and hides the
+legs. **Folded** is hitched up and tucked at the front, so the hem rises
+towards the front and the shins show. In both, the border (dark green by
+default) runs along the hem and up the edge of the outer layer, and is
+drawn from the cloth's own points so it moves with it.
 
 **Juhu.** Her states are `absent → approaching → together → departing`.
 She trots to catch up, eases into a walk beside him, walks one screen width
