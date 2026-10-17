@@ -120,15 +120,62 @@ export function footPoints(leg) {
   return { heel: add(leg.ankle, rot(HEEL, leg.footAngle)), toe: add(leg.ankle, rot(TOE, leg.footAngle)) };
 }
 
-function armPose(phase, swing, shoulder) {
-  // arms swing opposite to the leg on the same side; the forearm trails a
-  // little behind the upper arm (follow-through)
-  const ua = -0.36 * swing * Math.sin(phase);
-  const elbow = seg(shoulder, ua, LEN.upper);
-  const lag = phase - 0.55;
-  const fa = ua + 0.2 + 0.3 * swing * Math.max(0, -Math.sin(lag)) - 0.08 * swing * Math.sin(lag);
+// Arm swing targets from gait studies (Murray 1967 and later): the shoulder
+// swings about 8° forward to 25° back, furthest forward at the opposite
+// foot's heel strike, lagging it slightly; the elbow bends about 8° on the
+// back swing and 40° on the front swing, lagging the shoulder by a further
+// ~7% of the cycle. Angles in radians, positive = forward.
+// armU: the gait position of the leg on the same side as this arm.
+function armTargets(armU, swing) {
+  const ph = 2 * Math.PI * (armU - 0.5 - 0.06);
+  const shoulder = (-8.5 + 16.5 * Math.cos(ph)) * DEG * swing;
+  // a hanging arm keeps a relaxed bend of about 12°
+  const elbow = (12 + (12 + 16 * Math.cos(ph - 2 * Math.PI * 0.07)) * Math.min(1.2, swing)) * DEG;
+  return { shoulder, elbow };
+}
+
+function armFromAngles(shoulder, a) {
+  const elbow = seg(shoulder, a.shoulder, LEN.upper);
+  const fa = a.shoulder + a.elbow;
   const hand = seg(elbow, fa, LEN.fore);
   return { elbow, hand, fa };
+}
+
+// Arms as driven, damped pendulums (after Collins, Adamczyk & Kuo 2009 and
+// Pontzer et al. 2009): the arm hangs from a shoulder that moves with the
+// trunk, and swings mostly passively. A gentle spring towards the gait
+// targets stands in for muscle tone and keeps the swing in step; the
+// forearm is a second pendulum that reacts to the upper arm's acceleration.
+const ARM = {
+  g: 1470,          // units/s² (150 units ≈ 1 m)
+  lUpper: 43,       // effective pendulum length of the whole arm
+  tone: 0.35,       // muscle spring as a share of the gravity stiffness
+  dampShoulder: 0.22, dampElbow: 0.4,
+};
+
+class ArmPendulum {
+  constructor() { this.a = null; this.v = { shoulder: 0, elbow: 0 }; this.prevSh = null; this.shV = 0; }
+
+  step(dt, target, shoulderPos) {
+    if (!this.a) { this.a = { ...target }; this.prevSh = shoulderPos.x; return; }
+    // horizontal acceleration of the shoulder (trunk counter-rotation)
+    const shV = (shoulderPos.x - this.prevSh) / dt;
+    const shA = (shV - this.shV) / dt;
+    this.prevSh = shoulderPos.x; this.shV = shV;
+    const w2 = ARM.g / ARM.lUpper;
+    const K = w2 * (1 + ARM.tone);
+    const c1 = 2 * ARM.dampShoulder * Math.sqrt(K);
+    // gravity and tone pull towards the target; a moving pivot swings the arm
+    const acc1 = K * (target.shoulder - this.a.shoulder) - c1 * this.v.shoulder
+      - (clamp(shA, -4000, 4000) * Math.cos(this.a.shoulder)) / ARM.lUpper;
+    this.v.shoulder += acc1 * dt;
+    this.a.shoulder += this.v.shoulder * dt;
+    const Ke = K * 0.8;
+    const c2 = 2 * ARM.dampElbow * Math.sqrt(Ke);
+    const acc2 = Ke * (target.elbow - this.a.elbow) - c2 * this.v.elbow - acc1 * 0.35;
+    this.v.elbow += acc2 * dt;
+    this.a.elbow = clamp(this.a.elbow + this.v.elbow * dt, 4 * DEG, 75 * DEG);
+  }
 }
 
 export function characterColors(P) {
@@ -166,15 +213,17 @@ export function characterPose(pose) {
   const far = legPose(farFoot, hip);
   // the near shoulder moves forward as the near arm swings forward, against
   // the hips (counter-rotation seen from the side)
-  const armPh = ph + Math.PI / 2;
-  const twist = 2.2 * pose.armSwing * -Math.sin(armPh);
+  const twist = 2.2 * pose.armSwing * Math.min(1.2, (pose.sweep || 0) / 80) * Math.cos(ph);
   const sh = { x: SHOULDER.x + twist, y: SHOULDER.y + by };
   const shF = { x: SHOULDER.x - 3 - twist * 0.6, y: SHOULDER.y + 1 + by };
-  const armN = armPose(armPh, pose.armSwing, sh);
-  const armF = armPose(armPh + Math.PI, pose.armSwing, shF);
+  // arm swing grows with step length and relaxes to a hang when standing
+  const swing = pose.armSwing * Math.min(1.2, (pose.sweep || 0) / 80);
+  const tN = armTargets(u, swing), tF = armTargets(uFar, swing);
+  const armN = armFromAngles(sh, pose.arms?.near.a ?? tN);
+  const armF = armFromAngles(shF, pose.arms?.far.a ?? tF);
   // slight forward lean that deepens at push-off; the head counters it
   const lean = 0.045 + 0.012 * Math.sin(Math.PI * 4 * (u - 0.1));
-  return { u, by, hip, sh, shF, near, far, armN, armF, lean };
+  return { u, uFar, by, hip, sh, shF, near, far, armN, armF, lean, armTargets: { near: tN, far: tF } };
 }
 
 // ---------------------------------------------------------------------------
@@ -196,7 +245,10 @@ function clothColliders(p) {
 
 // opts: { length: 'folded' | 'full', drag, windDir, stiffness }
 export class CharacterMotion {
-  constructor() { this.cloth = new MunduCloth(); this.tail = 0; this.tailV = 0; }
+  constructor() {
+    this.cloth = new MunduCloth(); this.tail = 0; this.tailV = 0;
+    this.arms = { near: new ArmPendulum(), far: new ArmPendulum() };
+  }
 
   update(dt, pose, wind, time, fabric, opts = {}) {
     const p = characterPose(pose);
@@ -209,6 +261,12 @@ export class CharacterMotion {
     }
     if (dt <= 0) return;
     this.stepCloth(Math.min(dt, 1 / 30), p, wind, time, fabric, opts);
+    // arms: fixed small substeps keep the pendulums stable
+    const n = Math.max(1, Math.ceil(Math.min(dt, 1 / 30) / (1 / 120)));
+    for (let i = 0; i < n; i++) {
+      this.arms.near.step(dt / n, p.armTargets.near, p.sh);
+      this.arms.far.step(dt / n, p.armTargets.far, p.shF);
+    }
     // shirt tail: a spring towards a gentle wind flutter
     const target = Math.sin(time * (2.4 + wind * 3)) * fabric * (0.6 + wind * 2.5) * 0.8 + wind * fabric * 3;
     this.tailV = (this.tailV + (target - this.tail) * 140 * dt) * Math.exp(-11 * dt);
@@ -319,7 +377,7 @@ function drawArm(ctx, sh, pose, C, far, rim) {
 // the ground. motion is an optional CharacterMotion (springs); rim is
 // { dir, alpha, color } for the sun-side rim light.
 export function drawCharacter(ctx, x, y, scale, pose, C) {
-  const p = characterPose(pose);
+  const p = characterPose(pose.motion?.arms.near.a ? { ...pose, arms: pose.motion.arms } : pose);
   const { by, hip, sh, shF, near, far, armN, armF, lean } = p;
   // without a running simulation (tests, one-off renders) settle a cloth for this pose
   let motion = pose.motion;
@@ -442,11 +500,25 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
   ctx.beginPath(); // placket
   ctx.moveTo(15, -216 + by);
   ctx.quadraticCurveTo(20, -180 + by, 16, -127 + by);
-  ctx.moveTo(-14, -142 + by); // drape creases at the waist
-  ctx.quadraticCurveTo(-4, -138 + by, 6, -142 + by);
-  ctx.moveTo(-10, -132 + by);
-  ctx.quadraticCurveTo(0, -128 + by, 10, -131 + by);
   ctx.stroke();
+  // folds from under the arm towards the waist: they swing with the arm and
+  // pull tighter on the side the arm is reaching back
+  const armA = Math.atan2(armN.elbow.x - sh.x, armN.elbow.y - sh.y);
+  const pull = clamp(-armA * 2.2, -1, 1); // >0 when the arm is back
+  ctx.globalAlpha = 0.7;
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  for (let i = 0; i < 3; i++) {
+    const sy = -196 + i * 9 + by;
+    const ex = -10 + i * 7 + pull * 9;
+    const ey = -146 + i * 7 + by + Math.abs(pull) * 3;
+    ctx.moveTo(sh.x - 6 + i * 2, sy);
+    ctx.quadraticCurveTo((sh.x + ex) / 2 - 4 - pull * 3, (sy + ey) / 2 + 2, ex, ey);
+  }
+  ctx.moveTo(-14 + tail * 0.4, -134 + by); // a soft blouse at the waist
+  ctx.quadraticCurveTo(-3, -129 + by + tail * 0.3, 8, -132 + by);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
 
   // near arm over the torso
   drawArm(ctx, sh, armN, C, false, rim);
