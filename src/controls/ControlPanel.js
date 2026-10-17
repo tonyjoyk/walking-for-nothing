@@ -55,6 +55,17 @@ export function createPanel(app) {
     fO.addBinding(app.weatherStatus, 'detail', { label: 'because', readonly: true });
   }
 
+  // A3. Greeting ------------------------------------------------------
+  const Gr = config.greeting;
+  const fG = pane.addFolder({ title: 'Greeting', expanded: false });
+  fG.addBinding(Gr, 'enabled', { label: 'greet on hover' });
+  bind(fG, Gr, 'stopSeconds', 'greeting.stopSeconds', { label: 'stop / start (s)' });
+  bind(fG, Gr, 'turnSeconds', 'greeting.turnSeconds', { label: 'turn (s)' });
+  bind(fG, Gr, 'lookSeconds', 'greeting.lookSeconds', { label: 'look (s)' });
+  bind(fG, Gr, 'smileSeconds', 'greeting.smileSeconds', { label: 'smile (s)' });
+  bind(fG, Gr, 'cooldownSeconds', 'greeting.cooldownSeconds', { label: 'cooldown (s)' });
+  fG.addButton({ title: 'Greet now' }).on('click', () => scene.greetNow());
+
   // B. Lighting and palette --------------------------------------------
   const fB = pane.addFolder({ title: 'Lighting and palette', expanded: false });
   sc(fB, 'skyTop', 'sky top'); sc(fB, 'skyMid', 'sky middle'); sc(fB, 'skyHorizon', 'sky horizon');

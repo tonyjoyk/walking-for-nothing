@@ -198,6 +198,23 @@ next one: Dawn → Daylight → Windy → Rain → Sunset → Night.
 - The rules (wind thresholds, dawn and sunset windows, maximum age, location)
   are `WEATHER_RULES` in `src/config.js`.
 
+## The greeting
+
+Rest the cursor on the man and he slows to a stop (always with both feet on
+the ground), turns to face you head first, looks at you for 3 seconds, then
+slowly smiles. Four seconds later he turns back and walks on. Move the cursor
+off him at any point and he turns back straight away. On a phone, tap him.
+
+How it works: `src/scene/greeting.js` is a small state machine that eases
+his speed, stance, head and body turn, and smile. The drawing turns by
+blending each profile outline (head, hair, beard, neck, shirt) into a
+front-view twin with the same path commands, and by projecting arms, legs,
+eyes and ears from simple 3D positions, so at turn 0 it is exactly the
+profile figure. The mundu's simulated cloth morphs to its front view. Timings
+and an on/off switch are in the dev panel under **Greeting** (with a "Greet
+now" button); `npm run capture -- --only greet` renders the sequence. Spec:
+`docs/spec-greeting.md`.
+
 ## Credits
 
 Live weather: data by [Open-Meteo.com](https://open-meteo.com/), licensed

@@ -3,7 +3,7 @@
 //
 //   npm run capture                     # everything, into captures/
 //   npm run capture -- --url http://localhost:5173 --out some/dir
-//   npm run capture -- --only scenes    # scenes | walk | depth
+//   npm run capture -- --only scenes    # scenes | walk | depth | greet
 //
 // Writes:
 //   scenes.jpg         the six states as square crops around the man (1x)
@@ -11,6 +11,7 @@
 //   scene-<state>.jpg  each state, full frame (1600x900, 1x)
 //   walk-full.png, walk-folded.png  one gait cycle, close up (2x), short grass
 //   depth.png          the man at ground offset -20, 0 and +20 (1x)
+//   greet.jpg          the greeting, start to finish (2x, short grass)
 //
 // Rendering is deterministic: playback is paused and the scene is stepped
 // by a fixed 1/60 s, so captures of the same code are identical.
@@ -217,6 +218,51 @@ async function depth() {
   report(b);
 }
 
+async function greet() {
+  console.log('greet');
+  const b = await openBrowser(1600, 900, 2);
+  const result = await b.fetchAll(`(async () => {
+    ${PAGE_HELPERS}
+    cfg.activePreset = 'sunny'; S.applyScene('sunny'); S.snapParams();
+    cfg.grass.heightMul = 0.3; cfg.cycle.enabled = false;
+    step(1); step(60 * 2);
+    S.greetNow();
+    const G = S.greeting;
+    const stepUntil = (fn, max = 20) => { for (let i = 0; i < max * 60 && !fn(); i++) step(1); };
+    const wait = (sec) => step(Math.round(sec * 60));
+    // frames at each beat of the greeting, whatever the stop length
+    const beats = [
+      ['walking', () => wait(0.3)],
+      ['slowing', () => wait(0.6)],
+      ['stopped', () => stepUntil(() => G.state === 'settling')],
+      ['head turning', () => stepUntil(() => G.headP >= 0.45)],
+      ['body following', () => stepUntil(() => G.bodyP >= 0.5)],
+      ['facing', () => stepUntil(() => G.state === 'looking')],
+      ['looking', () => wait(2)],
+      ['smiling', () => { stepUntil(() => G.state === 'smiling'); wait(2); }],
+      ['turning back', () => { stepUntil(() => G.state === 'returning'); wait(0.6); }],
+      ['nearly round', () => wait(0.6)],
+      ['setting off', () => stepUntil(() => G.state === 'starting')],
+      ['walking on', () => { stepUntil(() => G.state === 'walking'); wait(0.5); }],
+    ];
+    const s = S.view.s * pd, W = 150 * s, H = 300 * s;
+    const strip = canvas(W * beats.length, H), g = strip.getContext('2d');
+    const out = {};
+    beats.forEach(([name, go], i) => {
+      go();
+      render();
+      const [cx, gy] = toScreen(S.manX + 3, 906 + cfg.character.groundOffset);
+      g.drawImage(cv, cx - W / 2, gy - H * 0.95, W, H, i * W, 0, W, H);
+      g.fillStyle = '#fff'; g.fillRect(i * W, 0, 2, H);
+      label(g, name, i * W + 6, 6, 15);
+    });
+    out.strip = strip.toDataURL('image/jpeg', 0.92);
+    return out;
+  })()`);
+  save('greet.jpg', result.strip);
+  report(b);
+}
+
 function report(b) {
   if (b.errors.length) console.log('  page errors:', b.errors);
   b.close();
@@ -226,6 +272,7 @@ try {
   if (only === 'all' || only === 'scenes') await scenes();
   if (only === 'all' || only === 'walk') await walk();
   if (only === 'all' || only === 'depth') await depth();
+  if (only === 'all' || only === 'greet') await greet();
 } catch (e) {
   console.error(e.message);
   if (/fetch failed|ERR_CONNECTION/.test(e.message)) console.error(`Is the dev server running at ${url}?`);

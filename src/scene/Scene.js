@@ -1,5 +1,6 @@
 import { PRESETS, OVERCAST, clone } from '../config.js';
 import { nextScene } from '../weather.js';
+import { Greeting } from './greeting.js';
 import {
   SCENE_W, SCENE_H, HORIZON_Y, FIELD_TOP, GROUND_Y, WRAP_MARGIN,
   hexToRgb, lerp, mod, clamp, css, mix, shade,
@@ -43,6 +44,9 @@ export class Scene {
     this.cloudOffsets = [0, 0, 0];
     this.dog = new Dog();
     this.manMotion = new CharacterMotion();
+    this.greeting = new Greeting();
+    this.greet = this.greeting.output();
+    this.hovering = false;
     this.massCache = { far: {}, mid: {}, fore: {} };
     this.fps = 60;
     this.needsManPlacement = true;
@@ -149,7 +153,26 @@ export class Scene {
       this.dog.reset();
       this.dog.firstDone = false;
     }
-    const manSpeed = C.walkSpeed;
+    // The greeting can slow him to a stop (and back up again). The stop is
+    // planned: the next moment with both feet down (at least a fifth of a
+    // stride ahead), reached with even deceleration.
+    const TWO_PI = Math.PI * 2;
+    const stride = C.walkSpeed / Math.max(0.05, C.cadence);
+    let stopFraction;
+    if (this.greeting.state === 'stopping') {
+      if (!this.stopPlan) {
+        const u = (((this.walkPhase / TWO_PI) % 1) + 1) % 1;
+        let du = Infinity;
+        for (const target of [0.035, 0.535, 1.035, 1.535]) if (target - u >= 0.2) du = Math.min(du, target - u);
+        this.stopPlan = { at: this.walkPhase + du * TWO_PI, total: du * stride };
+      }
+      const left = Math.max(0, ((this.stopPlan.at - this.walkPhase) / TWO_PI) * stride);
+      stopFraction = this.stopPlan.total > 0 ? left / this.stopPlan.total : 0;
+    } else {
+      this.stopPlan = null;
+    }
+    this.greet = this.greeting.update(dt, this.hovering, cfg.greeting, { stopFraction });
+    const manSpeed = C.walkSpeed * this.greet.speed;
     let crossed = false;
     let moved = 0;
     if (cfg.playback.loop || this.manX < this.view.x0 + this.view.w + WRAP_MARGIN - 5) {
@@ -159,8 +182,11 @@ export class Scene {
     // The gait advances with distance walked, not with time, so the legs can
     // never run ahead of the ground. One cycle (two steps) covers
     // walkSpeed / cadence, which keeps the cadence control meaningful.
-    const cycleLen = manSpeed / Math.max(0.05, C.cadence);
+    // The cycle length is the stride (full walking speed / cadence), so while
+    // he slows down for the greeting his steps slow with him instead of sliding.
+    const cycleLen = C.walkSpeed / Math.max(0.05, C.cadence);
     if (moved > 0 && cycleLen > 0) this.walkPhase += (Math.PI * 2 * moved) / cycleLen;
+    if (this.stopPlan && this.walkPhase > this.stopPlan.at) this.walkPhase = this.stopPlan.at; // never overshoot the stop
     this.manMotion.update(dt, this.manPose(C), this.P.wind, this.time, C.fabric, {
       length: C.munduLength, drag: moved > 0 ? manSpeed / Math.max(0.1, C.scale) : 0,
       windDir: cfg.grass.windDir, stiffness: C.clothStiffness,
@@ -210,8 +236,25 @@ export class Scene {
     return {
       phase: this.walkPhase, sweep: this.walkSweep(C), stride: C.stride, bob: C.bob, armSwing: C.armSwing,
       fabric: C.fabric, wind: this.P.wind, time: this.time, munduLength: C.munduLength,
+      swingScale: this.greet.speed, stand: this.greet.stand,
+      turnHead: this.greet.head, turnBody: this.greet.body, smile: this.greet.smile,
     };
   }
+
+  // Is a point on screen (CSS pixels) over the man? Used for the greeting.
+  // A generous box round the figure, never smaller than ~30x80 px on screen.
+  hitMan(px, py) {
+    const C = this.config.character;
+    if (!C.visible) return false;
+    const v = this.view;
+    const k = v.s * C.scale; // screen px per local unit
+    const lx = (px / v.s + v.x0 - this.manX) / C.scale;
+    const ly = (py / v.s + v.y0 - (GROUND_Y + C.groundOffset)) / C.scale;
+    const halfW = Math.max(30, 15 / k), top = -Math.max(270, 80 / k);
+    return Math.abs(lx - 3) <= halfW && ly >= top && ly <= 6;
+  }
+
+  greetNow() { this.greeting.greetNow(); }
 
   // How deep the man and Juhu are in the field, from the ground offset:
   // 0 = raised, walking on a grassy field; 1 = lowered, wading through hay.

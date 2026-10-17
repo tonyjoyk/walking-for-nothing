@@ -124,6 +124,21 @@ function adaptQuality(dt) {
   }
 }
 
+// The greeting (docs/spec-greeting.md): resting the cursor on the man makes
+// him stop and turn to the visitor. On touch screens a tap on him plays it
+// once; a tap anywhere else lets him walk on.
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType === 'touch') return;
+  scene.hovering = scene.hitMan(e.clientX, e.clientY);
+});
+document.addEventListener('mouseout', (e) => { if (!e.relatedTarget) scene.hovering = false; });
+window.addEventListener('blur', () => { scene.hovering = false; });
+window.addEventListener('pointerdown', (e) => {
+  if (e.pointerType !== 'touch') return;
+  if (scene.hitMan(e.clientX, e.clientY)) scene.greetNow();
+  else scene.greeting.release();
+});
+
 // Pause everything when the tab is hidden (battery on phones).
 document.addEventListener('visibilitychange', () => {
   if (!p5ref) return;

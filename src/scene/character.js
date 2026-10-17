@@ -221,24 +221,34 @@ export function characterPose(pose) {
     const d = legSpan(sampleGait(KNEE, lu) * DEG * LOAD_FLEX);
     hipY = Math.max(hipY, f.ankle.y - Math.sqrt(Math.max(0, d * d - f.ankle.x * f.ankle.x)));
   }
-  const by = (hipY - HIP_TOP) * pose.bob;
+  // standing still (the greeting): legs straighten and the feet come in
+  // under the hips, slightly apart
+  const stand = pose.stand || 0;
+  const standHip = -8 - legSpan(4 * DEG);
+  const by = lerp((hipY - HIP_TOP) * pose.bob, standHip - HIP_TOP, stand);
   const hip = { x: 0, y: HIP_TOP + by };
   const nearFoot = footTarget(u, half, pose.stride, hip);
   const farFoot = footTarget(uFar, half, pose.stride, hip);
+  if (stand > 0) {
+    for (const [f, x] of [[nearFoot, 5], [farFoot, -3]]) {
+      f.ankle = { x: lerp(f.ankle.x, x, stand), y: lerp(f.ankle.y, -ANKLE_H, stand) };
+      f.th = lerp(f.th, 0, stand);
+    }
+  }
   const near = legPose(nearFoot, hip);
   const far = legPose(farFoot, hip);
   // the near shoulder moves forward as the near arm swings forward, against
   // the hips (counter-rotation seen from the side)
-  const twist = 2.2 * pose.armSwing * Math.min(1.2, (pose.sweep || 0) / 80) * Math.cos(ph);
+  const twist = 2.2 * pose.armSwing * Math.min(1.2, (pose.sweep || 0) / 80) * (pose.swingScale ?? 1) * (1 - stand) * Math.cos(ph);
   const sh = { x: SHOULDER.x + twist, y: SHOULDER.y + by };
   const shF = { x: SHOULDER.x - 3 - twist * 0.6, y: SHOULDER.y + 1 + by };
   // arm swing grows with step length and relaxes to a hang when standing
-  const swing = pose.armSwing * Math.min(1.2, (pose.sweep || 0) / 80);
+  const swing = pose.armSwing * Math.min(1.2, (pose.sweep || 0) / 80) * (pose.swingScale ?? 1) * (1 - stand);
   const tN = armTargets(u, swing), tF = armTargets(uFar, swing);
   const armN = armFromAngles(sh, pose.arms?.near.a ?? tN);
   const armF = armFromAngles(shF, pose.arms?.far.a ?? tF);
   // slight forward lean that deepens at push-off; the head counters it
-  const lean = 0.045 + 0.012 * Math.sin(Math.PI * 4 * (u - 0.1));
+  const lean = (0.045 + 0.012 * Math.sin(Math.PI * 4 * (u - 0.1))) * (1 - stand * 0.85);
   return { u, uFar, by, hip, sh, shF, near, far, armN, armF, lean, armTargets: { near: tN, far: tF } };
 }
 
@@ -357,25 +367,39 @@ function footPath(ctx, ankle, th) {
 }
 
 function drawLeg(ctx, hip, leg, color, rim, thigh, sandal) {
-  const parts = [
-    // shin with the calf on the back of the leg (-x side)
-    () => limbPath(ctx, leg.knee, leg.ankle, 11.5, 6.5, 2.2, leg.knee.y < leg.ankle.y ? 1 : -1),
-    () => footPath(ctx, leg.ankle, leg.footAngle),
-  ];
+  // turning towards the viewer the foot shortens (footScale) and its front
+  // view, a small rounded shape, takes over (front)
+  const fs = leg.footScale ?? 1, front = leg.front ?? 0;
+  const footSpace = (draw) => {
+    ctx.save();
+    ctx.translate(leg.ankle.x, leg.ankle.y); ctx.scale(fs, 1); ctx.translate(-leg.ankle.x, -leg.ankle.y);
+    draw();
+    ctx.restore();
+  };
+  const shin = () => limbPath(ctx, leg.knee, leg.ankle, 11.5, 6.5, 2.2, leg.knee.y < leg.ankle.y ? 1 : -1);
+  const parts = [shin];
   if (thigh) parts.unshift(() => limbPath(ctx, hip, leg.knee, 17, 11.5));
   // each part on its own: overlapping subpaths with opposite winding would cut holes
   parts.forEach((b) => fillPath(ctx, color, b));
+  footSpace(() => fillPath(ctx, color, () => footPath(ctx, leg.ankle, leg.footAngle)));
+  if (front > 0.3) {
+    ctx.globalAlpha = (front - 0.3) / 0.7;
+    fillPath(ctx, color, () => ctx.ellipse(leg.ankle.x, leg.ankle.y + ANKLE_H - 2.5, 4.6, 3.2, 0, 0, Math.PI * 2));
+    ctx.globalAlpha = 1;
+  }
   rimLight(ctx, rim, parts, 2);
   if (sandal) {
     // a dark sole under the foot and one strap over the instep
-    const P = (x, y) => add(leg.ankle, rot({ x, y }, leg.footAngle));
-    const h = P(-7.5, ANKLE_H + 0.8), t = P(18.5, ANKLE_H + 0.8);
-    ctx.strokeStyle = sandal;
-    ctx.lineWidth = 2.6;
-    ctx.beginPath(); ctx.moveTo(h.x, h.y); ctx.lineTo(t.x, t.y); ctx.stroke();
-    const a = P(8, 1.5), b = P(11, ANKLE_H);
-    ctx.lineWidth = 1.8;
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    footSpace(() => {
+      const P = (x, y) => add(leg.ankle, rot({ x, y }, leg.footAngle));
+      const h = P(-7.5, ANKLE_H + 0.8), t = P(18.5, ANKLE_H + 0.8);
+      ctx.strokeStyle = sandal;
+      ctx.lineWidth = 2.6;
+      ctx.beginPath(); ctx.moveTo(h.x, h.y); ctx.lineTo(t.x, t.y); ctx.stroke();
+      const a = P(8, 1.5), b = P(11, ANKLE_H);
+      ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    });
   }
 }
 
@@ -399,8 +423,9 @@ function taperedPath(ctx, pts, widths, capStart = true) {
   for (let i = n - 2; i > 0; i--) ctx.quadraticCurveTo(R[i].x, R[i].y, (R[i].x + R[i - 1].x) / 2, (R[i].y + R[i - 1].y) / 2);
   ctx.lineTo(R[0].x, R[0].y);
   if (capStart) {
+    // round the start outwards (away from the limb), from the right side back to the left
     const ang = Math.atan2(normals[0].y, normals[0].x);
-    ctx.arc(pts[0].x, pts[0].y, widths[0] / 2, ang + Math.PI, ang, false);
+    ctx.arc(pts[0].x, pts[0].y, widths[0] / 2, ang + Math.PI, ang, true);
   }
   ctx.closePath();
 }
@@ -425,13 +450,13 @@ function handPath(ctx, wrist, dir) {
 // The arm is one continuous tapered shape from shoulder to wrist (no joint
 // discs), then a small hand. The sleeve is a tapered band over the upper
 // arm, cut square at a rolled cuff.
-function drawArm(ctx, sh, pose, C, far, rim) {
+function drawArm(ctx, sh, pose, C, far, rim, frontness = 0) {
   const skin = far ? C.skinShade : C.skin;
   const cloth = far ? C.shirtShade : C.shirt;
   const { elbow, hand } = pose;
   const dir = Math.atan2(hand.y - elbow.y, hand.x - elbow.x);
   const armPts = [sh, lerpPt(sh, elbow, 0.55), elbow, lerpPt(elbow, hand, 0.5), hand];
-  const arm = () => taperedPath(ctx, armPts, [12.5, 11, 9, 7.6, 6], true);
+  const arm = () => taperedPath(ctx, armPts, [12.5, 11, 9, 7.6, 6], false); // the sleeve covers its top
   const palm = () => handPath(ctx, hand, dir);
   fillPath(ctx, skin, arm);
   fillPath(ctx, skin, palm);
@@ -445,8 +470,13 @@ function drawArm(ctx, sh, pose, C, far, rim) {
   const sleeveW = long ? [16, 15, 13, 11.5] : [16, 15, 15.5];
   // the sleeve starts inside the shoulder, so its square top is hidden by
   // the torso and only its sides and cuff show
-  if (!far) fillPath(ctx, C.shirtShade, () => taperedPath(ctx, sleevePts, sleeveW.map((w) => w + 2), false));
-  fillPath(ctx, cloth, () => taperedPath(ctx, sleevePts, sleeveW, far));
+  // (from the front the sleeve shows its rounded shoulder and needs no outline)
+  if (!far && frontness < 0.3) {
+    ctx.globalAlpha = 1 - frontness / 0.3;
+    fillPath(ctx, C.shirtShade, () => taperedPath(ctx, sleevePts, sleeveW.map((w) => w + 2), false));
+    ctx.globalAlpha = 1;
+  }
+  fillPath(ctx, cloth, () => taperedPath(ctx, sleevePts, sleeveW, far || frontness > 0.15));
   // the rolled cuff: a narrow band just above the sleeve's end
   const k = sleevePts.length - 1;
   const cuffStart = lerpPt(sleevePts[k - 1], sleevePts[k], 0.78);
@@ -588,6 +618,77 @@ function drawMundu(ctx, cloth, C, rim, state) {
 // foot travels back during stance, in local units, which keeps it fixed on
 // the ground. motion is an optional CharacterMotion (springs); rim is
 // { dir, alpha, color } for the sun-side rim light.
+// ---------------------------------------------------------------------------
+// Turning to face the screen (the greeting, docs/spec-greeting.md).
+// Outlines are lists of path commands. Each profile outline has a front-view
+// twin with exactly the same commands, so turning is a point-by-point blend:
+// the nose bump flattens into the oval face, the shirt widens into the
+// shoulders. At turn 0 the commands are the profile ones, so nothing pops.
+// Limbs and features are placed in simple 3D (forward, sideways) and
+// projected: x = forward·cos(a) + (centre - sideways)·sin(a).
+// ---------------------------------------------------------------------------
+function tracePath(ctx, side, front, t, dy = 0) {
+  const L = (i, j) => side[i][j] + (front[i][j] - side[i][j]) * t;
+  for (let i = 0; i < side.length; i++) {
+    const c = side[i][0];
+    if (c === 'M') ctx.moveTo(L(i, 1), L(i, 2) + dy);
+    else if (c === 'L') ctx.lineTo(L(i, 1), L(i, 2) + dy);
+    else if (c === 'Q') ctx.quadraticCurveTo(L(i, 1), L(i, 2) + dy, L(i, 3), L(i, 4) + dy);
+    else if (c === 'C') ctx.bezierCurveTo(L(i, 1), L(i, 2) + dy, L(i, 3), L(i, 4) + dy, L(i, 5), L(i, 6) + dy);
+  }
+  ctx.closePath();
+}
+
+const HEAD_SIDE = [
+  ['M', -11, -236], ['C', -15, -246, -13, -262, 1, -264], ['C', 11, -265, 17, -258, 18, -251],
+  ['Q', 19.5, -249, 18.6, -246.5], ['Q', 21.5, -242, 23.8, -238.6], ['Q', 22.6, -236.6, 20.2, -236.8],
+  ['Q', 21.2, -234.5, 20.4, -233], ['Q', 21.4, -230, 19.6, -228], ['Q', 13, -225, 5, -227],
+  ['Q', -1, -229, -3, -232], ['Q', -7, -233, -11, -236],
+];
+const HEAD_FRONT = [
+  ['M', -6.5, -236], ['C', -11, -244, -10, -262, 4.5, -265], ['C', 15, -265, 19, -258, 18, -250],
+  ['Q', 18.6, -248, 18.2, -246.5], ['Q', 18, -242, 17.6, -239.5], ['Q', 17.2, -237, 16.4, -235.5],
+  ['Q', 15.8, -233.5, 14.8, -231.5], ['Q', 13.6, -228.5, 11, -227], ['Q', 8, -225.2, 4.5, -225.2],
+  ['Q', 1, -225.2, -2, -227], ['Q', -6, -230, -6.5, -236],
+];
+const NECK_SIDE = [['M', -4, -236], ['L', 7, -236], ['Q', 8, -226, 14, -221], ['L', -9, -221], ['Q', -4, -226, -4, -236]];
+const NECK_FRONT = [['M', -2, -236], ['L', 9, -236], ['Q', 9.5, -227, 17, -221], ['L', -10, -221], ['Q', -2.5, -227, -2, -236]];
+const BEARD_SIDE = [
+  ['M', 1.6, -245], ['Q', 4, -237, 11, -235.4], ['Q', 16, -234.6, 18.4, -236.6], ['Q', 21, -237.6, 22, -236.9],
+  ['Q', 21.2, -235.4, 19.6, -235], ['Q', 21.6, -232, 21.2, -229.6], ['Q', 19.4, -224.6, 13, -224],
+  ['Q', 5, -224.2, 0.5, -228.6], ['Q', -1.4, -236, 1.6, -245],
+];
+const BEARD_FRONT = [
+  ['M', -7.5, -245], ['Q', -6.4, -237.4, -2, -235.9], ['Q', -0.4, -235.7, 1, -236.5], ['Q', 4.5, -238.4, 8, -236.5],
+  ['Q', 9.4, -235.7, 11, -235.9], ['Q', 15.4, -237.4, 16.5, -245], ['Q', 18.6, -228.5, 9, -223.4],
+  ['Q', 4.5, -222.2, 0, -223.4], ['Q', -9.6, -228.5, -7.5, -245],
+];
+const HAIR_SIDE = [
+  ['M', 14.5, -255.5], ['Q', 15.5, -261, 9, -264.6], ['Q', 5, -266.8, 0.5, -265.4], ['Q', -4, -266, -8, -262.5],
+  ['C', -14, -257, -15, -246, -12, -238.5], ['Q', -9, -238, -6.5, -240], ['Q', -4.5, -246, -2, -247.5],
+  ['Q', 2.5, -250.5, 3.6, -246], ['Q', 6.5, -253.5, 14.5, -255.5],
+];
+const HAIR_FRONT = [
+  ['M', 17.6, -247], ['Q', 19.4, -261, 9.5, -265.9], ['Q', 4.5, -267.8, -0.5, -265.9], ['Q', -5, -265, -7.6, -262],
+  ['C', -10.6, -257, -10.2, -250, -8.8, -245.5], ['Q', -8.4, -244.6, -7.4, -246], ['Q', -6.2, -251.5, -2.6, -255],
+  ['Q', 4.5, -258.2, 12, -255], ['Q', 16, -253, 17.6, -247],
+];
+function torsoShapes(by, loose, tail) {
+  const side = [
+    ['M', -9, -224], ['C', -24, -214, -25, -186, -18, -164], ['Q', -17 - loose * 4, -146, -23 - tail - loose * 8, -121],
+    ['Q', -1, -115 + loose * 2, 22 + loose * 6, -124], ['Q', 19, -140, 20, -156], ['C', 27, -178, 25, -206, 15, -224],
+    ['Q', 3, -232, -9, -224],
+  ];
+  const front = [
+    ['M', -12, -227], ['C', -27, -225, -33, -205, -29, -178], ['Q', -24 - loose * 3, -150, -25 - tail - loose * 7, -121],
+    ['Q', 2, -116 + loose * 2, 29 + loose * 7, -121], ['Q', 28 + loose * 3, -150, 33, -178], ['C', 37, -205, 31, -225, 16, -227],
+    ['Q', 2, -231, -12, -227],
+  ];
+  return { side, front, by };
+}
+const BODY_CX = 2;   // the body's centre line in the front view
+const HEAD_CX = 4.5; // the head's centre line (in head space)
+
 export function drawCharacter(ctx, x, y, scale, pose, C) {
   const p = characterPose(pose.motion?.arms.near.a ? { ...pose, arms: pose.motion.arms } : pose);
   const { by, hip, sh, shF, near, far, armN, armF, lean } = p;
@@ -598,6 +699,11 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
     motion.update(0, pose, pose.wind || 0, pose.time || 0, pose.fabric ?? 1, { length: pose.munduLength });
   }
   const rim = pose.rim;
+  const tb = clamp(pose.turnBody || 0, 0, 1), th = clamp(pose.turnHead || 0, 0, 1);
+  const smile = clamp(pose.smile || 0, 0, 1);
+  const sb = Math.sin(tb * Math.PI / 2), cb = Math.cos(tb * Math.PI / 2);
+  // project a profile point with a sideways offset (towards the viewer = +)
+  const proj = (pt, side) => ({ x: pt.x * cb + (BODY_CX - side) * sb, y: pt.y });
 
   ctx.save();
   ctx.translate(x, y);
@@ -607,15 +713,24 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
 
   // upper body leans forward about the hip
   const leanIn = () => { ctx.save(); ctx.translate(hip.x, hip.y); ctx.rotate(lean); ctx.translate(-hip.x, -hip.y); };
+  // arms and legs, projected for the turn: his left side (near) moves to the
+  // viewer's left, the right side comes round from behind
+  const armPts = (s0, a, side) => {
+    const out = (d) => side + Math.sign(side) * d * sb; // from the front, arms hang a little outward
+    return { s: proj(s0, side), a: { elbow: proj(a.elbow, out(4)), hand: proj(a.hand, out(8)), fa: a.fa } };
+  };
+  const nArm = armPts(sh, armN, 25), fArm = armPts(shF, armF, -25);
+  const legPts = (L, side) => ({ ...L, knee: proj(L.knee, side), ankle: proj(L.ankle, side), footScale: Math.max(0.3, cb), front: sb });
+  const hipN = proj(hip, 8), hipF = proj(hip, -8);
+  const farArmBehind = tb < 0.75;
 
   // far side
-  leanIn();
-  drawArm(ctx, shF, armF, C, true, null);
-  ctx.restore();
-  drawLeg(ctx, hip, far, C.skinShade, null, true, C.sandal);
-  drawLeg(ctx, hip, near, C.skin, rim, true, C.sandal);
+  if (farArmBehind) { leanIn(); drawArm(ctx, fArm.s, fArm.a, C, true, null, sb); ctx.restore(); }
+  drawLeg(ctx, hipF, legPts(far, -8), C.skinShade, null, true, C.sandal);
+  drawLeg(ctx, hipN, legPts(near, 8), C.skin, rim, true, C.sandal);
 
-  drawMundu(ctx, motion.cloth, C, rim, motion.cloth.state);
+  // the mundu: the simulated cloth, morphed towards its front view
+  drawMundu(ctx, tb > 0 ? munduTurned(motion.cloth, sb) : motion.cloth, C, rim, motion.cloth.state);
 
   leanIn();
   // loose shirt, untucked over the mundu. The back curves (upper back round,
@@ -626,21 +741,13 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
   // build widens the torso about the spine
   ctx.save();
   ctx.scale(build, 1);
-  const torsoBuild = () => {
-    ctx.moveTo(-9, -224 + by);
-    ctx.bezierCurveTo(-24, -214 + by, -25, -186 + by, -18, -164 + by);
-    ctx.quadraticCurveTo(-17 - loose * 4, -146 + by, -23 - tail - loose * 8, -121 + by); // hangs over the seat
-    ctx.quadraticCurveTo(-1, -115 + by + loose * 2, 22 + loose * 6, -124 + by);
-    ctx.quadraticCurveTo(19, -140 + by, 20, -156 + by);
-    ctx.bezierCurveTo(27, -178 + by, 25, -206 + by, 15, -224 + by);
-    ctx.quadraticCurveTo(3, -232 + by, -9, -224 + by);
-    ctx.closePath();
-  };
+  const T = torsoShapes(by, loose, tail);
+  const torsoBuild = () => tracePath(ctx, T.side, T.front, sb, by);
   fillPath(ctx, C.shirt, torsoBuild);
-  // shade the back half and a crease where the arm swings
+  // shade the back half (fades as he turns: from the front, a soft shade on his left)
   ctx.save();
   ctx.beginPath(); torsoBuild(); ctx.clip();
-  ctx.globalAlpha = 0.5;
+  ctx.globalAlpha = 0.5 * (1 - sb);
   fillPath(ctx, C.shirtShade, () => {
     ctx.moveTo(-30, -235 + by);
     ctx.lineTo(-4, -235 + by);
@@ -648,20 +755,30 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
     ctx.lineTo(-30, -112 + by);
     ctx.closePath();
   });
+  ctx.globalAlpha = 0.3 * sb;
+  fillPath(ctx, C.shirtShade, () => { ctx.rect(-40, -240 + by, 22, 130); });
   ctx.globalAlpha = 1;
   ctx.restore();
   rimLight(ctx, rim, torsoBuild, 3.5);
   ctx.strokeStyle = C.shirtShade;
   ctx.lineWidth = 1.2;
-  ctx.beginPath(); // placket
-  ctx.moveTo(15, -216 + by);
-  ctx.quadraticCurveTo(20, -180 + by, 16, -127 + by);
+  ctx.beginPath(); // placket, moving to the centre of the chest as he turns
+  const pl = (a, b) => a + (b - a) * sb;
+  ctx.moveTo(pl(15, 3), -216 + by);
+  ctx.quadraticCurveTo(pl(20, 3.5), -180 + by, pl(16, 3), -125 + by);
   ctx.stroke();
+  if (sb > 0.05) { // the collar opening, seen from the front
+    ctx.globalAlpha = sb;
+    ctx.beginPath();
+    ctx.moveTo(-7, -228 + by); ctx.lineTo(3, -213 + by); ctx.lineTo(13, -228 + by);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
   // folds from under the arm towards the waist: they swing with the arm and
   // pull tighter on the side the arm is reaching back
   const armA = Math.atan2(armN.elbow.x - sh.x, armN.elbow.y - sh.y);
   const pull = clamp(-armA * 2.2, -1, 1); // >0 when the arm is back
-  ctx.globalAlpha = 0.7;
+  ctx.globalAlpha = 0.7 * (1 - sb);
   ctx.lineWidth = 1.1;
   ctx.beginPath();
   for (let i = 0; i < 3; i++) {
@@ -678,101 +795,136 @@ export function drawCharacter(ctx, x, y, scale, pose, C) {
 
   ctx.restore(); // build
 
-  // near arm over the torso
-  drawArm(ctx, sh, armN, C, false, rim);
+  // arms over the torso; the far arm joins once it has come round
+  if (!farArmBehind) drawArm(ctx, fArm.s, fArm.a, C, true, null, sb);
+  drawArm(ctx, nArm.s, nArm.a, C, false, rim, sb);
 
-  // neck, tapering into the shoulders, and head. The head is held steadier
-  // than the body and tilts back against the lean so the gaze stays level.
+  // neck and head. The head is held steadier than the body and tilts back
+  // against the lean so the gaze stays level. It turns ahead of the body.
   const hb = -by * 0.45;
   ctx.save();
   ctx.translate(3, hb);
-  const neckBuild = () => {
-    ctx.moveTo(-4, -236 + by);
-    ctx.lineTo(7, -236 + by);
-    ctx.quadraticCurveTo(8, -226 + by, 14, -221 + by);
-    ctx.lineTo(-9, -221 + by);
-    ctx.quadraticCurveTo(-4, -226 + by, -4, -236 + by);
-    ctx.closePath();
-  };
-  fillPath(ctx, C.skinShade, neckBuild);
+  fillPath(ctx, C.skinShade, () => tracePath(ctx, NECK_SIDE, NECK_FRONT, (sb + th) / 2, by));
   ctx.translate(4, -243 + by);
   ctx.rotate(-lean * 0.8);
   ctx.translate(-4, 243 - by);
-  const hy = by;
-  // The head as one profile: rounded skull, sloping forehead, a brow, a nose
-  // that projects from the contour, lips and chin, and the jaw back to the
-  // neck. Detail lives in the outline; inside it only an eye and a brow mark.
-  const headBuild = () => {
-    const y = hy;
-    ctx.moveTo(-11, -236 + y);                                    // back of the neck
-    ctx.bezierCurveTo(-15, -246 + y, -13, -262 + y, 1, -264 + y);   // back of the skull to the crown
-    ctx.bezierCurveTo(11, -265 + y, 17, -258 + y, 18, -251 + y);    // crown to forehead
-    ctx.quadraticCurveTo(19.5, -249 + y, 18.6, -246.5 + y);         // brow, then the eye socket
-    ctx.quadraticCurveTo(21.5, -242 + y, 23.8, -238.6 + y);         // bridge to the tip of the nose
-    ctx.quadraticCurveTo(22.6, -236.6 + y, 20.2, -236.8 + y);       // under the nose
-    ctx.quadraticCurveTo(21.2, -234.5 + y, 20.4, -233 + y);         // lips
-    ctx.quadraticCurveTo(21.4, -230 + y, 19.6, -228 + y);           // chin
-    ctx.quadraticCurveTo(13, -225 + y, 5, -227 + y);                // jaw underside
-    ctx.quadraticCurveTo(-1, -229 + y, -3, -232 + y);               // into the neck
-    ctx.quadraticCurveTo(-7, -233 + y, -11, -236 + y);
-    ctx.closePath();
-  };
+  drawHead(ctx, C, rim, by, th, smile);
+  ctx.restore();
+
+  ctx.restore(); // lean
+  ctx.restore();
+}
+
+// The head at a turn of t (0 profile, 1 facing the screen) with a smile.
+function drawHead(ctx, C, rim, hy, t, smile) {
+  const s = Math.sin(t * Math.PI / 2), c = Math.cos(t * Math.PI / 2);
+  // a feature at (forward, sideways) from the head's centre line
+  const fx = (forward, side) => HEAD_CX + forward * c - side * s;
+  const facing = (forward, side) => forward * s + side * c; // > 0: towards the viewer
+  const headBuild = () => tracePath(ctx, HEAD_SIDE, HEAD_FRONT, t, hy);
+
+  // the far ear peeks out from behind the head as it comes round
+  if (s > 0.75) fillPath(ctx, C.skinShade, () => ctx.ellipse(fx(-5, -13.5), -242 + hy, 2.4, 3.6, -0.15, 0, Math.PI * 2));
   fillPath(ctx, C.skin, headBuild);
-  // a quiet division of light: the back of the head and jaw in shade
+  // a quiet division of light: the back of the head and jaw in shade (in
+  // profile); from the front, a soft shade down his left side
   ctx.save();
   ctx.beginPath(); headBuild(); ctx.clip();
-  ctx.globalAlpha = 0.35;
+  ctx.globalAlpha = 0.35 * (1 - s);
   fillPath(ctx, C.skinShade, () => {
     ctx.moveTo(-16, -268 + hy); ctx.lineTo(4, -268 + hy);
     ctx.quadraticCurveTo(2, -246 + hy, 9, -224 + hy);
     ctx.lineTo(-16, -224 + hy); ctx.closePath();
   });
+  ctx.globalAlpha = 0.22 * s;
+  fillPath(ctx, C.skinShade, () => ctx.ellipse(-6, -245 + hy, 7, 16, 0, 0, Math.PI * 2));
+  // cheeks lift and warm as he smiles
+  if (smile > 0 && s > 0.3) {
+    ctx.globalAlpha = 0.07 * smile * s;
+    fillPath(ctx, '#ffffff', () => {
+      ctx.ellipse(fx(8, 6), -239.5 + hy - smile, 3.6, 2.2, 0, 0, Math.PI * 2);
+      ctx.moveTo(fx(8, -6) + 3.6, -239.5 + hy - smile);
+      ctx.ellipse(fx(8, -6), -239.5 + hy - smile, 3.6, 2.2, 0, 0, Math.PI * 2);
+    });
+  }
   ctx.globalAlpha = 1;
   ctx.restore();
   rimLight(ctx, rim, headBuild, 2.2);
-  fillPath(ctx, C.skinShade, () => ctx.ellipse(-0.5, -242 + hy, 2.6, 3.8, 0.15, 0, Math.PI * 2)); // ear
-  if (C.beardOn !== false) fillPath(ctx, C.beard, () => {
-    // one connected beard: sideburn, along the jaw, moustache under the nose
-    // and round the chin, with a clean lower edge just below the jawline
-    const y = hy;
-    ctx.moveTo(1.6, -245 + y);
-    ctx.quadraticCurveTo(4, -237 + y, 11, -235.4 + y);              // cheek line
-    ctx.quadraticCurveTo(16, -234.6 + y, 18.4, -236.6 + y);         // to the corner of the mouth
-    ctx.quadraticCurveTo(21, -237.6 + y, 22, -236.9 + y);           // moustache under the nose
-    ctx.quadraticCurveTo(21.2, -235.4 + y, 19.6, -235 + y);         // upper lip line
-    ctx.quadraticCurveTo(21.6, -232 + y, 21.2, -229.6 + y);         // round the chin
-    ctx.quadraticCurveTo(19.4, -224.6 + y, 13, -224 + y);           // clean lower edge
-    ctx.quadraticCurveTo(5, -224.2 + y, 0.5, -228.6 + y);           // under the jaw
-    ctx.quadraticCurveTo(-1.4, -236 + y, 1.6, -245 + y);
-    ctx.closePath();
-  });
-  fillPath(ctx, C.hair, () => {
-    // short hair following the skull: a natural hairline at the temple, a
-    // slightly uneven top, cut close above the ear and down the nape
-    const y = hy;
-    ctx.moveTo(14.5, -255.5 + y);                                    // front hairline
-    ctx.quadraticCurveTo(15.5, -261 + y, 9, -264.6 + y);
-    ctx.quadraticCurveTo(5, -266.8 + y, 0.5, -265.4 + y);            // uneven top
-    ctx.quadraticCurveTo(-4, -266 + y, -8, -262.5 + y);
-    ctx.bezierCurveTo(-14, -257 + y, -15, -246 + y, -12, -238.5 + y); // back of the head
-    ctx.quadraticCurveTo(-9, -238 + y, -6.5, -240 + y);              // nape
-    ctx.quadraticCurveTo(-4.5, -246 + y, -2, -247.5 + y);           // above the ear
-    ctx.quadraticCurveTo(2.5, -250.5 + y, 3.6, -246 + y);           // sideburn top
-    ctx.quadraticCurveTo(6.5, -253.5 + y, 14.5, -255.5 + y);        // temple to hairline
-    ctx.closePath();
-  });
-  // eye and brow: two small marks aligned with the face
-  ctx.globalAlpha = 0.85;
-  fillPath(ctx, C.hair, () => ctx.ellipse(14.4, -245.6 + hy, 1.2, 0.9, 0.1, 0, Math.PI * 2));
-  ctx.strokeStyle = C.hair;
-  ctx.lineWidth = 1.1;
-  ctx.beginPath();
-  ctx.moveTo(11.6, -249.2 + hy);
-  ctx.quadraticCurveTo(14.6, -250.4 + hy, 17.2, -249.2 + hy);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-  ctx.restore();
+  // near ear: just in front of the back of the head in profile, at the edge from the front
+  fillPath(ctx, C.skinShade, () => ctx.ellipse(fx(-5, 13.5), -242 + hy, 2.6, 3.8, 0.15, 0, Math.PI * 2));
 
-  ctx.restore(); // lean
-  ctx.restore();
+  if (C.beardOn !== false) fillPath(ctx, C.beard, () => tracePath(ctx, BEARD_SIDE, BEARD_FRONT, t, hy));
+
+  // mouth: comes into view as the face turns; a closed smile curves the
+  // corners up and dips the middle a little
+  const mouthA = clamp((s - 0.45) / 0.35, 0, 1);
+  if (mouthA > 0) {
+    const mc = fx(10, 0), w = 3.4 * s;
+    const my = -233.4 + hy;
+    ctx.globalAlpha = mouthA;
+    ctx.strokeStyle = '#2a1712';
+    ctx.lineWidth = 1.15;
+    ctx.beginPath();
+    ctx.moveTo(mc - w, my - 1.6 * smile);
+    ctx.quadraticCurveTo(mc, my + 0.4 + 1.6 * smile, mc + w, my - 1.6 * smile);
+    ctx.stroke();
+    ctx.strokeStyle = C.skinShade; // the lower lip
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = mouthA * 0.7;
+    ctx.beginPath();
+    ctx.moveTo(mc - w * 0.55, my + 1.6 + 0.6 * smile);
+    ctx.quadraticCurveTo(mc, my + 2.3 + 1.2 * smile, mc + w * 0.55, my + 1.6 + 0.6 * smile);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  fillPath(ctx, C.hair, () => tracePath(ctx, HAIR_SIDE, HAIR_FRONT, t, hy));
+
+  // eyes and brows: the near ones slide across; the far ones come into view
+  // from behind the nose. Smiling, the lower lids rise a little.
+  const eyeH = 0.9 * (1 - 0.45 * smile);
+  const eye = (side, alpha) => {
+    if (alpha <= 0) return;
+    const ex = fx(9.9, side), ey = -245.6 + hy - 0.4 * smile;
+    ctx.globalAlpha = 0.85 * alpha;
+    fillPath(ctx, C.hair, () => ctx.ellipse(ex, ey, 1.2 + 0.1 * s, eyeH, 0.1 * c, 0, Math.PI * 2));
+    ctx.strokeStyle = C.hair;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(ex - 2.8 * (0.6 + 0.4 * s), ey - 3.6);
+    ctx.quadraticCurveTo(ex, ey - 4.8 - 0.3 * smile, ex + 2.8 * (0.6 + 0.4 * s), ey - 3.6);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  };
+  eye(4.3, 1);
+  eye(-4.3, clamp(facing(9.9, -4.3) / 3, 0, 1));
+  // a hint of the nose from the front: a soft line and the shadow beneath
+  if (s > 0.4) {
+    ctx.globalAlpha = (s - 0.4) / 0.6 * 0.6;
+    ctx.strokeStyle = C.skinShade;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(fx(11, -1), -245 + hy);
+    ctx.quadraticCurveTo(fx(12, -2), -240.5 + hy, fx(12, -1), -238.4 + hy);
+    ctx.moveTo(fx(11, 2), -238 + hy);
+    ctx.quadraticCurveTo(fx(12, 0), -237 + hy, fx(11, -2.4), -238 + hy);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+// The cloth outline seen turning: each chain point moves towards its place
+// in the front view (back edge to his left, front edge to his right, the
+// wrapped edge just right of centre), keeping the simulated heights.
+function munduTurned(cloth, s) {
+  const P = cloth.pts;
+  const n = P[0].length, C = P.length;
+  const frontX = (c, k) => BODY_CX + (-21 + (42 * c) / (C - 1)) * (1 + 0.12 * (k / (n - 1)));
+  const at = (c, k) => ({ x: P[c][k].x + (frontX(c, k) - P[c][k].x) * s, y: P[c][k].y });
+  const chains = P.map((chain, c) => chain.map((_, k) => at(c, k)));
+  const outline = {
+    front: chains[C - 1], back: chains[0],
+    hem: chains.map((ch) => ch[n - 1]), inner: chains.slice(1, -1),
+  };
+  return { state: cloth.state, pts: P, outline: () => outline };
 }
