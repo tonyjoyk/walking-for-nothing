@@ -57,14 +57,14 @@ export function createPanel(app) {
 
   // A3. Greeting ------------------------------------------------------
   const Gr = config.greeting;
-  const fG = pane.addFolder({ title: 'Greeting', expanded: false });
-  fG.addBinding(Gr, 'enabled', { label: 'greet on hover' });
-  bind(fG, Gr, 'stopSeconds', 'greeting.stopSeconds', { label: 'stop / start (s)' });
-  bind(fG, Gr, 'turnSeconds', 'greeting.turnSeconds', { label: 'turn (s)' });
-  bind(fG, Gr, 'lookSeconds', 'greeting.lookSeconds', { label: 'look (s)' });
-  bind(fG, Gr, 'smileSeconds', 'greeting.smileSeconds', { label: 'smile (s)' });
-  bind(fG, Gr, 'cooldownSeconds', 'greeting.cooldownSeconds', { label: 'cooldown (s)' });
-  fG.addButton({ title: 'Greet now' }).on('click', () => scene.greetNow());
+  const fGr = pane.addFolder({ title: 'Greeting', expanded: false });
+  fGr.addBinding(Gr, 'enabled', { label: 'greet on hover' });
+  bind(fGr, Gr, 'stopSeconds', 'greeting.stopSeconds', { label: 'stop / start (s)' });
+  bind(fGr, Gr, 'turnSeconds', 'greeting.turnSeconds', { label: 'turn (s)' });
+  bind(fGr, Gr, 'lookSeconds', 'greeting.lookSeconds', { label: 'look (s)' });
+  bind(fGr, Gr, 'smileSeconds', 'greeting.smileSeconds', { label: 'smile (s)' });
+  bind(fGr, Gr, 'cooldownSeconds', 'greeting.cooldownSeconds', { label: 'cooldown (s)' });
+  fGr.addButton({ title: 'Greet now' }).on('click', () => scene.greetNow());
 
   // B. Lighting and palette --------------------------------------------
   const fB = pane.addFolder({ title: 'Lighting and palette', expanded: false });
