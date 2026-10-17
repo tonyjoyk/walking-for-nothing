@@ -284,6 +284,25 @@ the last round.
 
 ---
 
+## Status (17 Oct 2026)
+
+Option A (longer, natural steps) was chosen. Steps 2–8 are implemented.
+Captures are in `docs/compare2/`. `npm test` has 17 checks.
+
+| Step | Result |
+| --- | --- |
+| 2 | Ground offset (−20 to +20) moves the man, Juhu, grass parting and shadows. Density goes up to 2.0. Zero-size canvas fixed, with a test. |
+| 3 | Contact shadows; long cast shadows at low sun, multiplied over the grass and faded; blade roots darken; soft shadow at the undergrowth roots. |
+| 4 | Mountain faces follow the ridge from peak to saddle to gully. Lambert-weighted, sky-tinted shadows, warm lit faces, far range at 45% contrast, rim light on the nearer range. |
+| 5 | Verlet mundu: 5 chains, 6 passes, collision with leg capsules and the seat. Tested: no leg shows outside it above the hem (folded and full, calm and wind). |
+| 6 | Legs from the UCI curves, scaled to a 0.47 m step. Measured: stance knee 2° → 13° → 6°, swing knee peak 58°, hip +17° to −8°. Feet still pinned (< 1 px). |
+| 7 | Pendulum arms: shoulder +12° to −30°, elbow 4°–45°; settle to a hang when standing. Shirt folds follow the arm. |
+| 8 | Character section: Body, Hair, Shirt, Mundu, Walk. Every option is validated on import and covered by a render test. |
+
+**Performance:** median render time is 26.6 ms per frame, against 26 ms
+before this round (same browser, same method), and 31 ms at grass density
+2.0.
+
 ## Sources
 
 - UCI Multivariate Gait Data (CC BY 4.0): https://archive.ics.uci.edu/dataset/760/multivariate+gait+data

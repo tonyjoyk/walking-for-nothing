@@ -71,7 +71,9 @@ src/
     clouds.js          painted cumulus clouds
     terrain.js         mountains with facets, hills, treeline, coconut palms
     field.js           grass: clumped blades, cached undergrowth, wind, parting
-    character.js       the man: IK rig, feet, walk cycle, cloth springs, rim light
+    character.js       the man: IK rig, feet, gait, pendulum arms, look, rim light
+    gaitData.js        measured hip/knee/ankle curves (UCI, CC BY 4.0)
+    mundu.js           the mundu as a Verlet cloth that wraps the legs
     dog.js             Juhu: state machine, IK legs, walk and trot gaits
     life.js            birds, rain, leaves, haze, mist, light, paint grain
   controls/
@@ -103,16 +105,35 @@ noise drifting downwind, so gusts roll across in patches. Blades part
 around the man's legs and Juhu's paws. Controls: **clumping** and
 **undergrowth** in the grass group.
 
-**The walk.** One phase value drives the legs, arms, torso and fabric, and
-it advances with distance walked, not time, so the legs can never run
-ahead of the ground. Walk speed and cadence (steps) are the controls;
-step length follows from them. Each foot rolls heel, flat, toe while it is
-down, and its pivot point stays fixed on the ground (two-bone IK). Hip
-height comes from the planted leg, so the body rises over each step and
-dips between them. Shoulders counter-rotate against the hips, the head
-stays level, and the mundu hem and shirt tail follow on springs. The
-**stride** control now sets how high the knee lifts. A low sun puts a rim
-light on the side of the figure that faces it.
+**The walk.** One phase value drives the whole body, and it advances with
+distance walked, not time, so the legs can never run ahead of the ground.
+The default is a slow stroll: 0.47 m steps at 60 steps a minute, about 33
+seconds per screen crossing.
+- **Legs:** hip, knee and ankle follow joint angles measured from real
+  walkers (`gaitData.js`), scaled to the step length. While a foot is down
+  it is pinned to the ground by two-bone IK and rolls heel, flat, toe. The
+  knee's small bend after heel strike sets the hip height, so the body dips
+  after each contact and rises over the planted foot.
+- **Arms:** driven, damped pendulums hanging from shoulders that move with
+  the trunk, pulled gently towards measured arm-swing ranges. They swing
+  more behind than in front, the elbow bends on the forward swing, and they
+  settle to a relaxed hang when he stops.
+- **Mundu:** a small Verlet cloth (five chains from the waistband) that
+  collides with the legs and drapes over the seat, so the legs never show
+  through above the hem. Choose folded (knee) or full (ankle) length.
+- **Light:** a low sun puts a rim light on the side of the figure facing it.
+
+The **Character** section of the dev panel has groups for body, hair,
+shirt, mundu and walk: height, build, skin, hair and beard, shirt colour,
+sleeve and looseness, mundu and kasavu colours, mundu length, cloth
+stiffness, walking speed, steps per minute, arm swing, knee lift, bob,
+and a **ground offset** that moves the man and Juhu up or down together.
+
+**Light and shadow.** Mountain faces follow each ridge from the peak down
+to its saddle and gullies. Each face is shaded by how its slope faces the
+sun, with sky-tinted shadows and less contrast on distant ranges. The man
+and Juhu have soft contact shadows, and long shadows that fall across the
+grass when the sun is low. Grass blades darken towards their roots.
 
 **Juhu.** Her states are `absent → approaching → together → departing`.
 She trots to catch up, eases into a walk beside him, walks one screen width
@@ -126,6 +147,13 @@ Her tail and ears follow her body on springs.
 rises with the wind setting. Rain is filtered noise. Chirps play when a
 flock enters, with a cooldown. Sound starts only after a tap on the button
 in the corner.
+
+## Credits
+
+Gait curves are the mean of the unbraced trials in the UCI Machine Learning
+Repository "Multivariate Gait Data"
+(https://archive.ics.uci.edu/dataset/760/multivariate+gait+data),
+licensed CC BY 4.0. The values were averaged and rounded.
 
 ## Swapping in recorded sound
 
