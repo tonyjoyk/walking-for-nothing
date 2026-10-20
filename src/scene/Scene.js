@@ -52,6 +52,7 @@ export class Scene {
     this.greet = this.greeting.output();
     this.hovering = false;
     this.pointer = null; // last mouse position (CSS px), or null when it's off the page
+    this.bubbleRect = null; // the speech bubble on screen (CSS px), set by bubble.js while it shows
     this.massCache = { far: {}, mid: {}, fore: {} };
     this.fps = 60;
     this.needsManPlacement = true;
@@ -182,7 +183,10 @@ export class Scene {
     }
     // Hover is re-tested every frame, so a still cursor follows him (D-2.2).
     if (this.pointer) this.hovering = this.hitMan(this.pointer.x, this.pointer.y, this.greeting.active);
-    this.greet = this.greeting.update(dt, this.hovering, cfg.greeting, { stopFraction });
+    // the cursor on the bubble itself pauses its hold (D-2.7)
+    const b = this.bubbleRect, p = this.pointer;
+    const holdBubble = !!(b && p && this.bubbleShown && p.x >= b.left && p.x <= b.right && p.y >= b.top && p.y <= b.bottom);
+    this.greet = this.greeting.update(dt, this.hovering, cfg.greeting, { stopFraction, holdBubble });
     // plan a new stop in the frame it begins, so he slows from the next one
     if (this.greeting.state === 'stopping' && !this.stopPlan) planStop();
     const manSpeed = C.walkSpeed * this.greet.speed;
@@ -258,6 +262,8 @@ export class Scene {
   // A generous box round the figure, never smaller than ~30x80 px on screen.
   // held: he's greeting, so the box reaches back by the most he can walk
   // while stopping, and he can't stop out from under the cursor (D-2.2).
+  // While the bubble shows, the box spans him and the bubble, so the cursor
+  // (or a tap) can travel between them (D-2.7).
   hitMan(px, py, held = false) {
     const C = this.config.character;
     if (!C.visible) return false;
@@ -267,7 +273,14 @@ export class Scene {
     const ly = (py / v.s + v.y0 - (GROUND_Y + C.groundOffset)) / C.scale;
     const halfW = Math.max(30, 15 / k), top = -Math.max(270, 80 / k);
     const back = held ? (STOP_REACH * C.walkSpeed) / Math.max(0.05, C.cadence) / C.scale : 0;
-    return lx - 3 <= halfW && lx - 3 >= -halfW - back && ly >= top && ly <= 6;
+    if (lx - 3 <= halfW && lx - 3 >= -halfW - back && ly >= top && ly <= 6) return true;
+    const b = held && this.bubbleShown && this.bubbleRect;
+    if (!b) return false;
+    const PAD = 12;
+    const toX = (u) => (this.manX + u * C.scale - v.x0) * v.s;
+    const left = Math.min(b.left, toX(3 - halfW)) - PAD, right = Math.max(b.right, toX(3 + halfW)) + PAD;
+    const bottom = (GROUND_Y + C.groundOffset + 6 * C.scale - v.y0) * v.s;
+    return px >= left && px <= right && py >= b.top - PAD && py <= bottom;
   }
 
   greetNow() { this.greeting.greetNow(); }

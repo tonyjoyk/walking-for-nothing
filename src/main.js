@@ -148,16 +148,16 @@ function adaptQuality(dt) {
   }
 }
 
-// The greeting (docs/product/specs/greeting.md, D-2.2): the cursor on the man
-// makes him stop; resting it there for a moment, or clicking him, makes him
-// turn to the visitor. A tap on touch screens works like a click. A click or
-// tap anywhere else lets him walk on. The scene re-tests the hover every frame
-// from the last pointer position, so a still cursor still counts.
+// The greeting (docs/product/specs/greeting.md, D-2.2, D-2.7): the cursor on
+// the man makes him stop; resting it there for a moment, or clicking him, makes
+// him turn to the visitor. A tap on touch screens works like a click. While he
+// faces the visitor, another click or tap on him sends him on his way; a click
+// or tap well away from him and the bubble does too. The scene re-tests the
+// hover every frame from the last pointer position, so a still cursor counts,
+// and while the bubble shows, it counts as part of him.
 const pointerOff = () => { scene.pointer = null; scene.hovering = false; };
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
-  // the cursor on the speech bubble counts as on him (D-2.3)
-  if (scene.bubbleShown && bubbleEl.contains(e.target)) { scene.pointer = null; scene.hovering = true; return; }
   scene.pointer = { x: e.clientX, y: e.clientY };
   scene.hovering = scene.hitMan(e.clientX, e.clientY, scene.greeting.active);
 });
@@ -166,7 +166,8 @@ window.addEventListener('blur', pointerOff);
 window.addEventListener('pointerdown', (e) => {
   if (e.button > 0) return;
   if (e.target.closest && e.target.closest('button, input, select, a, .tp-dfwv, .bubble')) return; // UI or the bubble, not the scene
-  if (scene.hitMan(e.clientX, e.clientY, scene.greeting.active)) scene.greetNow();
+  if (scene.greeting.facing && scene.hitMan(e.clientX, e.clientY)) scene.greeting.dismiss(); // on him again: bye
+  else if (scene.hitMan(e.clientX, e.clientY, scene.greeting.active)) scene.greetNow();
   else scene.greeting.release();
 });
 

@@ -1,0 +1,17 @@
+schema: 1
+story: '2.6'
+story_title: 'Reach the bubble, hold on touch, reveal the text'
+gate: PASS
+status_reason: 'Hover bridge verified with a real mouse; 4 s hold after a 1.1 s reveal, paused on the bubble; second click dismisses; 77 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-10-20'
+top_issues: []
+evidence:
+  tests_reviewed: 77
+  browser_checks:
+    - 'Real mouse, 25 steps chest to link: all on him, still smiling at the link'
+    - 'Moving 450 px away: returning'
+    - 'Second real click on him while facing: returning'
+    - 'Reveal captures at 0.25 s, 0.7 s and done'
+notes:
+  - '4 s is a glance; resting the cursor on the bubble pauses the hold'

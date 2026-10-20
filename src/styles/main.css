@@ -84,7 +84,19 @@ html, body {
 .bubble.show {
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.8s ease, visibility 0s, background-color 0.8s ease;
+  transition: opacity 0.4s ease, visibility 0s, background-color 0.8s ease;
+}
+/* The reveal (D-2.7): each line rises 4 px and fades in over 0.5 s,
+   0.15 s apart, done at about 1.1 s (BUBBLE_REVEAL_SECONDS in greeting.js). */
+@keyframes bubble-line { from { opacity: 0; transform: translateY(4px); } }
+.bubble.show p { animation: bubble-line 0.5s ease-out both; }
+.bubble.show p:nth-child(1) { animation-delay: 0.15s; }
+.bubble.show p:nth-child(2) { animation-delay: 0.3s; }
+.bubble.show p:nth-child(3) { animation-delay: 0.45s; }
+.bubble.show p:nth-child(4) { animation-delay: 0.6s; }
+@media (prefers-reduced-motion: reduce) {
+  @keyframes bubble-line-still { from { opacity: 0; } }
+  .bubble.show p { animation: bubble-line-still 0.6s ease-out both; animation-delay: 0s !important; }
 }
 .bubble p { margin: 0 0 0.5em; }
 .bubble p:last-child { margin-bottom: 0; }

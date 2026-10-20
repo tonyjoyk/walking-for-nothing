@@ -323,12 +323,13 @@ test('2.2 AC1/5: the bubble shows only while he faces the visitor', () => {
   }
 });
 
-test('2.2 AC3: with the bubble on, he faces the visitor for readSeconds before turning back', () => {
+test('2.2 AC3 / 2.6 AC3: with the bubble on, he faces the visitor for readSeconds after the reveal', async () => {
   const { scene, cfg } = makeScene();
   scene.greetNow(); // a click: plays through without the cursor
   until(scene, () => scene.greeting.state === 'looking', 6);
   const facing = until(scene, () => scene.greeting.state === 'returning', 40);
-  assert.ok(Math.abs(facing - cfg.greeting.readSeconds) < 0.05, `faced for ${facing.toFixed(2)} s`);
+  const { BUBBLE_REVEAL_SECONDS } = await import('../src/scene/greeting.js');
+  assert.ok(Math.abs(facing - BUBBLE_REVEAL_SECONDS - cfg.greeting.readSeconds) < 0.05, `faced for ${facing.toFixed(2)} s`);
 });
 
 test('2.2 AC7: with the bubble off, the timing is 3 s + 4 s and nothing shows', () => {
@@ -382,4 +383,68 @@ test('2.5: the bubble ends with a "View my work" link to the portfolio, opening 
   const paras = bubble.match(/<p[^>]*>[\s\S]*?<\/p>/g);
   const last = paras[paras.length - 1];
   assert.match(last, /<a href="https:\/\/tonyjoyk\.github\.io\/tony-joy-portfolio\/" target="_blank" rel="noopener">View my work<\/a>/);
+});
+
+// Story 2.6 / D-2.7: a hover bridge between him and the bubble.
+test('2.6: while the bubble shows, the box around him and the bubble counts as on him', () => {
+  const { scene } = makeScene();
+  scene.greetNow();
+  until(scene, () => scene.greeting.facing, 8);
+  const h = scene.headPoint();
+  // a bubble like the real one: above his head, a little to the right, 22 px gap
+  scene.bubbleRect = { left: h.x - 48, top: h.y - 22 - 240, right: h.x - 48 + 204, bottom: h.y - 22 };
+  const gap = { x: h.x + 60, y: h.y - 11 };  // in the gap, beside the hairline
+  assert.ok(!scene.hitMan(gap.x, gap.y, false), 'the gap is not him without the bridge');
+  assert.ok(scene.hitMan(gap.x, gap.y, true), 'the gap counts while the bubble shows');
+  assert.ok(scene.hitMan(h.x + 150, h.y - 100, true), 'on the bubble');
+  assert.ok(!scene.hitMan(h.x + 400, h.y - 100, true), 'well beside the bubble');
+  assert.ok(!scene.hitMan(h.x, h.y - 400, true), 'well above the bubble');
+  // the cursor resting in the gap keeps the greeting going
+  scene.greeting.oneShot = false;
+  scene.pointer = gap;
+  for (let i = 0; i < 60; i++) scene.update(1 / 60);
+  assert.ok(scene.greeting.facing, 'still facing with the cursor in the gap');
+  // moving well away ends it
+  scene.pointer = { x: h.x + 400, y: h.y - 100 };
+  until(scene, () => scene.greeting.state === 'returning', 1);
+  scene.pointer = null;
+});
+
+test('2.6: no bridge when the bubble is not showing', () => {
+  const { scene } = makeScene();
+  const h = scene.headPoint();
+  scene.bubbleRect = { left: h.x - 48, top: h.y - 262, right: h.x + 156, bottom: h.y - 22 };
+  assert.ok(!scene.hitMan(h.x + 60, h.y - 11, true));
+});
+
+test('2.6: the bubble holds 4 s after its reveal, paused while the cursor is on it; a click on him dismisses it', async () => {
+  const { BUBBLE_REVEAL_SECONDS } = await import('../src/scene/greeting.js');
+  const { scene, cfg } = makeScene();
+  assert.equal(cfg.greeting.readSeconds, 4);
+  // a tap (no cursor): about 5 s on screen, then he turns back
+  scene.greetNow();
+  until(scene, () => scene.greeting.facing, 8);
+  const shown = until(scene, () => !scene.greeting.facing, 20);
+  assert.ok(Math.abs(shown - BUBBLE_REVEAL_SECONDS - 4) < 0.05, `shown for ${shown.toFixed(2)} s`);
+
+  // the cursor resting on the bubble pauses the hold
+  const b = makeScene().scene;
+  b.greetNow();
+  until(b, () => b.greeting.facing, 8);
+  const h = b.headPoint();
+  b.bubbleRect = { left: h.x - 48, top: h.y - 262, right: h.x + 156, bottom: h.y - 22 };
+  b.pointer = { x: h.x + 50, y: h.y - 120 };
+  for (let i = 0; i < 60 * 12; i++) b.update(1 / 60);
+  assert.ok(b.greeting.facing, 'still facing after 12 s with the cursor on the bubble');
+  b.pointer = { x: h.x + 50, y: h.y + 60 }; // down onto him: the hold runs again
+  until(b, () => !b.greeting.facing, 6);
+
+  // a click on him while he faces the visitor sends him on his way at once
+  const c = makeScene().scene;
+  c.greetNow();
+  until(c, () => c.greeting.facing, 8);
+  c.greeting.dismiss();
+  assert.equal(c.greeting.state, 'returning');
+  const t = until(c, () => c.greeting.state === 'walking', 5);
+  assert.ok(t <= 2.5);
 });

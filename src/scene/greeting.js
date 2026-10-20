@@ -19,6 +19,10 @@ const HEAD_LEAD = 0.25;      // the head leads the body by this share of the tur
 const SETTLE_SECONDS = 0.8;  // feet come together and the arms settle
 const SMILE_GROW = 1.5;      // seconds for the smile to spread
 const SMILE_FADE = 0.8;
+// The bubble's text takes this long to appear (main.css, D-2.7); its
+// readSeconds hold starts after it, and pauses while the cursor is on the
+// bubble (ctx.holdBubble).
+export const BUBBLE_REVEAL_SECONDS = 1.1;
 
 export class Greeting {
   constructor() {
@@ -35,6 +39,7 @@ export class Greeting {
     this.hoverT = 0;     // seconds the cursor has rested on him (the dwell clock)
     this.turned = false; // has he begun to turn in this greeting?
     this.stopFrom = 1;   // speed when the stop began
+    this.faceT = 0;      // seconds facing the visitor (paused while the cursor is on the bubble)
   }
 
   // Turn now, regardless of the cursor (a click or tap on him, the dev
@@ -47,6 +52,16 @@ export class Greeting {
 
   // End a one-shot greeting early (a tap elsewhere).
   release() { this.oneShot = false; }
+
+  // He's facing the visitor (the bubble shows now, if it's on).
+  get facing() { return this.state === 'looking' || this.state === 'smiling'; }
+
+  // A click or tap on him while he faces the visitor: turn back now (D-2.7).
+  dismiss() {
+    if (!this.facing) return;
+    this.oneShot = false;
+    this.state = 'returning'; this.t = 0;
+  }
 
   get active() { return this.state !== 'walking'; }
 
@@ -106,21 +121,26 @@ export class Greeting {
 
       case 'turning':
         turnToward(1);
-        if (this.bodyP >= 1) goto('looking');
+        if (this.bodyP >= 1) { this.faceT = 0; goto('looking'); }
         if (!want) leave();
         break;
 
       case 'looking':
-        if (this.t >= cfg.lookSeconds) goto('smiling');
+      case 'smiling': {
+        // with the speech bubble on (D-2.3, D-2.7) he faces them for its reveal
+        // plus readSeconds, paused while the cursor is on the bubble; without
+        // it, he looks for lookSeconds and smiles for smileSeconds
+        if (!ctx.holdBubble) this.faceT += dt;
+        if (this.state === 'looking') {
+          if (this.t >= cfg.lookSeconds) goto('smiling');
+        } else {
+          this.smile = smooth(Math.min(1, this.t / SMILE_GROW));
+        }
+        const done = cfg.bubble ? this.faceT >= BUBBLE_REVEAL_SECONDS + cfg.readSeconds : this.state === 'smiling' && this.t >= cfg.smileSeconds;
+        if (done) { this.oneShot = false; leave(); }
         if (!want) leave();
         break;
-
-      case 'smiling':
-        this.smile = smooth(Math.min(1, this.t / SMILE_GROW));
-        // with the speech bubble on (D-2.3) he faces them for at least readSeconds in all
-        if (this.t >= Math.max(cfg.smileSeconds, cfg.bubble ? cfg.readSeconds - cfg.lookSeconds : 0)) { this.oneShot = false; leave(); }
-        if (!want) leave();
-        break;
+      }
 
       case 'returning':
         this.smile = Math.max(0, this.smile - dt / SMILE_FADE);

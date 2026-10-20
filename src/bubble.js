@@ -66,13 +66,14 @@ export function createBubble(el, scene, canvas) {
       if (!shown) fading = 0.8;
     }
     fading = Math.max(0, fading - dt);
-    if (!shown && fading <= 0) return; // hidden: nothing to place
+    if (!shown && fading <= 0) { scene.bubbleRect = null; return; } // hidden: nothing to place
     const head = scene.headPoint();
     const w = el.offsetWidth, h = el.offsetHeight;
     const vw = window.innerWidth;
     const left = Math.min(Math.max(MARGIN, head.x - 48), vw - MARGIN - w);
     const top = Math.max(MARGIN, head.y - GAP - h);
     el.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+    scene.bubbleRect = { left, top, right: left + w, bottom: top + h };
     el.style.setProperty('--tail-x', `${Math.round(Math.min(Math.max(8, head.x - left), w - 8))}px`);
     sinceSample += dt;
     if (shown && sinceSample >= SAMPLE_EVERY) { sinceSample = 0; readSky(left, top, w, h); }

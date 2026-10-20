@@ -18,5 +18,6 @@
 | 2.3 | A smaller, more minimal speech bubble | [2.3](../stories/2.3.speech-bubble-restyle.md) | Done |
 | 2.4 | A plain 40% white plate behind the bubble | [2.4](../stories/2.4.speech-bubble-plate.md) | Done |
 | 2.5 | "View my work" link in the bubble | [2.5](../stories/2.5.view-my-work-link.md) | Done |
+| 2.6 | Reach the bubble, hold on touch, reveal the text | [2.6](../stories/2.6.bubble-reach-hold-reveal.md) | Done |
 
-Next story: **2.6**. Candidate follow-ups (spec P1/P2): Juhu reacts; a blink while looking. Register new stories in [`docs/README.md`](../README.md) before writing them.
+Next story: **2.7**. Candidate follow-ups (spec P1/P2): Juhu reacts; a blink while looking. Register new stories in [`docs/README.md`](../README.md) before writing them.

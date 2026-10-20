@@ -336,3 +336,40 @@ Story: [2.5](../../stories/2.5.view-my-work-link.md).
   facing), by touch, and by keyboard while the bubble shows.
 - **Out of scope:** any other links, buttons or calls to action.
 
+---
+
+## Revision 5 (20 Oct 2026): reaching the bubble, holding on touch, revealing the text
+
+Decision: [D-2.7](../../architecture/decisions.md#d-27-a-hover-bridge-a-hold-after-the-reveal-and-a-staggered-reveal).
+Story: [2.6](../../stories/2.6.bubble-reach-hold-reveal.md).
+
+**Problems (found by testing and owner feedback):**
+- **Desktop:** between his head and the bubble there's a gap of about 22 px,
+  and the bubble also sits to one side. Moving the cursor from him to the
+  bubble leaves his hover box, so he turns away and the bubble fades before
+  the cursor arrives.
+- **Touch:** the 15 s hold starts before the text is visible. A tap that
+  just misses the link counts as "tapped elsewhere" and dismisses it.
+
+**Requirements:**
+- **R1, hover bridge.** While the bubble shows, the cursor anywhere in the
+  box spanning him and the bubble (plus 12 px) counts as on him. Leaving
+  that box still ends the greeting as before.
+- **R2, a short hold (owner, 20 Oct).** 15 s felt far too long. The bubble
+  now stays for `readSeconds` = **4 s** after its text has fully appeared
+  (about 5 s on screen), then he turns back and walks on. While the cursor
+  rests on the bubble itself, the 4 s is paused, so someone reading it or
+  reaching for the link isn't cut off.
+- **R2b, click him again to dismiss.** While he faces the visitor, a click
+  or tap on him sends him on his way at once.
+- **R3, near misses on touch.** A tap inside the same box doesn't dismiss
+  it; a tap clearly elsewhere still does.
+- **R4, reveal.** The text appears line by line, not all at once (see the
+  timing in D-2.7). With reduced motion, it simply fades in.
+- **Unchanged:** the copy, look, link, timing of the stop and turn, and the
+  plate. With the bubble off, the original 3 s look and 4 s smile still
+  apply.
+
+This replaces the Revision 3 non-goal "animation of the text": the owner
+now wants a reveal. A letter-by-letter typing effect is still out.
+

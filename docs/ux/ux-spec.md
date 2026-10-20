@@ -79,13 +79,18 @@ change.
   button. This still holds now that a click does something (D-2.2).
 - **Speech bubble (D-2.3, style D-2.5):** when he faces the visitor, a few
   words above his head introduce Tony. It fades in and out over 0.8 s, and
-  holds about 15 s so it can be read.
+  holds briefly (D-2.7).
   - Style: dark 11 px system font with a bold first line, on a plain white
     plate (8 px corners, 40% opacity), 204 px wide. A 1 px white hairline
     runs down to his head.
   - The same in every scene. The plate steps to 60% only if a sky is ever
     too dark for 4.5:1 contrast.
   - It stays on screen with a 16 px margin.
+  - The text is revealed line by line (each line 0.5 s, staggered 0.15 s,
+    complete in about 1.1 s). It then holds 4 s, paused while the cursor is
+    on the bubble. While it shows, the cursor or a tap anywhere around him
+    and the bubble keeps it, and a click or tap on him dismisses it
+    (D-2.7).
   - The last line is a quiet "View my work" link to the portfolio: same
     ink, semibold, underlined, opening in a new tab (D-2.6).
   - This is the one exception to principle 1, and it's only shown once the

@@ -228,6 +228,43 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   include this one link.
 - **Status:** in force.
 
+### D-2.7 A hover bridge, a hold after the reveal, and a staggered reveal
+- **Date:** 20 Oct 2026. **Story:** [2.6](../stories/2.6.bubble-reach-hold-reveal.md).
+- **Decision (UX):**
+  - **Hover bridge:** while the bubble shows, the hover area is the box
+    around him and the bubble together, plus 12 px. This makes a single
+    target, so the cursor can travel from him to the link along any path
+    (the usual fix for "menu closes on the way to it"). It also counts for
+    taps, so a near miss on touch doesn't dismiss.
+  - **Hold (owner's call):** short, so it never keeps the visitor from the
+    walk. 4 s (`readSeconds`) after the reveal, about 5 s on screen in all,
+    with or without the cursor; then he turns back.
+    - While the cursor is on the bubble itself, the 4 s pauses. Content
+      that appears on hover shouldn't vanish while the pointer is on it
+      (WCAG 1.4.13), and it gives time to reach the link.
+    - 4 s is a glance, not a full read of about 50 words; the pause on the
+      bubble covers anyone who wants to read it all.
+  - **Dismiss:** while he faces the visitor, a click or tap on him (not the
+    bubble) sends him on his way at once.
+  - **Reveal timing**, following common UI motion guidance (Material and
+    NN/g: entrances of about 200–500 ms, items staggered, the whole thing
+    in about a second so reading isn't delayed), within the site's "nothing
+    snaps" rule (UX principle 2):
+    - the plate fades in over 0.4 s;
+    - each of the four lines rises 4 px and fades in over 0.5 s, ease-out;
+    - the lines are staggered 0.15 s apart, starting at 0.15 s;
+    - the reveal is complete at about 1.1 s.
+  - **Reduced motion:** the text fades in once, with no rise and no stagger.
+  - It's revealed by paragraph, not letter by letter: a typing effect is
+    slow to read and noisy for screen readers.
+- **Why:** owner testing found the bubble vanished on the way to it. The
+  owner asked for a reveal, a short stay (about 4–5 s), and for a click on
+  him to dismiss it.
+- **Supersedes:** the Revision 3 non-goal "animation of the text". The
+  15 s hold (D-2.3): now 4 s after the reveal, pausable on the bubble. The
+  3 s look and 4 s smile no longer set the length while the bubble is on.
+- **Status:** in force.
+
 ## Epic 3: Character and motion (D-3)
 
 ### D-3.1 Natural steps over the brief's slow crossing

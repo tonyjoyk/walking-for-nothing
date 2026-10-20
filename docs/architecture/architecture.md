@@ -78,8 +78,14 @@ scripts/      fetch-weather.mjs: Open-Meteo to weather.json (CI; paused feature)
   - It samples the canvas behind the plate and sets the plate to 40%, or
     60% if needed for 4.5:1 (D-2.5).
   - Hovering the bubble counts as hovering him.
-  - `greeting.js` holds the smile until `readSeconds` while the bubble is
-    on.
+  - `greeting.js` sets how long he faces the visitor while the bubble is
+    on (D-2.7).
+- **Hover bridge (D-2.7):** `bubble.js` publishes `Scene.bubbleRect`, and
+  while the bubble shows, `hitMan(…, held)` also accepts the box around the
+  man and the bubble. The reveal is CSS. In `greeting.js`, the hold is
+  `BUBBLE_REVEAL_SECONDS + readSeconds` of facing time (`faceT`), paused
+  while the pointer is on the bubble (`ctx.holdBubble`); `dismiss()` turns
+  him back on a second click.
 - `Scene.pointer` holds the last mouse position. Hover is re-tested from it
   every frame, with the box widened behind him while greeting.
 - `Scene` plans the stop at the next both-feet-down point and passes the
