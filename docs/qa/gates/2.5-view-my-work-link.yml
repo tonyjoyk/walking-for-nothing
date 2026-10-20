@@ -1,0 +1,14 @@
+schema: 1
+story: '2.5'
+story_title: '"View my work" link in the bubble'
+gate: PASS
+status_reason: 'Link in place, new tab, does not end the greeting; contrast at least 4.5:1 in all scenes (night uses the 60% plate step); 74 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-10-20'
+top_issues: []
+evidence:
+  tests_reviewed: 74
+  browser_checks:
+    - 'pointerdown on the link: greeting stays in smiling, one-shot kept'
+    - 'href, target=_blank, rel=noopener, tabIndex 0 while shown'
+  contrast: { sunny: 12.2, twilight: 7.8, rain: 6.9, night: 7.4, dawn: 11.3, wind: 11.8, phone_sunny: 12.6, phone_dawn: 13.7, phone_night: 4.6 }

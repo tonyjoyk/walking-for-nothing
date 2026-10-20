@@ -209,6 +209,25 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   hairline stay.
 - **Status:** in force.
 
+### D-2.6 A "View my work" link in the bubble
+- **Date:** 20 Oct 2026. **Story:** [2.5](../stories/2.5.view-my-work-link.md).
+- **Decision (UX):**
+  - A plain text link, "View my work", as the last line of the bubble,
+    left-aligned. It uses the same dark 11 px ink, in semibold with a thin
+    underline, and has no button, icon or arrow.
+  - It opens in a new tab (`rel="noopener"`), so the walk keeps going
+    where the visitor left it.
+  - It has a visible focus ring for the keyboard. It sits on the plate, so
+    it gets the same 4.5:1 or better contrast.
+  - Clicks and taps on it don't end the greeting (the bubble is already
+    excluded from scene clicks).
+- **Why:** the owner wants visitors who meet him to be able to find his
+  portfolio. A quiet link at the end of what he says keeps the "discovered,
+  not announced" feel.
+- **Supersedes:** widens UX principle 1's bubble exception (D-2.3) to
+  include this one link.
+- **Status:** in force.
+
 ## Epic 3: Character and motion (D-3)
 
 ### D-3.1 Natural steps over the brief's slow crossing

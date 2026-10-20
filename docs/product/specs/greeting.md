@@ -321,3 +321,18 @@ typing effect, more than one message.
 
 **Config:** `greeting.bubble` (on/off), `greeting.readSeconds` (5–40 s).
 
+---
+
+## Revision 4 (20 Oct 2026): "View my work"
+
+Decision: [D-2.6](../../architecture/decisions.md#d-26-a-view-my-work-link-in-the-bubble).
+Story: [2.5](../../stories/2.5.view-my-work-link.md).
+
+**Requirement.** At the bottom left of the speech bubble, a link reading
+"View my work" goes to https://tonyjoyk.github.io/tony-joy-portfolio/.
+
+- It's part of the bubble, so it appears and disappears with it.
+- It can be reached with the mouse (the cursor on the bubble keeps him
+  facing), by touch, and by keyboard while the bubble shows.
+- **Out of scope:** any other links, buttons or calls to action.
+

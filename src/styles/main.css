@@ -89,6 +89,16 @@ html, body {
 .bubble p { margin: 0 0 0.5em; }
 .bubble p:last-child { margin-bottom: 0; }
 .bubble .hi { font-weight: 600; }
+/* "View my work" (D-2.6): a quiet link, the bubble's last line */
+.bubble .work { margin-top: 0.7em; }
+.bubble .work a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.bubble .work a:focus-visible { outline: 2px solid #17211c; outline-offset: 2px; border-radius: 2px; }
 .bubble::after {
   content: '';
   position: absolute;

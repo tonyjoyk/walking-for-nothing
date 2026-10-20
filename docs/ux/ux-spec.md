@@ -86,6 +86,8 @@ change.
   - The same in every scene. The plate steps to 60% only if a sky is ever
     too dark for 4.5:1 contrast.
   - It stays on screen with a 16 px margin.
+  - The last line is a quiet "View my work" link to the portfolio: same
+    ink, semibold, underlined, opening in a new tab (D-2.6).
   - This is the one exception to principle 1, and it's only shown once the
     greeting has been discovered.
 - Spec: [greeting](../product/specs/greeting.md).

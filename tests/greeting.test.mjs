@@ -373,3 +373,13 @@ test('2.4: the plate is 40%, stepping up to 60% only when 40% is under 4.5:1', a
   // judged on the darkest tenth: a few dark pixels don't pass as light
   assert.ok(plateContrast([...sky(0xa9, 0xd5, 0xe0, 80), ...sky(0, 0, 0, 20)], 0.4) < plateContrast(sky(0xa9, 0xd5, 0xe0), 0.4));
 });
+
+// Story 2.5 / D-2.6: "View my work" at the end of the bubble.
+test('2.5: the bubble ends with a "View my work" link to the portfolio, opening in a new tab', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const bubble = html.slice(html.indexOf('id="bubble"'), html.indexOf('</div>', html.indexOf('id="bubble"')));
+  const paras = bubble.match(/<p[^>]*>[\s\S]*?<\/p>/g);
+  const last = paras[paras.length - 1];
+  assert.match(last, /<a href="https:\/\/tonyjoyk\.github\.io\/tony-joy-portfolio\/" target="_blank" rel="noopener">View my work<\/a>/);
+});
