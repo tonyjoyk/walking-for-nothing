@@ -1,0 +1,105 @@
+{
+  "_about": "What is in audio-src/ (git-ignored). Freesound files are the HQ Ogg Vorbis previews fetched with the API (originals need OAuth; previews are well above the shipped 56 kbps Opus). xeno-canto files are the uploaded originals. scripts/build-audio.mjs checks these checksums.",
+  "fetched": "2026-10-20",
+  "files": {
+    "dawnOrchard": {
+      "file": "dawnOrchard.ogg",
+      "sha256": "ea5caa8104fc4f3bf158174bc3544997d254d761efb3347a633e9e089c0149f1",
+      "codec": "vorbis",
+      "sampleRate": 96000,
+      "channels": 2,
+      "duration": 160.86,
+      "from": "freesound preview-hq-ogg"
+    },
+    "dayField": {
+      "file": "dayField.ogg",
+      "sha256": "30901d22e2698d9001a8683ab7c8e1854bbfe63147887c96444bc2790750fc12",
+      "codec": "vorbis",
+      "sampleRate": 48000,
+      "channels": 2,
+      "duration": 154.95,
+      "from": "freesound preview-hq-ogg"
+    },
+    "windGrass": {
+      "file": "windGrass.ogg",
+      "sha256": "8232b0a3e05caa0e08da51cc91a859b70b45c87d786c96468ad9efd44ab6b725",
+      "codec": "vorbis",
+      "sampleRate": 48000,
+      "channels": 2,
+      "duration": 107.98,
+      "from": "freesound preview-hq-ogg"
+    },
+    "rainSteady": {
+      "file": "rainSteady.ogg",
+      "sha256": "9014abb4d195ef4e788c89949b0b550d2d9541ffdfd7bf9c2ae196732ddea769",
+      "codec": "vorbis",
+      "sampleRate": 96000,
+      "channels": 2,
+      "duration": 600.06,
+      "from": "freesound preview-hq-ogg"
+    },
+    "eveningBirdsToCrickets": {
+      "file": "eveningBirdsToCrickets.ogg",
+      "sha256": "c74a0b9ee120136ecec8344062dccfca0268996da3a3dedf6feeacfc490c1267",
+      "codec": "vorbis",
+      "sampleRate": 48000,
+      "channels": 1,
+      "duration": 189.19,
+      "from": "freesound preview-hq-ogg"
+    },
+    "nightCrickets": {
+      "file": "nightCrickets.ogg",
+      "sha256": "95fabb3af09c921ef8a2ccd83b1ae90cd3bbad0c24e7aa64ba8bb4ae4790cc1a",
+      "codec": "vorbis",
+      "sampleRate": 96000,
+      "channels": 2,
+      "duration": 47.08,
+      "from": "freesound preview-hq-ogg"
+    },
+    "thunderDistant": {
+      "file": "thunderDistant.ogg",
+      "sha256": "ad2b491007b8d0a3fee04343c3bbb8914d732c6b01a64a62a9262ea3bc993f87",
+      "codec": "vorbis",
+      "sampleRate": 48000,
+      "channels": 2,
+      "duration": 893.82,
+      "from": "freesound preview-hq-ogg"
+    },
+    "thunderClose": {
+      "file": "thunderClose.ogg",
+      "sha256": "c6a35fa51032f34da1576ca70b1b7277fe44855d1c665664085c8b28dde61803",
+      "codec": "vorbis",
+      "sampleRate": 48000,
+      "channels": 2,
+      "duration": 41.35,
+      "from": "freesound preview-hq-ogg"
+    },
+    "crowsHouse": {
+      "file": "crowsHouse.ogg",
+      "sha256": "1c68be32b54bae5215e92de5884949aaab05a16724f8a8ec6ba52b4ed2d13fbc",
+      "codec": "vorbis",
+      "sampleRate": 44100,
+      "channels": 2,
+      "duration": 57.12,
+      "from": "freesound preview-hq-ogg"
+    },
+    "koel": {
+      "file": "koel.mp3",
+      "sha256": "a3d2fce9c9ecdef79c26d7a4ce463b938e5e38bf60d5c4dfc2d863dfd0bf8fad",
+      "codec": "mp3",
+      "sampleRate": 44100,
+      "channels": 2,
+      "duration": 70.65,
+      "from": "xeno-canto original"
+    },
+    "kingfisher": {
+      "file": "kingfisher.mp3",
+      "sha256": "841a0826dbc3938438a69b7742af49001eaaf33177d6dcba26d95b1cb98a0254",
+      "codec": "mp3",
+      "sampleRate": 48000,
+      "channels": 2,
+      "duration": 51.75,
+      "from": "xeno-canto original"
+    }
+  }
+}

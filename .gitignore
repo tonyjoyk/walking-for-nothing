@@ -3,3 +3,4 @@ dist
 .DS_Store
 captures
 .claude/settings.local.json
+audio-src/
