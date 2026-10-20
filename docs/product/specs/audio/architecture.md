@@ -138,18 +138,33 @@ The current `src/audio.js` becomes `src/audio/`:
 `AUDIO_MIX` in `src/config.js` gives each scene a weight per bed id. These
 are starting levels for the listening pass.
 
-| Scene | Weights |
+| Scene | Weights (ids from `audio/sources.json`) |
 | --- | --- |
-| `dawn` | `dawnChorus` 1.0, `dawnGoa` 0.6, `windPalms` 0.15 |
-| `sunny` | `dayField` 1.0, `windPalms` 0.25 |
-| `wind` | `windPalms` 1.0, `windGrass` 0.8, `dayField` 0.25 |
-| `rain` | `rainSteady` 1.0, `rainHeavy` (× P.rain), `nightCrickets` 0.1 |
-| `overcast` | `dayField` 0.4, `windGrass` 0.3, `rainSteady` 0.0 |
-| `twilight` | `birdsToCrickets` 1.0, `houseCrows` 0.5 |
-| `night` | `nightCrickets` 1.0 (+ owlet and nightjar events) |
+| `dawn` | `dawnOrchard` 1.0, `windGrass` 0.1 |
+| `sunny` | `dayField` 1.0, `windGrass` 0.15 |
+| `wind` | `windGrass` 0.6 (already −8 dB at build), `dayField` 0.25 |
+| `rain` | `rainSteady` 1.0 (× eased P.rain) |
+| `overcast` | `dayField` 0.5, `windGrass` 0.2 |
+| `twilight` | `eveningBirdsToCrickets` 1.0 |
+| `night` | `nightCrickets` 1.0 |
 
-Event pools also live in config: species ids, mean interval (Dawn 6 s, Day
-14 s, Windy 30 s, Sunset 12 s, Night 25 s) and minimum gap.
+These follow Tony's picks (story 6.1, 20 Oct 2026). Since there's one bed
+per scene, heavier rain comes from level rather than a second file.
+
+Event pools also live in config.
+
+| Scene | Events | Mean interval |
+| --- | --- | --- |
+| Dawn | `koel`, `kingfisher` | 12 s |
+| Daylight | `koel`, `kingfisher` | 25 s |
+| Sunset | `crowsHouse` (Tony: sparingly) | 90 s |
+| Windy, Night, Rain | none (Rain has thunder) | n/a |
+
+Thunder uses `thunderDistant` cuts for most rolls and `thunderClose`
+only for near distances.
+
+**Passing flocks:** none of the flock calls were picked, so flocks stay
+silent for now. Egrets rarely call, so a silent flock is authentic.
 
 ## 3. Interfaces
 
@@ -242,4 +257,18 @@ These are for the project decision log (`docs/architecture/decisions.md`).
     - sunset crows: 249567 (CC0);
     - night: 803557 Goa crickets (CC BY), plus the Kerala owlet and
       nightjar calls (CC BY-SA).
-  - Final picks follow Tony's listening notes (story 6.1).
+  - **Final picks** (story 6.1, Tony):
+    - Tropical Orchard in Spring (dawn bed);
+    - crickets and tropical birds (day);
+    - Wind in the African bush (−8 dB: Tony found it too loud);
+    - Light rain in banana trees;
+    - two TRP thunder recordings (parts of 578230, plus 574386);
+    - Birds to Crickets (sunset);
+    - house crows (sparingly);
+    - Goa night crickets;
+    - Asian koel;
+    - white-throated kingfisher.
+
+    Recorded in `audio/sources.json`.
+  - Not used: the palm wind, heavy and easing-off rain, the Goa dawn, owlet
+    and nightjar, and the parakeet, myna, barbet, bulbul and coucal calls.
