@@ -5,7 +5,10 @@ Juhu, his German Shepherd, joins him now and then. The weather changes.
 
 Everything is drawn in code with p5.js. No images, no sound files.
 
-![The six states](docs/preview-six-states.png)
+![The six states](docs/media/preview-six-states.png)
+
+**Project docs** (PRD, UX, architecture, decisions, epics, stories): start at
+[`docs/README.md`](docs/README.md).
 
 ## Run it
 
@@ -192,7 +195,7 @@ the scene moves to the next one in the same order.
 **Other opening modes** (dev panel → **Opening and journey** → opening
 mode):
 - **Live weather:** Kerala's time of day, easing into Pala's current weather
-  from `weather.json` (`docs/spec-live-weather.md`). Off for now:
+  from `weather.json` (`docs/product/specs/live-weather.md`). Off for now:
   - the repository variable `LIVE_WEATHER` is `false`, so the deploy
     publishes the file switched off;
   - `?weather=live` previews it.
@@ -218,7 +221,7 @@ eyes and ears from simple 3D positions, so at turn 0 it is exactly the
 profile figure. The mundu's simulated cloth morphs to its front view. Timings
 and an on/off switch are in the dev panel under **Greeting** (with a "Greet
 now" button); `npm run capture -- --only greet` renders the sequence. Spec:
-`docs/spec-greeting.md`.
+`docs/product/specs/greeting.md`.
 
 ## Credits
 

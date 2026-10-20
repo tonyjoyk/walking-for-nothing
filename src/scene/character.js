@@ -619,7 +619,7 @@ function drawMundu(ctx, cloth, C, rim, state) {
 // the ground. motion is an optional CharacterMotion (springs); rim is
 // { dir, alpha, color } for the sun-side rim light.
 // ---------------------------------------------------------------------------
-// Turning to face the screen (the greeting, docs/spec-greeting.md).
+// Turning to face the screen (the greeting, docs/product/specs/greeting.md).
 // Outlines are lists of path commands. Each profile outline has a front-view
 // twin with exactly the same commands, so turning is a point-by-point blend:
 // the nose bump flattens into the oval face, the shirt widens into the

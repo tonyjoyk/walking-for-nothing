@@ -1,5 +1,5 @@
 # Builds and publishes the site to GitHub Pages, and refreshes Pala's
-# weather (weather.json) every 30 minutes (docs/spec-live-weather.md).
+# weather (weather.json) every 30 minutes (docs/product/specs/live-weather.md).
 #
 # Live weather is OFF until the repository variable LIVE_WEATHER is set to
 # "true" (Settings > Secrets and variables > Actions > Variables). Setting it

@@ -5,7 +5,7 @@ and customisation; a ground-offset control; grass density; mountain
 shading; small changes that make the scenes feel more natural.
 
 **How this was done:**
-- I captured close-ups of the current build (`docs/study/current-walk-cycle.png`).
+- I captured close-ups of the current build (`docs/media/study/current-walk-cycle.png`).
 - I read the rig, field and terrain code.
 - I reviewed published gait data, animation practice and 2D cloth and
   landscape techniques. Sources are at the end.
@@ -287,7 +287,7 @@ the last round.
 ## Status (17 Oct 2026)
 
 Option A (longer, natural steps) was chosen. Steps 2–8 are implemented.
-Captures are in `docs/compare2/`. `npm test` has 17 checks.
+Captures are in `docs/media/compare-2/`. `npm test` has 17 checks.
 
 | Step | Result |
 | --- | --- |

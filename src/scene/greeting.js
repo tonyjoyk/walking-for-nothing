@@ -1,4 +1,4 @@
-// The greeting (docs/spec-greeting.md): when the visitor rests the cursor on
+// The greeting (docs/product/specs/greeting.md): when the visitor rests the cursor on
 // the man he stops, turns to face them, looks, smiles, then turns back and
 // walks on. Leaving him at any point sends him straight back to walking.
 //

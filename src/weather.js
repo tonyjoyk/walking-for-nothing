@@ -1,5 +1,5 @@
 // Opening scene from Kerala's weather, and the scene cycle.
-// Spec: docs/spec-live-weather.md. Everything here is a pure function so it
+// Spec: docs/product/specs/live-weather.md. Everything here is a pure function so it
 // can be tested without a browser or network.
 //
 // weather.json (produced by a scheduled job, Phase B):

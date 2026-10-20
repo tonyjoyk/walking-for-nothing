@@ -27,7 +27,7 @@ const audio = new AudioManager(config);
 //                      next scene after the one last on screen
 //                      (docs/stories/1.1.shuffle-and-advance-opening.md)
 //   weather            Kerala's time of day, easing into the live weather if
-//                      weather.json arrives in time (docs/spec-live-weather.md)
+//                      weather.json arrives in time (docs/product/specs/live-weather.md)
 //   time-of-day        Kerala's time of day only
 //   ?weather=rain (or any scene name)  force that opening scene
 //   ?weather=live                      weather mode, even if switched off
@@ -143,7 +143,7 @@ function adaptQuality(dt) {
   }
 }
 
-// The greeting (docs/spec-greeting.md): resting the cursor on the man makes
+// The greeting (docs/product/specs/greeting.md): resting the cursor on the man makes
 // him stop and turn to the visitor. On touch screens a tap on him plays it
 // once; a tap anywhere else lets him walk on.
 window.addEventListener('pointermove', (e) => {

@@ -1,4 +1,4 @@
-// The greeting (docs/spec-greeting.md).
+// The greeting (docs/product/specs/greeting.md).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefaultConfig } from '../src/config.js';

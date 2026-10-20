@@ -1,4 +1,4 @@
-// Opening scene from the weather, and the scene cycle (docs/spec-live-weather.md).
+// Opening scene from the weather, and the scene cycle (docs/product/specs/live-weather.md).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefaultConfig, validateConfig } from '../src/config.js';

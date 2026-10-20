@@ -100,7 +100,7 @@ export const PRESET_LABELS = {
 // The overcast look: the Rain scene with the rain itself switched off.
 export const OVERCAST = { rain: 0, rainSpeed: 1, leaves: 0 };
 
-// How the opening scene is chosen from the weather (docs/spec-live-weather.md).
+// How the opening scene is chosen from the weather (docs/product/specs/live-weather.md).
 // Times are in minutes, Kerala time.
 export const WEATHER_RULES = {
   location: { name: 'Pala, Kottayam', lat: 9.71306, lon: 76.68331 },
@@ -154,13 +154,13 @@ export function createDefaultConfig() {
       flockSize: 5, interval: 28, speed: 70, altitude: 0.7, wingSpeed: 1, scale: 1, chirps: true,
     },
     weather: { rainDensity: 0.7 },
-    // Opening scene, then one scene per crossing (docs/spec-live-weather.md,
+    // Opening scene, then one scene per crossing (docs/product/specs/live-weather.md,
     // docs/stories/1.1.shuffle-and-advance-opening.md).
     // mode: 'shuffle' (random first visit, next scene on each reload),
     // 'weather' (Kerala's live weather) or 'time-of-day'.
     opening: { mode: 'shuffle', force: 'auto' },
     cycle: { enabled: true, crossingsPerScene: 1 },
-    // The man stops and greets the visitor on hover (docs/spec-greeting.md).
+    // The man stops and greets the visitor on hover (docs/product/specs/greeting.md).
     greeting: { enabled: true, stopSeconds: 0.9, turnSeconds: 1.4, lookSeconds: 3, smileSeconds: 4, cooldownSeconds: 2 },
     finish: { grain: 0.1 },
     audio: {

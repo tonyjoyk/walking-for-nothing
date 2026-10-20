@@ -1,5 +1,5 @@
 // Fetches the current weather for the site's location from Open-Meteo and
-// writes weather.json for the page (docs/spec-live-weather.md). Run by the
+// writes weather.json for the page (docs/product/specs/live-weather.md). Run by the
 // deploy workflow on a schedule; visitors never contact the weather service.
 //
 //   node scripts/fetch-weather.mjs [out=public/weather.json]

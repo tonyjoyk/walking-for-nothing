@@ -1,0 +1,234 @@
+# Decision log
+
+Every decision that changes or overrides an earlier document goes here,
+newest last within each section. IDs are `D-<epic>.<n>`; project-wide ones
+are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
+
+**Format:** date · decision · why · what it supersedes · status.
+
+## Project-wide (D-0)
+
+### D-0.1 Everything is drawn in code
+- **Date:** 16 Oct 2026. **Source:** brief.
+- **Decision:** the landscape, figures and effects are drawn with Canvas 2D
+  inside p5.js. There are no image assets in the site; reference images live
+  only in `docs/ux/reference/`.
+- **Status:** in force.
+
+### D-0.2 No p5play or sprite sheets for the character
+- **Date:** 17 Oct 2026.
+- **Why:**
+  - p5play's personal licence requires the whole site to be open source, and
+    a paid licence for commercial use.
+  - It draws sprites on top of everything, which breaks layering with the
+    grass.
+  - Stock sprites don't match the look.
+  - A timer-driven sprite brings back foot sliding.
+- **Status:** in force. If drawn frames are ever wanted, draw them into our
+  own canvas and advance them by distance walked.
+
+### D-0.3 Public repository; history kept as is
+- **Date:** 17 Oct 2026.
+- **Why:** GitHub Pages on the free plan needs a public repo.
+- **Decision:** the owner chose to keep the commit history unchanged, so the
+  work email stays in commit metadata. New commits use the GitHub no-reply
+  address.
+- **Status:** in force.
+
+### D-0.4 The brief's post-processing shader pass is not used
+- **Date:** 17 Oct 2026.
+- **Why:** the painted finish comes from a grain overlay and gradients. They
+  look the same in every browser and cost less.
+- **Supersedes:** the shader pass in brief rev 2.
+- **Status:** deferred; revisit only if the finish needs it.
+
+## Epic 1: Opening and journey (D-1)
+
+### D-1.1 Live weather is Kerala's (Pala), published by a scheduled job
+- **Date:** 17 Oct 2026. **Spec:** [`product/specs/live-weather.md`](../product/specs/live-weather.md).
+- **Decision:**
+  - The weather comes from Open-Meteo, for Pala, Kottayam.
+  - A GitHub Actions job writes `weather.json` every 30 minutes.
+  - Visitors never contact the weather service.
+- **Status:** built; **paused** by D-1.3.
+
+### D-1.2 Each crossing moves to the next scene
+- **Date:** 17 Oct 2026.
+- **Decision:** the scenes cycle in the order Dawn → Daylight → Windy → Rain
+  → Sunset → Night, one per crossing (configurable).
+- **Status:** in force.
+
+### D-1.3 Live weather paused; deprecation review
+- **Date:** 20 Oct 2026 (owner's request).
+- **Decision:**
+  - The default opening is the shuffle (D-1.4).
+  - Live weather stays in the code as the `weather` opening mode.
+  - The repository variable `LIVE_WEATHER` is `false`.
+  - In shuffle mode the page never requests `weather.json`.
+- **⚠ Deprecation review: 31 Jan 2027.** If live weather hasn't been switched
+  back on and used by then, remove it rather than keep carrying it. To
+  remove:
+  1. **`src/weather.js`:** remove `validateWeather`, `chooseOpeningScene`,
+     `approxSunTimes` and `keralaMinutes`. Keep the shuffle and cycle
+     functions, and consider moving them to a `scenes.js`.
+  2. **`src/main.js`:** remove the weather and time-of-day branches of
+     `chooseOpening()`, the `?weather=live` preview and the credit link
+     handling.
+  3. **`src/config.js`:** remove `WEATHER_RULES`, and the `'weather'` and
+     `'time-of-day'` values of `opening.mode`.
+  4. **`scripts/fetch-weather.mjs`, `public/weather.json`:** delete.
+  5. **`.github/workflows/deploy.yml`:** remove the "Fetch the weather" step,
+     the 30-minute `schedule` trigger (deploy on push only) and the
+     `LIVE_WEATHER` variable.
+  6. **`index.html`, `src/styles/main.css`:** remove the Open-Meteo credit
+     link and its styles; also remove the credit from the README.
+  7. **`tests/weather.test.mjs`:** remove the weather tests, and keep the
+     shuffle and cycle tests.
+  8. **Docs:** mark `product/specs/live-weather.md` as *Retired*, move it to
+     `archive/`, and close this decision.
+- **Until then:**
+  - The scheduled job still runs every 30 minutes and keeps `weather.json`
+    current, switched off. It's harmless on a public repo.
+  - To turn live weather back on: set the opening mode to `weather` in
+    `config.js` and set `LIVE_WEATHER=true`.
+- **Status:** paused, with review due 31 Jan 2027.
+
+### D-1.4 Opening: random on a fresh visit, next scene on each reload
+- **Date:** 20 Oct 2026. **Story:** [1.1](../stories/1.1.shuffle-and-advance-opening.md).
+- **Decision:**
+  - A new tab opens on a random scene.
+  - A reload opens on the scene after the one last on screen.
+  - The tab's memory is kept in `sessionStorage` only.
+- **Supersedes:** "open on the weather" (D-1.1) as the default.
+- **Status:** in force.
+
+## Epic 2: The greeting (D-2)
+
+### D-2.1 The turn is a morph of the profile rig, not a second drawing
+- **Date:** 18 Oct 2026. **Spec:** [`product/specs/greeting.md`](../product/specs/greeting.md).
+- **Decision:**
+  - Each profile outline has a front-view twin with the same path commands.
+  - Limbs and features are projected from 3D positions; the head leads the
+    turn.
+  - The stop is planned to land with both feet down.
+- **Status:** in force.
+
+## Epic 3: Character and motion (D-3)
+
+### D-3.1 Natural steps over the brief's slow crossing
+- **Date:** 17 Oct 2026; tuned by the owner on 17 Oct.
+- **Decision:**
+  - Steps are about 0.42 m at about 67 steps a minute (walk speed 70,
+    cadence 0.56).
+  - A crossing takes about 33 s.
+- **Supersedes:** brief §5 "80–90 steps per minute" together with "60–90 s
+  per crossing", which force tiny, shuffling steps at this scale.
+- **Status:** in force.
+
+### D-3.2 Legs follow measured gait data
+- **Date:** 17 Oct 2026.
+- **Decision:** the legs follow the UCI Multivariate Gait Data (CC BY 4.0),
+  with IK foot planting.
+- **Status:** in force.
+
+### D-3.3 The mundu is a Verlet cloth with a designed silhouette
+- **Date:** 17 Oct 2026.
+- **Decision:** the cloth simulation provides motion and keeps the legs
+  hidden. Its look (border, wrap panel, waistband, folded state) is drawn on
+  top of the cloth points.
+- **Supersedes:** the external feedback "do not simulate cloth physics".
+- **Status:** in force.
+
+### D-3.4 The owner's tuned character defaults
+- **Date:** 17 Oct 2026.
+- **Decision:**
+  - Full-length mundu, ground offset +20 (in the hay), knee lift 0.41,
+    bob 0.54, arm swing 0.67.
+  - Border colour dark green (changed 17 Oct, from gold kasavu).
+- **Status:** in force.
+
+## Epic 4: Landscape and atmosphere (D-4)
+
+### D-4.1 Mountains follow the six-scene reference
+- **Date:** 17 Oct 2026.
+- **Decision:** one dominant peak with smaller peaks, and a single lit plane
+  per peak fading into haze.
+- **Supersedes:** the ridge-following faceted shading of 17 Oct (character
+  study §5).
+- **Status:** in force.
+
+### D-4.2 Ground offset sets field depth
+- **Date:** 17 Oct 2026.
+- **Decision:** raised, he walks on a grassy field; lowered, he wades
+  through hay. Grass parting stays gentle (0.6).
+- **Status:** in force.
+
+### D-4.3 Keep the hay-field style
+- **Date:** 17 Oct 2026.
+- **Decision:** a continuous canopy over undergrowth. The reference sheet's
+  sparser grass was not adopted.
+- **Status:** in force.
+
+## Epic 5: Platform and delivery (D-5)
+
+### D-5.1 Hosted on GitHub Pages under the repo name
+- **Date:** 17 Oct 2026.
+- **Decision:** https://tonyjoyk.github.io/walking-for-nothing/, deployed on
+  every push to `main` (tests, then build). The scheduled weather refresh is
+  covered by D-1.3.
+- **Status:** in force.
+
+### D-5.2 Mobile quality adapts automatically
+- **Date:** 17 Oct 2026.
+- **Decision:** touch devices start at medium quality, and any device steps
+  down if it stays under about 40 fps.
+- **Status:** in force.
+
+## Epic 6: Audio (D-6)
+
+Added 20 Oct 2026 by the audio chat. Full text:
+[`product/specs/audio/architecture.md` §7](../product/specs/audio/architecture.md).
+
+### D-6.1 Recorded ambience becomes the main audio
+- **Date:** 20 Oct 2026.
+- **Decision:** recorded ambience replaces generated sound as the main audio.
+  Generated wind and rain stay in `SynthFallback`, used while a recording
+  loads or if one is unavailable.
+- **Supersedes:** brief §12, "wind sound made in code". The brief is left
+  unchanged.
+- **Status:** planned (epic 6).
+
+### D-6.2 Licence policy for audio
+- **Date:** 20 Oct 2026.
+- **Decision:**
+  - Only CC0, CC BY, CC BY-SA and CC BY-NC files ship; CC BY-NC only while
+    the site is non-commercial.
+  - Files derived from BY-SA sources ship as CC BY-SA.
+  - Not used: BBC, Sonniss, Pixabay, Zapsplat, Macaulay, and paid packs that
+    forbid redistribution.
+  - A test enforces the allowlist.
+- **Status:** planned.
+
+### D-6.3 No religious sound by default
+- **Date:** 20 Oct 2026.
+- **Decision:** no temple music, azaan or bells.
+- **Open question for Tony:** a church bell at sunset.
+- **Status:** planned.
+
+### D-6.4 Audio delivery
+- **Date:** 20 Oct 2026.
+- **Decision:**
+  - Opus in WebM, with AAC in M4A as the fallback.
+  - Beds about −28 LUFS, events about −24, thunder about −22.
+  - Equal-power loop crossfades baked in at build time.
+  - Lazy loading after the tap, current scene first.
+  - Total ≤ 6 MB.
+- **Status:** planned.
+
+### D-6.5 Audio originals stay out of git
+- **Date:** 20 Oct 2026.
+- **Decision:**
+  - Original recordings live in `audio-src/` (git-ignored).
+  - `audio/sources.json` records the source, licence and edits for each.
+  - The processed outputs and `manifest.json` are generated.
+- **Status:** planned.

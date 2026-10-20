@@ -7,7 +7,7 @@
 //
 // Writes:
 //   scenes.jpg         the six states as square crops around the man (1x)
-//   scenes-vs-reference.jpg  the same grid above docs/reference/six-scenes.png
+//   scenes-vs-reference.jpg  the same grid above docs/ux/reference/six-scenes.png
 //   scene-<state>.jpg  each state, full frame (1600x900, 1x)
 //   walk-full.png, walk-folded.png  one gait cycle, close up (2x), short grass
 //   depth.png          the man at ground offset -20, 0 and +20 (1x)
@@ -118,7 +118,7 @@ const PAGE_HELPERS = `
 async function scenes() {
   console.log('scenes');
   const b = await openBrowser(1600, 900, 1);
-  const refPath = join(root, 'docs/reference/six-scenes.png');
+  const refPath = join(root, 'docs/ux/reference/six-scenes.png');
   // the reference goes over in its own call; one huge message can stall the protocol
   const hasRef = existsSync(refPath);
   if (hasRef) await b.evaluate(`window.__ref = ${JSON.stringify('data:image/png;base64,' + readFileSync(refPath).toString('base64'))}; 1`);

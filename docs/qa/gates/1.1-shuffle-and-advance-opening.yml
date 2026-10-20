@@ -1,0 +1,19 @@
+schema: 1
+story: '1.1'
+story_title: 'Random opening scene, next scene on every reload'
+gate: PASS
+status_reason: 'All 9 acceptance criteria verified: unit tests (46 passing), local browser reload sequence, and live site.'
+reviewer: 'QA (Claude)'
+updated: '2026-10-20'
+top_issues: []
+evidence:
+  tests_reviewed: 46
+  browser_checks:
+    - 'Local: fresh session then 6 reloads: rain, twilight, night, dawn, sunny, wind, rain; 0 weather.json requests'
+    - 'Local: ?weather=night then plain URL opened on dawn (next after night)'
+    - 'Live: fresh session then 2 reloads: dawn, sunny, wind; credit hidden; 0 weather.json requests'
+  live_weather_json_enabled: false
+nfr_validation:
+  privacy: { status: PASS, notes: 'sessionStorage only; no requests in shuffle mode' }
+  reliability: { status: PASS, notes: 'blocked or missing storage falls back to random' }
+  performance: { status: PASS, notes: 'no added work on the first frame' }

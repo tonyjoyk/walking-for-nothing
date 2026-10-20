@@ -134,7 +134,7 @@ two things visitors will notice first.
 ## Status (16 Oct 2026)
 
 All ten recommendations are implemented; `npm test` covers the measurable
-ones. Before/after captures are in `docs/compare/`.
+ones. Before/after captures are in `docs/media/compare-1/`.
 
 | # | Result |
 | --- | --- |

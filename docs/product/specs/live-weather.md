@@ -1,6 +1,6 @@
 # Spec: opening on today's weather
 
-**Status:** built and live 17–18 Oct 2026; **paused 20 Oct 2026**. The default opening is now shuffle (story 1.1); live weather is the 'weather' opening mode, and `LIVE_WEATHER=false` · **Owner:** Tony · **Decision:** Kerala's weather (option A)
+**Status:** built and live 17–18 Oct 2026; **paused 20 Oct 2026**. ⚠ **Deprecation review due 31 Jan 2027:** if it hasn't been switched back on and used by then, remove it, following the checklist in [D-1.3](../../architecture/decisions.md#d-13-live-weather-paused-deprecation-review). The default opening is now shuffle (story 1.1); live weather is the 'weather' opening mode, and `LIVE_WEATHER=false` · **Owner:** Tony · **Decision:** Kerala's weather (option A)
 
 ## Summary
 
