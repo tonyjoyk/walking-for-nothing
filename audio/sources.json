@@ -4,133 +4,227 @@
     {
       "id": "dawnOrchard",
       "role": "bed",
-      "scenes": ["dawn"],
+      "scenes": [
+        "dawn"
+      ],
       "title": "Tropical Orchard in Spring",
       "recordist": "Calcuttan",
       "url": "https://freesound.org/people/Calcuttan/sounds/184798/",
       "licence": "CC BY 4.0",
       "location": "near Kolkata, India, about 6:15 am",
-      "edits": { "start": null, "end": null, "loopCrossfade": 3, "highpass": 70, "gainDb": 0, "mono": false },
+      "edits": {
+        "start": null,
+        "end": null,
+        "loopCrossfade": 3,
+        "highpass": 70,
+        "gainDb": 0,
+        "mono": false
+      },
       "notes": "Koel, coppersmith barbet, myna, magpie robin, kingfisher. The whole dawn bed."
     },
     {
       "id": "dayField",
       "role": "bed",
-      "scenes": ["sunny", "overcast"],
+      "scenes": [
+        "sunny",
+        "overcast"
+      ],
       "title": "crickets and tropical birds village or backyard day like after rain India",
       "recordist": "kyles",
       "url": "https://freesound.org/people/kyles/sounds/451945/",
       "licence": "CC0",
       "location": "India",
-      "edits": { "start": null, "end": null, "loopCrossfade": 3, "highpass": 70, "gainDb": 0, "mono": false },
+      "edits": {
+        "start": null,
+        "end": null,
+        "loopCrossfade": 3,
+        "highpass": 70,
+        "gainDb": 0,
+        "mono": false
+      },
       "notes": "The day bed. Also sits low under Windy and Overcast."
     },
     {
       "id": "windGrass",
       "role": "bed",
-      "scenes": ["wind", "dawn", "sunny"],
+      "scenes": [
+        "wind",
+        "dawn",
+        "sunny"
+      ],
       "title": "Wind in the African bush (Mali)",
       "recordist": "felix.blume",
       "url": "https://freesound.org/people/felix.blume/sounds/171445/",
       "licence": "CC0",
       "location": "Mali",
-      "edits": { "start": null, "end": null, "loopCrossfade": 3, "highpass": 80, "gainDb": -8, "mono": false },
+      "edits": {
+        "start": null,
+        "end": null,
+        "loopCrossfade": 3,
+        "highpass": 80,
+        "gainDb": -8,
+        "mono": false
+      },
       "notes": "Tony: liked, but too loud. Trimmed 8 dB at build, and the Windy mix weight starts at 0.6 instead of 1.0."
     },
     {
       "id": "rainSteady",
       "role": "bed",
-      "scenes": ["rain"],
+      "scenes": [
+        "rain"
+      ],
       "title": "Light rain in a field of bananas trees",
       "recordist": "felix.blume",
       "url": "https://freesound.org/people/felix.blume/sounds/512334/",
       "licence": "CC0",
       "location": "Veracruz, Mexico",
-      "edits": { "start": null, "end": null, "loopCrossfade": 3, "highpass": 60, "gainDb": 0, "mono": false },
+      "edits": {
+        "start": null,
+        "end": null,
+        "loopCrossfade": 3,
+        "highpass": 60,
+        "gainDb": 0,
+        "mono": false
+      },
       "notes": "The only rain bed. Heavier rain comes from level (P.rain), not a second file."
     },
     {
       "id": "eveningBirdsToCrickets",
       "role": "bed",
-      "scenes": ["twilight"],
+      "scenes": [
+        "twilight"
+      ],
       "title": "Birds to Crickets",
       "recordist": "deadmanswill",
       "url": "https://freesound.org/people/deadmanswill/sounds/568216/",
       "licence": "CC BY 4.0",
       "location": "Nilgiri forest, South India",
-      "edits": { "start": null, "end": null, "loopCrossfade": 3, "highpass": 70, "gainDb": 0, "mono": true },
+      "edits": {
+        "start": null,
+        "end": null,
+        "loopCrossfade": 3,
+        "highpass": 70,
+        "gainDb": 0,
+        "mono": true
+      },
       "notes": "The sunset bed. Mono source."
     },
     {
       "id": "nightCrickets",
       "role": "bed",
-      "scenes": ["night"],
+      "scenes": [
+        "night"
+      ],
       "title": "Night Crickets on a Quiet Road – Goa Ambience",
       "recordist": "Federico_Casazza",
       "url": "https://freesound.org/people/Federico_Casazza/sounds/803557/",
       "licence": "CC BY 4.0",
       "location": "Goa, India",
-      "edits": { "start": null, "end": null, "loopCrossfade": 2, "highpass": 70, "gainDb": 0, "mono": false },
+      "edits": {
+        "start": null,
+        "end": null,
+        "loopCrossfade": 2,
+        "highpass": 70,
+        "gainDb": 0,
+        "mono": false
+      },
       "notes": "The night bed. Only 0:47, so the loop crossfade matters; listen for a repeating pattern."
     },
     {
       "id": "thunderDistant",
       "role": "thunder",
-      "scenes": ["rain"],
+      "scenes": [
+        "rain"
+      ],
       "title": "210614 Thunder, dry rolling distant some big, birds, roof",
       "recordist": "TRP",
       "url": "https://freesound.org/people/TRP/sounds/578230/",
       "licence": "CC0",
       "location": "Toronto, Canada",
-      "edits": { "cuts": [], "highpass": 40, "gainDb": 0, "mono": false },
+      "edits": {
+        "cuts": [],
+        "highpass": 40,
+        "gainDb": 0,
+        "mono": false
+      },
       "notes": "Tony: use some parts. Cut 4 to 6 separate distant rolls (avoid the birds and roof noise); cut times are chosen at build."
     },
     {
       "id": "thunderClose",
       "role": "thunder",
-      "scenes": ["rain"],
+      "scenes": [
+        "rain"
+      ],
       "title": "Rolling thunder closer rain drops ms",
       "recordist": "TRP",
       "url": "https://freesound.org/people/TRP/sounds/574386/",
       "licence": "CC0",
       "location": "Toronto, Canada",
-      "edits": { "cuts": [], "highpass": 40, "gainDb": 0, "mono": false },
+      "edits": {
+        "cuts": [],
+        "highpass": 40,
+        "gainDb": 0,
+        "mono": false
+      },
       "notes": "The closer, gentle roll. Used rarely (near distances only)."
     },
     {
       "id": "crowsHouse",
       "role": "event",
-      "scenes": ["twilight"],
+      "scenes": [
+        "twilight"
+      ],
       "title": "House crows",
       "recordist": "Calcuttan",
       "url": "https://freesound.org/people/Calcuttan/sounds/249567/",
       "licence": "CC0",
       "location": "India",
-      "edits": { "cuts": [], "highpass": 120, "gainDb": -4, "mono": true },
+      "edits": {
+        "cuts": [],
+        "highpass": 120,
+        "gainDb": -4,
+        "mono": true
+      },
       "notes": "Tony: use sparingly. One short call at a time, rare (mean 90 s), Sunset only."
     },
     {
       "id": "koel",
       "role": "event",
-      "scenes": ["dawn", "sunny"],
-      "title": "Asian koel",
-      "recordist": "TBC (xeno-canto XC753727, Jairam Vijayan, CC BY-SA 4.0; or Freesound 460466, ramblinglibrarian, CC0)",
-      "url": "TBC",
-      "licence": "TBC",
-      "location": "TBC",
-      "edits": { "cuts": [], "highpass": 150, "gainDb": -2, "mono": true },
-      "notes": "The preview page had two 'Asian koel' tracks; which one Tony liked is to be confirmed. Calls cut into 3 to 5 one-shots."
+      "scenes": [
+        "dawn",
+        "sunny"
+      ],
+      "title": "Asian koel (Eudynamys scolopaceus)",
+      "recordist": "Jairam Vijayan",
+      "url": "https://xeno-canto.org/753727",
+      "licence": "CC BY-SA 4.0",
+      "location": "Kannur, Kerala",
+      "edits": {
+        "cuts": [],
+        "highpass": 150,
+        "gainDb": -2,
+        "mono": true
+      },
+      "notes": "Tony's pick (the Kerala koel, 1:11). Calls cut into 3 to 5 one-shots. ShareAlike: the cut files ship as CC BY-SA 4.0 (D-6.2). Check the licence on xeno-canto.org before shipping."
     },
     {
       "id": "kingfisher",
       "role": "event",
-      "scenes": ["dawn", "sunny"],
+      "scenes": [
+        "dawn",
+        "sunny"
+      ],
       "title": "White-throated kingfisher",
       "recordist": "Sathyan Meppayur",
       "url": "https://xeno-canto.org/603361",
       "licence": "CC0",
       "location": "Kozhikode, Kerala",
-      "edits": { "cuts": [], "highpass": 200, "gainDb": -3, "mono": true },
+      "edits": {
+        "cuts": [],
+        "highpass": 200,
+        "gainDb": -3,
+        "mono": true
+      },
       "notes": "Calls cut into 2 to 4 one-shots. Check the licence on xeno-canto.org before shipping."
     }
   ]
