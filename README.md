@@ -76,7 +76,7 @@ You don't need to. It only loads with `?dev`. If you want it gone:
 src/
   main.js              p5 setup, resize, tab pause, sound button, ?dev loader
   config.js            six presets, defaults, control ranges, JSON validation
-  audio.js             generated wind, rain and bird chirps (Web Audio)
+  audio/               recorded sound: beds per scene, birds, thunder (Web Audio)
   scene/
     Scene.js           state, parameter easing, wrap, render order, debug view
     util.js            coordinate constants, seeded random, colour helpers
@@ -234,15 +234,17 @@ Repository "Multivariate Gait Data"
 (https://archive.ics.uci.edu/dataset/760/multivariate+gait+data),
 licensed CC BY 4.0. The values were averaged and rounded.
 
-## Swapping in recorded sound
+## Sound
 
-The generated sound is a starting point. To use recordings, put loops in
-`public/audio/` and play them through the same gain nodes in `audio.js`.
-Candidates (check each licence and credit the recordist):
+Recorded sound plays per scene: a looping bed, one-shot birds and thunder in
+the rain. The generated wind and rain fill in while recordings load. How it
+plays together: `docs/bmad/party-mode/2026-10-20-sound-mix.md`.
 
-- Chalakudy River ambience, Kerala (Freesound, CC0)
-- Paddy field birds, Alappuzha (xeno-canto, licence varies per file)
-- "Ambiences from Suburban India", Kerala backwaters (A Sound Effect, paid)
+- The recordings are listed in `audio/sources.json`. Originals go in
+  `audio-src/`, which is git-ignored.
+- `node scripts/build-audio.mjs` makes `public/audio/` and `manifest.json`.
+- The mix, bird and thunder tables are in `src/config.js` (`AUDIO_MIX`,
+  `AUDIO_EVENTS`, `AUDIO_THUNDER`).
 
 ## Notes and known limits
 

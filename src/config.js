@@ -164,9 +164,12 @@ export function createDefaultConfig() {
     // (docs/product/specs/greeting.md, D-2.2).
     greeting: { enabled: true, stopSeconds: 0.9, dwellSeconds: 2, turnSeconds: 1.4, lookSeconds: 3, smileSeconds: 4, cooldownSeconds: 2, bubble: true, readSeconds: 15 },
     finish: { grain: 0.1 },
+    // Recorded sound (Epic 6). wind and rain scale those beds; beds scales
+    // the others. Mixes, birds and thunder timing: AUDIO_MIX and friends below.
     audio: {
-      enabled: false, muted: false, master: 0.5,
-      windOn: true, wind: 0.5, rainOn: true, rain: 0.5, birdsOn: true, birds: 0.35,
+      enabled: false, muted: false, master: 0.6, beds: 0.9, crossfadeSeconds: 8,
+      windOn: true, wind: 1, rainOn: true, rain: 1, birdsOn: true, birds: 0.7, eventDensity: 1,
+      thunderOn: true, thunder: 0.9,
     },
   };
 }
@@ -206,7 +209,50 @@ export const RANGES = {
   'greeting.stopSeconds': [0.3, 3, 0.05], 'greeting.dwellSeconds': [0, 6, 0.1], 'greeting.turnSeconds': [0.5, 4, 0.05],
   'greeting.lookSeconds': [0, 10, 0.1], 'greeting.smileSeconds': [1, 12, 0.1], 'greeting.cooldownSeconds': [0, 10, 0.1], 'greeting.readSeconds': [5, 40, 0.5],
   'finish.grain': [0, 0.4, 0.005],
-  'audio.master': [0, 1, 0.01], 'audio.wind': [0, 1, 0.01], 'audio.rain': [0, 1, 0.01], 'audio.birds': [0, 1, 0.01],
+  'audio.master': [0, 1, 0.01], 'audio.beds': [0, 1.5, 0.01], 'audio.crossfadeSeconds': [1, 20, 0.5],
+  'audio.wind': [0, 1.5, 0.01], 'audio.rain': [0, 1.5, 0.01], 'audio.birds': [0, 1.5, 0.01],
+  'audio.eventDensity': [0, 3, 0.05], 'audio.thunder': [0, 1.5, 0.01],
+};
+
+// ---------------------------------------------------------------------------
+// Sound mix (docs/bmad/party-mode/2026-10-20-sound-mix.md, D-6.7 to D-6.11).
+// Ids are from audio/sources.json. Weights are amplitudes before coupling:
+// rain beds x P.rain / 0.8 (the Rain preset's rain), wind beds x
+// (0.25 + 0.75 x P.wind).
+// ---------------------------------------------------------------------------
+export const AUDIO_MIX = {
+  dawn: { dawnOrchard: 1, windGrass: 0.3 },
+  sunny: { dayField: 1, windGrass: 0.35 },
+  wind: { windGrass: 0.6, dayField: 0.3 },
+  rain: { rainSteady: 1 },
+  overcast: { dayField: 0.55, windGrass: 0.4 },
+  twilight: { eveningBirdsToCrickets: 1 },
+  night: { nightCrickets: 1 },
+};
+export const AUDIO_COUPLING = { rainSteady: 'rain', windGrass: 'wind' };
+
+// One-shot birds per scene. mean: average seconds between events (Poisson),
+// minGap: never closer. phrase: [min, max] calls per event and the gap
+// between calls in seconds; rise: pitch and level step per call (koel).
+export const AUDIO_EVENTS = {
+  dawn: { mean: 16, minGap: 6, pool: [{ id: 'koel', weight: 2 }, { id: 'kingfisher', weight: 1 }] },
+  sunny: { mean: 14, minGap: 6, pool: [{ id: 'koel', weight: 3 }, { id: 'kingfisher', weight: 1 }] },
+  overcast: { mean: 30, minGap: 10, pool: [{ id: 'koel', weight: 1 }] },
+  twilight: { mean: 90, minGap: 40, pool: [{ id: 'crowsHouse', weight: 1 }] },
+};
+export const AUDIO_CALLS = {
+  koel: { phrase: [2, 4], gap: [1.4, 2.2], rise: 0.02 },
+  kingfisher: { phrase: [1, 2], gap: [0.6, 1.2], rise: 0 },
+  crowsHouse: { phrase: [1, 1], gap: [0, 0], rise: 0 },
+};
+
+export const AUDIO_THUNDER = {
+  scenes: ['rain'],
+  firstAfter: [6, 14],   // seconds after rain arrives
+  mean: 40, minGap: 25,  // seconds between rolls
+  distanceKm: [3, 12],
+  closeUnderKm: 5,       // thunderClose only nearer than this, once per visit
+  far: 'thunderDistant', close: 'thunderClose',
 };
 
 export const OPTIONS = {

@@ -2,7 +2,7 @@ import p5 from 'p5';
 import { createDefaultConfig, WEATHER_RULES } from './config.js';
 import { chooseOpeningScene, validateWeather, SCENE_NAMES, chooseShuffleScene, readLastScene, rememberScene } from './weather.js';
 import { Scene } from './scene/Scene.js';
-import { AudioManager } from './audio.js';
+import { SoundDirector } from './audio/index.js';
 import { createBubble } from './bubble.js';
 import './styles/main.css';
 
@@ -20,7 +20,7 @@ const coarse = window.matchMedia('(pointer: coarse)').matches;
 if (coarse || Math.min(window.innerWidth, window.innerHeight) < 600) config.playback.quality = 'medium';
 
 const scene = new Scene(config);
-const audio = new AudioManager(config);
+const audio = new SoundDirector(config);
 
 // ---------------------------------------------------------------------------
 // Opening scene. The first frame never waits. By opening.mode:
@@ -127,7 +127,7 @@ new p5((p) => {
     scene.update(dt);
     scene.render(p.drawingContext, p.width, p.height, p.pixelDensity());
     updateBubble(dt);
-    audio.update(scene.P, dt);
+    audio.update(scene.P, dt, scene.sceneName);
   };
 });
 

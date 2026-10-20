@@ -272,3 +272,20 @@ These are for the project decision log (`docs/architecture/decisions.md`).
     Recorded in `audio/sources.json`.
   - Not used: the palm wind, heavy and easing-off rain, the Goa dawn, owlet
     and nightjar, and the parakeet, myna, barbet, bulbul and coucal calls.
+- **D-6.7 to D-6.12: how the sounds play together** (party mode,
+  20 Oct 2026; notes in `docs/bmad/party-mode/2026-10-20-sound-mix.md`).
+  - **D-6.7:** scene changes crossfade over 8 s, equal-power. Shared beds
+    carry across.
+  - **D-6.8:** a returning bed starts at a random offset.
+  - **D-6.9:** koel plays in rising phrases of 2–4 calls. One-shots are
+    placed by pan and distance.
+  - **D-6.10:** bird density: dawn mean 16 s, sunny 14 s, twilight crows
+    90 s. No one-shots in wind, rain or night.
+  - **D-6.11:** thunder: the first roll 6–14 s into rain, then a mean of
+    40 s, at least 25 s apart, at 3–12 km. The close roll plays only under
+    5 km, once per visit. Birds duck under thunder.
+  - **D-6.12:** release gate: no push or deploy of the sound until the
+    on-page Credits link (story 6.12) ships.
+  - This supersedes the means in §2's event table (dawn 12 s, daylight 25 s)
+    and the thunder timing in §2 (a mean of 40–120 s, the first roll at
+    least 15 s in). The reason: a scene lasts only about 35 s.

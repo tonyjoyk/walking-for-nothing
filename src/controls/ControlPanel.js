@@ -206,6 +206,16 @@ export function createPanel(app) {
   bind(fI, A, 'rain', 'audio.rain', { label: 'rain volume' });
   fI.addBinding(A, 'birdsOn', { label: 'bird layer' });
   bind(fI, A, 'birds', 'audio.birds', { label: 'bird volume' });
+  bind(fI, A, 'eventDensity', 'audio.eventDensity', { label: 'bird density' });
+  bind(fI, A, 'beds', 'audio.beds', { label: 'beds volume' });
+  bind(fI, A, 'crossfadeSeconds', 'audio.crossfadeSeconds', { label: 'crossfade (s)' });
+  fI.addBinding(A, 'thunderOn', { label: 'thunder' });
+  bind(fI, A, 'thunder', 'audio.thunder', { label: 'thunder volume' });
+  fI.addButton({ title: 'Bird now' }).on('click', () => audio.birdNow());
+  fI.addButton({ title: 'Thunder now' }).on('click', () => audio.thunderNow());
+  const soundNow = { playing: '' };
+  fI.addBinding(soundNow, 'playing', { readonly: true, multiline: true, rows: 4, interval: 500, label: 'playing' });
+  setInterval(() => { soundNow.playing = audio.status(); }, 500);
   app.onAudioChange = () => pane.refresh();
 
   // J. Save and share ---------------------------------------------------
