@@ -42,6 +42,20 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
 - **Supersedes:** the shader pass in brief rev 2.
 - **Status:** deferred; revisit only if the finish needs it.
 
+### D-0.5 One quiet "Credits" link for all on-page credits
+- **Date:** 20 Oct 2026 (confirmed by Tony).
+- **Decision:**
+  - Every on-page credit shares one small "Credits" link in the bottom-left
+    corner. That includes Open-Meteo weather data and recorded sound.
+  - The link opens one quiet list.
+  - There's never more than one credit link on screen.
+- **Supersedes:** the standalone "Weather: Open-Meteo" link
+  (`#credit` in `index.html`).
+- **Implementation:** the shared link and list are built in story 6.12
+  (audio). That story also moves the weather credit into the list.
+- **Answers:** audio PRD open question 5 (where the credits go).
+- **Status:** in force.
+
 ## Epic 1: Opening and journey (D-1)
 
 ### D-1.1 Live weather is Kerala's (Pala), published by a scheduled job

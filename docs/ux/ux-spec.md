@@ -22,8 +22,8 @@ each other on 20 Oct 2026.
 - **Credits: one quiet link.** Anything that needs on-page credit (Open-Meteo
   while live weather is on; recorded sound, story 6.12) shares a single small
   "Credits" link in the bottom-left corner. It opens one quiet list; there's
-  never more than one credit link on screen. *Proposed; Tony to confirm
-  (audio PRD open question 5).*
+  never more than one credit link on screen. **Confirmed by Tony, 20 Oct
+  2026 (D-0.5).**
 - **Flashes (lightning, story 6.11)** are the only allowed exception to
   "nothing snaps":
   - a soft brightening of the sky only, never a full-screen white;
