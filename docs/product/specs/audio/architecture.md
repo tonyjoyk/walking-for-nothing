@@ -140,13 +140,13 @@ are starting levels for the listening pass.
 
 | Scene | Weights |
 | --- | --- |
-| `dawn` | `dawnChorus` 1.0, `koelsKerala` 0.6, `windPalms` 0.15 |
-| `sunny` | `dayField` 1.0, `farmlifeKottayam` 0.5, `windPalms` 0.25 |
+| `dawn` | `dawnChorus` 1.0, `dawnGoa` 0.6, `windPalms` 0.15 |
+| `sunny` | `dayField` 1.0, `windPalms` 0.25 |
 | `wind` | `windPalms` 1.0, `windGrass` 0.8, `dayField` 0.25 |
-| `rain` | `rainSteady` 1.0, `rainHeavy` (× P.rain), `paddyFrogs` 0.15 |
+| `rain` | `rainSteady` 1.0, `rainHeavy` (× P.rain), `nightCrickets` 0.1 |
 | `overcast` | `dayField` 0.4, `windGrass` 0.3, `rainSteady` 0.0 |
-| `twilight` | `eveningCrows` 1.0, `birdsToCrickets` 0.6 |
-| `night` | `paddyFrogs` 1.0, `odayamNight` 0.6 |
+| `twilight` | `birdsToCrickets` 1.0, `houseCrows` 0.5 |
+| `night` | `nightCrickets` 1.0 (+ owlet and nightjar events) |
 
 Event pools also live in config: species ids, mean interval (Dawn 6 s, Day
 14 s, Windy 30 s, Sunset 12 s, Night 25 s) and minimum gap.
@@ -231,3 +231,15 @@ These are for the project decision log (`docs/architecture/decisions.md`).
 - **D-6.5 Originals stay out of git** (`audio-src/`, git-ignored).
   `audio/sources.json` records the source, licence and edits, and the
   processed outputs plus `manifest.json` are generated.
+- **D-6.6 Open-only sound set** (Tony, 20 Oct 2026).
+  - Ship only CC0, CC BY and CC BY-SA recordings: no CC BY-NC, so the site
+    can be monetised later.
+  - This narrows D-6.2's allowlist; the licence test enforces it.
+  - **Dropped (CC BY-NC):** 27492 Asian koels, 808117 Farmlife, 28107 Boat
+    trip, 28263 Odayam evening, 31948 Paddy frogs, 28264 Odayam night.
+  - **Replacements:**
+    - dawn: 787307 (Goa, CC0);
+    - sunset crows: 249567 (CC0);
+    - night: 803557 Goa crickets (CC BY), plus the Kerala owlet and
+      nightjar calls (CC BY-SA).
+  - Final picks follow Tony's listening notes (story 6.1).

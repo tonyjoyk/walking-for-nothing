@@ -182,7 +182,7 @@ The site has no analytics, so these are measured in review:
 
 | # | Question | Who | Blocking? |
 | --- | --- | --- | --- |
-| 1 | **Kerala-authentic set (includes CC BY-NC, so the site must stay non-commercial) or open-only set (CC0, BY and BY-SA; less local)?** | Tony | **Yes**, for downloads |
+| 1 | ~~Kerala-authentic or open-only set?~~ **Resolved (D-6.6): open-only set** (CC0, CC BY, CC BY-SA). No CC BY-NC files, so the site stays free to monetise. | Tony | Resolved |
 | 2 | Freesound originals need a logged-in account to download. Will you download the shortlisted files, or set up a Freesound API key for a script? | Tony | **Yes**, for the build |
 | 3 | A distant church bell at sunset (authentic to Pala), or no religious sound at all (the default)? | Tony | No |
 | 4 | Lightning flash (P1.1) in this round, or later? | Tony | No |
