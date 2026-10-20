@@ -1,0 +1,21 @@
+schema: 1
+story: '2.2'
+story_title: 'A speech bubble when he faces you'
+gate: PASS
+status_reason: 'All 8 acceptance criteria verified by unit tests (59 passing), build, and local browser checks at desktop and phone sizes.'
+reviewer: 'QA (Claude)'
+updated: '2026-10-20'
+top_issues: []
+evidence:
+  tests_reviewed: 59
+  browser_checks:
+    - 'Local 1280x720, sunny and rain: bubble above his head, tail at the head'
+    - 'Local 375x812, night: bubble within 16 px margins, readable'
+    - 'Local: in returning the bubble is opacity 0, hidden, aria-hidden'
+  not_covered:
+    - 'Real-time fade feel: in-app browser pane throttled'
+  pre_existing:
+    - 'Zero-width window: manX NaN, contact shadow canvas error (also at d92086a)'
+nfr_validation:
+  performance: { status: PASS, notes: 'one transform per frame while shown; nothing while hidden' }
+  accessibility: { status: PASS, notes: 'real text, aria-live polite, hidden when not shown' }

@@ -117,7 +117,8 @@ export class Greeting {
 
       case 'smiling':
         this.smile = smooth(Math.min(1, this.t / SMILE_GROW));
-        if (this.t >= cfg.smileSeconds) { this.oneShot = false; leave(); }
+        // with the speech bubble on (D-2.3) he faces them for at least readSeconds in all
+        if (this.t >= Math.max(cfg.smileSeconds, cfg.bubble ? cfg.readSeconds - cfg.lookSeconds : 0)) { this.oneShot = false; leave(); }
         if (!want) leave();
         break;
 

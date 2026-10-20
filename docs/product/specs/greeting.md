@@ -287,3 +287,38 @@ in the dev panel.
 
 **Unchanged:** the turn, the face, no cursor change, touch tap, "Greet
 now", the no-snap and resolve-within-2.5 s goals.
+
+---
+
+## Revision 3 (20 Oct 2026): a few words from Tony
+
+Decision: [D-2.3](../../architecture/decisions.md#d-23-a-speech-bubble-when-he-faces-you).
+Story: [2.2](../../stories/2.2.speech-bubble.md).
+
+**Problem.** The greeting shows that someone is there, but not who. A
+visitor who finds it should get a short sense of the person behind the site.
+
+**Requirement.** When he has turned to face the visitor (after the 2 s rest,
+a click or a tap), a simple speech bubble shows this text:
+
+> Hey, I'm Tony.
+>
+> I'm a product designer from Kerala, India. I lead design at Resolve to Save
+> Lives, a public health nonprofit, where I design tools and services for
+> healthcare staff.
+>
+> The internet often feels rushed and demanding. I like creating digital
+> spaces that help people slow down, and feel calm.
+
+| When | The bubble |
+| --- | --- |
+| He finishes turning to face the visitor | Fades in (0.8 s) |
+| While he faces them | Stays. He holds the look for at least `readSeconds` (default 15 s) in all, so the text can be read |
+| The cursor is on the bubble | Counts as being on him: he keeps facing them |
+| He starts turning back (time's up, or the cursor leaves both him and the bubble) | Fades out (0.8 s) |
+
+**Non-goals:** links, buttons, a close control, animation of the text, a
+typing effect, more than one message.
+
+**Config:** `greeting.bubble` (on/off), `greeting.readSeconds` (5–40 s).
+

@@ -68,6 +68,8 @@ export function createPanel(app) {
   bind(fGr, Gr, 'lookSeconds', 'greeting.lookSeconds', { label: 'look (s)' });
   bind(fGr, Gr, 'smileSeconds', 'greeting.smileSeconds', { label: 'smile (s)' });
   bind(fGr, Gr, 'cooldownSeconds', 'greeting.cooldownSeconds', { label: 'cooldown (s)' });
+  fGr.addBinding(Gr, 'bubble', { label: 'speech bubble' });
+  bind(fGr, Gr, 'readSeconds', 'greeting.readSeconds', { label: 'bubble hold (s)' });
   fGr.addButton({ title: 'Greet now' }).on('click', () => scene.greetNow());
 
   // B. Lighting and palette --------------------------------------------

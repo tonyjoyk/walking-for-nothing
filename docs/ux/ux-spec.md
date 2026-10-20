@@ -77,6 +77,16 @@ change.
 - **Leaving:** he turns back smoothly from wherever he is.
 - **No cursor change:** the cursor doesn't change over him; it isn't a
   button. This still holds now that a click does something (D-2.2).
+- **Speech bubble (D-2.3):** when he faces the visitor, a small bubble
+  above his head introduces Tony, in three short paragraphs. It fades in
+  and out over 0.8 s, and holds about 15 s so it can be read.
+  - Style: system font at 15 px (14 px on phones), dark ink on a
+    translucent light surface with a soft blur, 14 px corners and a small
+    tail pointing to his head. No border, icons, links or close button.
+  - It stays on screen with a 16 px margin, and moves to whichever side has
+    room.
+  - This is the one exception to principle 1, and it's only shown once the
+    greeting has been discovered.
 - Spec: [greeting](../product/specs/greeting.md).
 
 ## Field depth (epic 4)

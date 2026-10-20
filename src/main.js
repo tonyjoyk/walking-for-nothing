@@ -3,6 +3,7 @@ import { createDefaultConfig, WEATHER_RULES } from './config.js';
 import { chooseOpeningScene, validateWeather, SCENE_NAMES, chooseShuffleScene, readLastScene, rememberScene } from './weather.js';
 import { Scene } from './scene/Scene.js';
 import { AudioManager } from './audio.js';
+import { createBubble } from './bubble.js';
 import './styles/main.css';
 
 p5.disableFriendlyErrors = true; // faster; the scene does its own validation
@@ -103,6 +104,9 @@ function applyQuality() {
   p5ref.pixelDensity(Math.min(window.devicePixelRatio || 1, DENSITY_CAP[q] || 2));
 }
 
+const bubbleEl = document.getElementById('bubble');
+const updateBubble = createBubble(bubbleEl, scene);
+
 new p5((p) => {
   p5ref = p;
   p.setup = () => {
@@ -122,6 +126,7 @@ new p5((p) => {
     adaptQuality(dt);
     scene.update(dt);
     scene.render(p.drawingContext, p.width, p.height, p.pixelDensity());
+    updateBubble(dt);
     audio.update(scene.P, dt);
   };
 });
@@ -151,6 +156,8 @@ function adaptQuality(dt) {
 const pointerOff = () => { scene.pointer = null; scene.hovering = false; };
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
+  // the cursor on the speech bubble counts as on him (D-2.3)
+  if (scene.bubbleShown && bubbleEl.contains(e.target)) { scene.pointer = null; scene.hovering = true; return; }
   scene.pointer = { x: e.clientX, y: e.clientY };
   scene.hovering = scene.hitMan(e.clientX, e.clientY, scene.greeting.active);
 });
@@ -158,7 +165,7 @@ document.addEventListener('mouseout', (e) => { if (!e.relatedTarget) pointerOff(
 window.addEventListener('blur', pointerOff);
 window.addEventListener('pointerdown', (e) => {
   if (e.button > 0) return;
-  if (e.target.closest && e.target.closest('button, input, select, a, .tp-dfwv')) return; // UI, not the scene
+  if (e.target.closest && e.target.closest('button, input, select, a, .tp-dfwv, .bubble')) return; // UI or the bubble, not the scene
   if (scene.hitMan(e.clientX, e.clientY, scene.greeting.active)) scene.greetNow();
   else scene.greeting.release();
 });

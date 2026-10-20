@@ -272,6 +272,18 @@ export class Scene {
 
   greetNow() { this.greeting.greetNow(); }
 
+  // The speech bubble (D-2.3): shown while he faces the visitor.
+  get bubbleShown() {
+    const s = this.greeting.state;
+    return this.config.greeting.enabled && this.config.greeting.bubble && this.config.character.visible && (s === 'looking' || s === 'smiling');
+  }
+
+  // The top of his head on screen (CSS px), for placing the bubble.
+  headPoint() {
+    const C = this.config.character, v = this.view;
+    return { x: (this.manX + 3 * C.scale - v.x0) * v.s, y: (GROUND_Y + C.groundOffset - 285 * C.scale - v.y0) * v.s };
+  }
+
   // How deep the man and Juhu are in the field, from the ground offset:
   // 0 = raised, walking on a grassy field; 1 = lowered, wading through hay.
   // Grass height in front of them, grass parting and contact shadows all

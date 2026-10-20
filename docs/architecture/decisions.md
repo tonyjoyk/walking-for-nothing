@@ -152,6 +152,27 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   unturned pause is removed.
 - **Status:** in force.
 
+### D-2.3 A speech bubble when he faces you
+- **Date:** 20 Oct 2026. **Story:** [2.2](../stories/2.2.speech-bubble.md).
+- **Decision:**
+  - When he has turned to face the visitor, a small speech bubble shows a
+    short introduction from Tony. It fades in and out over 0.8 s.
+  - While the bubble is on, he faces the visitor for at least
+    `readSeconds` (15 s) in all, instead of 3 s + 4 s. The cursor on the
+    bubble counts as being on him.
+  - The bubble is HTML, not drawn on the canvas, so the text is sharp,
+    selectable and read by screen readers. It's placed every frame above his
+    head.
+  - Style: the site's existing look. It uses the system font, a soft,
+    translucent light surface with a blur like the sound button, a small
+    tail, and no border or icons.
+- **Why:** the owner wants visitors to get a sense of who he is, kept
+  minimal.
+- **Supersedes:** UX principle 1 ("no text") for this one bubble, which
+  appears only after the greeting is discovered (principle 3 still holds).
+  The 3 s + 4 s timing applies only with the bubble off.
+- **Status:** in force.
+
 ## Epic 3: Character and motion (D-3)
 
 ### D-3.1 Natural steps over the brief's slow crossing

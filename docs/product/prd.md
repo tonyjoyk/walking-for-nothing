@@ -27,7 +27,7 @@ Status and numbers: see the registry in [`docs/README.md`](../README.md).
 | Epic | Scope | Requirements |
 | --- | --- | --- |
 | 1 Opening and journey | Which scene opens, and how scenes change | [opening-shuffle](specs/opening-shuffle.md) (current); [live-weather](specs/live-weather.md) (paused, D-1.3) |
-| 2 The greeting | Hover the man and he stops; rest 2 s, click or tap and he turns, smiles, walks on | [greeting](specs/greeting.md) |
+| 2 The greeting | Hover the man and he stops; rest 2 s, click or tap and he turns, smiles and says a few words (speech bubble), walks on | [greeting](specs/greeting.md) |
 | 3 Character and motion | Walk, arms, mundu, look, character controls | [character study](../ux/research/character-study.md) and decisions D-3.x |
 | 4 Landscape and atmosphere | Mountains, field, grass, shadows, the six scenes | [UX spec](../ux/ux-spec.md) and decisions D-4.x |
 | 5 Platform and delivery | Hosting, deploy, mobile, performance, tests, dev tools | [architecture](../architecture/architecture.md) and decisions D-5.x |

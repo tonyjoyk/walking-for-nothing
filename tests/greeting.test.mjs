@@ -23,8 +23,8 @@ function until(scene, cond, limit = 30) {
   throw new Error(`timed out in state ${scene.greeting.state}`);
 }
 
-test('held on him: stop, turn, look 3 s, smile, turn back after 4 s more, walk on', () => {
-  const { scene, cfg } = makeScene();
+test('held on him: stop, turn, look 3 s, smile, turn back after 4 s more, walk on (bubble off)', () => {
+  const { scene, cfg } = makeScene((c) => { c.greeting.bubble = false; });
   scene.hovering = true;
   const g = scene.greeting;
   until(scene, () => g.state === 'looking', 6);
@@ -71,7 +71,7 @@ test('he never snaps: turn and smile change smoothly from frame to frame', () =>
 test('another greeting needs the cursor to leave and come back, after a cooldown', () => {
   const { scene, cfg } = makeScene();
   scene.hovering = true;
-  until(scene, () => scene.greeting.state === 'returning', 14);
+  until(scene, () => scene.greeting.state === 'returning', 25);
   until(scene, () => scene.greeting.state === 'walking');
   for (let i = 0; i < 60 * 5; i++) scene.update(DT); // still hovering: he keeps walking
   assert.equal(scene.greeting.state, 'walking');
@@ -140,7 +140,7 @@ test('hovering is detected on him, not on the sky or the grass beside him', () =
 test('feet stay planted when he walks on after a greeting', () => {
   const { scene, cfg } = makeScene();
   scene.hovering = true;
-  until(scene, () => scene.greeting.state === 'returning', 14);
+  until(scene, () => scene.greeting.state === 'returning', 25);
   scene.hovering = false;
   until(scene, () => scene.greeting.state === 'walking');
   for (let i = 0; i < 60; i++) scene.update(DT);
@@ -163,7 +163,7 @@ test('a one-shot greeting (tap or "Greet now") plays through without hovering', 
   const cfg = createDefaultConfig().greeting;
   g.greetNow();
   const seen = new Set();
-  for (let i = 0; i < 60 * 16; i++) { g.update(DT, false, cfg, {}); seen.add(g.state); }
+  for (let i = 0; i < 60 * 30; i++) { g.update(DT, false, cfg, {}); seen.add(g.state); }
   for (const s of ['stopping', 'settling', 'turning', 'looking', 'smiling', 'returning', 'starting']) assert.ok(seen.has(s), s);
   assert.equal(g.state, 'walking');
 });
@@ -230,7 +230,7 @@ test('2.1 AC3: a click turns him as soon as he stands, and plays through after t
     assert.ok(waited <= 1, `${when}: stood ${waited} frames before turning`);
     scene.hovering = false; // the visitor moves away after clicking
     until(scene, () => scene.greeting.state === 'smiling', 8);
-    until(scene, () => scene.greeting.state === 'walking', 10);
+    until(scene, () => scene.greeting.state === 'walking', 25);
   }
 });
 
@@ -305,4 +305,51 @@ test('2.1 AC8: dwellSeconds is a validated setting', () => {
   const bad = validateConfig({ greeting: { dwellSeconds: 'soon' } });
   assert.equal(bad.config.greeting.dwellSeconds, 2);
   assert.ok(bad.warnings.length > 0);
+});
+
+// Story 2.2 / D-2.3: the speech bubble.
+test('2.2 AC1/5: the bubble shows only while he faces the visitor', () => {
+  const { scene } = makeScene();
+  scene.hovering = true;
+  const seen = new Map();
+  for (let i = 0; i < 60 * 30; i++) {
+    scene.update(DT);
+    const s = scene.greeting.state;
+    seen.set(s, (seen.get(s) || new Set()).add(scene.bubbleShown));
+  }
+  for (const s of ['looking', 'smiling']) assert.deepEqual([...seen.get(s)], [true], s);
+  for (const s of ['walking', 'stopping', 'settling', 'waiting', 'turning', 'returning', 'starting']) {
+    if (seen.has(s)) assert.deepEqual([...seen.get(s)], [false], s);
+  }
+});
+
+test('2.2 AC3: with the bubble on, he faces the visitor for readSeconds before turning back', () => {
+  const { scene, cfg } = makeScene();
+  scene.greetNow(); // a click: plays through without the cursor
+  until(scene, () => scene.greeting.state === 'looking', 6);
+  const facing = until(scene, () => scene.greeting.state === 'returning', 40);
+  assert.ok(Math.abs(facing - cfg.greeting.readSeconds) < 0.05, `faced for ${facing.toFixed(2)} s`);
+});
+
+test('2.2 AC7: with the bubble off, the timing is 3 s + 4 s and nothing shows', () => {
+  const { scene, cfg } = makeScene((c) => { c.greeting.bubble = false; });
+  scene.greetNow();
+  until(scene, () => scene.greeting.state === 'looking', 6);
+  let shown = false;
+  const facing = until(scene, () => { shown ||= scene.bubbleShown; return scene.greeting.state === 'returning'; }, 40);
+  assert.ok(Math.abs(facing - cfg.greeting.lookSeconds - cfg.greeting.smileSeconds) < 0.05, `faced for ${facing.toFixed(2)} s`);
+  assert.equal(shown, false);
+  const ok = validateConfig({ greeting: { bubble: false, readSeconds: 20 } });
+  assert.equal(ok.config.greeting.bubble, false);
+  assert.equal(ok.config.greeting.readSeconds, 20);
+  assert.ok(validateConfig({ greeting: { bubble: 'yes' } }).warnings.length > 0);
+});
+
+test('2.2 AC2: the head point sits just above his head', () => {
+  const { scene } = makeScene();
+  const h = scene.headPoint(), v = scene.view;
+  const m = manOnScreen(scene);
+  assert.ok(Math.abs(h.x - m.x) < 10 * v.s);
+  assert.ok(scene.hitMan(h.x, h.y + 20 * v.s), 'just below the point is still him');
+  assert.ok(!scene.hitMan(h.x, h.y - 20 * v.s), 'just above is sky');
 });

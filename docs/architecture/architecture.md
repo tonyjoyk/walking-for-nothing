@@ -71,6 +71,13 @@ scripts/      fetch-weather.mjs: Open-Meteo to weather.json (CI; paused feature)
   waiting → turning → looking → smiling → returning → starting. A hover
   clock (`dwellSeconds`) or a click (`greetNow`) moves him from waiting to
   turning (D-2.2).
+- **Speech bubble (D-2.3):** `#bubble` in `index.html` holds the text.
+  - `src/bubble.js` places it every frame from `Scene.headPoint()` (head
+    top in CSS px) and shows it while `Scene.bubbleShown` is true (facing:
+    `looking` or `smiling`).
+  - Hovering the bubble counts as hovering him.
+  - `greeting.js` holds the smile until `readSeconds` while the bubble is
+    on.
 - `Scene.pointer` holds the last mouse position. Hover is re-tested from it
   every frame, with the box widened behind him while greeting.
 - `Scene` plans the stop at the next both-feet-down point and passes the
