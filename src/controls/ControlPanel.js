@@ -40,10 +40,13 @@ export function createPanel(app) {
   // A2. Opening scene and journey -----------------------------------
   const fO = pane.addFolder({ title: 'Opening and journey', expanded: false });
   const openingOptions = {
-    'from the weather': 'auto', 'time of day only': 'time-of-day', Daylight: 'sunny', Overcast: 'overcast',
+    'by opening mode': 'auto', Daylight: 'sunny', Overcast: 'overcast',
     Rain: 'rain', Windy: 'wind', Dawn: 'dawn', Sunset: 'twilight', Night: 'night',
   };
-  fO.addBinding(config.opening, 'liveWeather', { label: 'live weather' });
+  fO.addBinding(config.opening, 'mode', {
+    label: 'opening mode',
+    options: { 'shuffle (random, then next on reload)': 'shuffle', 'live weather': 'weather', 'time of day': 'time-of-day' },
+  }).on('change', () => app.chooseOpening?.());
   fO.addBinding(config.opening, 'force', { label: 'opening scene', options: openingOptions })
     .on('change', () => app.chooseOpening?.());
   fO.addButton({ title: 'Re-run opening' }).on('click', () => app.chooseOpening?.());

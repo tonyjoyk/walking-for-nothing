@@ -5,6 +5,7 @@ import { createDefaultConfig, validateConfig } from '../src/config.js';
 import { Scene } from '../src/scene/Scene.js';
 import {
   keralaMinutes, approxSunTimes, validateWeather, chooseOpeningScene, nextScene, CYCLE_ORDER,
+  chooseShuffleScene, readLastScene, rememberScene, LAST_SCENE_KEY,
 } from '../src/weather.js';
 
 // A Date at a given Kerala time (minutes since midnight, IST) on 17 Oct 2026.
@@ -132,8 +133,12 @@ test('overcast is the rain scene with the rain switched off', () => {
 test('opening and cycle settings save and load, and bad values are rejected', () => {
   const cfg = createDefaultConfig();
   assert.deepEqual(validateConfig(JSON.parse(JSON.stringify(cfg))).config, cfg);
-  const bad = validateConfig({ opening: { force: 'snow', liveWeather: 'yes' }, cycle: { crossingsPerScene: 50 } });
-  assert.ok(bad.warnings.includes('opening.force') && bad.warnings.includes('opening.liveWeather'));
+  const bad = validateConfig({ opening: { force: 'snow', mode: 'tides' }, cycle: { crossingsPerScene: 50 } });
+  assert.ok(bad.warnings.includes('opening.force') && bad.warnings.includes('opening.mode'));
+  // an old export with liveWeather loads cleanly; the key is simply ignored
+  const old = validateConfig({ opening: { liveWeather: true, force: 'auto' } });
+  assert.deepEqual(old.warnings, []);
+  assert.equal(old.config.opening.mode, 'shuffle');
   assert.equal(bad.config.cycle.crossingsPerScene, 6);
 });
 
@@ -154,4 +159,69 @@ test('the weather job turns an Open-Meteo response into weather.json the page ac
   assert.equal(toWeatherDoc(om, {}).enabled, false);
   assert.equal(toWeatherDoc({}, { enabled: true }), null);
   assert.match(openMeteoUrl(), /latitude=9\.71306&longitude=76\.68331/);
+});
+
+// --- Story 1.1: random first visit, next scene on every reload ---------------
+
+test('shuffle: a reload opens on the scene after the one last on screen', () => {
+  const order = ['dawn', 'sunny', 'wind', 'rain', 'twilight', 'night'];
+  order.forEach((s, i) => assert.equal(chooseShuffleScene(s).scene, order[(i + 1) % 6]));
+  assert.equal(chooseShuffleScene('night').scene, 'dawn', 'wraps');
+  assert.equal(chooseShuffleScene('overcast').scene, 'twilight', 'overcast sits at rain');
+  assert.match(chooseShuffleScene('rain').reason, /next after rain/);
+});
+
+test('shuffle: with no memory, the first visit is random across all six scenes', () => {
+  // every scene is reachable, and only the six (never overcast)
+  const seen = new Set();
+  for (let i = 0; i < 6; i++) seen.add(chooseShuffleScene(null, () => (i + 0.5) / 6).scene);
+  assert.deepEqual([...seen].sort(), [...CYCLE_ORDER].sort());
+  assert.equal(chooseShuffleScene(null, () => 0.999999).scene, 'night');
+  assert.equal(chooseShuffleScene(null, () => 0).scene, 'dawn');
+  // unknown or tampered memory counts as no memory
+  for (const junk of [undefined, '', 'snow', 42]) assert.match(chooseShuffleScene(junk, () => 0.4).reason, /random/);
+  // a real random source spreads roughly evenly
+  const counts = Object.fromEntries(CYCLE_ORDER.map((s) => [s, 0]));
+  for (let i = 0; i < 6000; i++) counts[chooseShuffleScene(null).scene]++;
+  for (const n of Object.values(counts)) assert.ok(n > 800 && n < 1200, JSON.stringify(counts));
+});
+
+test('the tab remembers the scene; broken or missing storage never throws', () => {
+  const mem = new Map();
+  const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, String(v)) };
+  assert.equal(readLastScene(storage), null);
+  rememberScene(storage, 'twilight');
+  assert.equal(mem.get(LAST_SCENE_KEY), 'twilight');
+  assert.equal(readLastScene(storage), 'twilight');
+  rememberScene(storage, 'not-a-scene');
+  assert.equal(readLastScene(storage), 'twilight', 'junk is not stored');
+  mem.set(LAST_SCENE_KEY, 'garbage');
+  assert.equal(readLastScene(storage), null, 'junk is not read');
+  const throwing = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
+  assert.equal(readLastScene(throwing), null);
+  assert.doesNotThrow(() => rememberScene(throwing, 'rain'));
+  assert.equal(readLastScene(null), null);
+  assert.doesNotThrow(() => rememberScene(undefined, 'rain'));
+});
+
+test('the scene reports every change: opening, crossings and changes by hand', () => {
+  const cfg = createDefaultConfig();
+  const scene = new Scene(cfg);
+  scene.computeView(1920, 1080);
+  const changes = [];
+  scene.onSceneChange = (name) => changes.push(name);
+  scene.applyScene('twilight');                 // the opening
+  const crossing = (1920 + 380) / cfg.character.walkSpeed;
+  for (let i = 0; i < Math.round(crossing * 1.6 * 60); i++) scene.update(1 / 60); // at least one crossing
+  cfg.activePreset = 'wind';                    // by hand, in the dev panel
+  scene.update(1 / 60);
+  assert.equal(changes[0], 'twilight');
+  assert.equal(changes[1], 'night', 'a crossing moves on and is reported');
+  assert.equal(changes[changes.length - 1], 'wind');
+  // what a reload would then open on
+  assert.equal(chooseShuffleScene(changes[changes.length - 1]).scene, 'rain');
+});
+
+test('the default opening mode is shuffle (live weather off)', () => {
+  assert.equal(createDefaultConfig().opening.mode, 'shuffle');
 });

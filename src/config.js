@@ -154,9 +154,11 @@ export function createDefaultConfig() {
       flockSize: 5, interval: 28, speed: 70, altitude: 0.7, wingSpeed: 1, scale: 1, chirps: true,
     },
     weather: { rainDensity: 0.7 },
-    // Opening scene from Kerala's weather, then one scene per crossing
-    // (docs/spec-live-weather.md).
-    opening: { liveWeather: true, force: 'auto' },
+    // Opening scene, then one scene per crossing (docs/spec-live-weather.md,
+    // docs/stories/1.1.shuffle-and-advance-opening.md).
+    // mode: 'shuffle' (random first visit, next scene on each reload),
+    // 'weather' (Kerala's live weather) or 'time-of-day'.
+    opening: { mode: 'shuffle', force: 'auto' },
     cycle: { enabled: true, crossingsPerScene: 1 },
     // The man stops and greets the visitor on hover (docs/spec-greeting.md).
     greeting: { enabled: true, stopSeconds: 0.9, turnSeconds: 1.4, lookSeconds: 3, smileSeconds: 4, cooldownSeconds: 2 },
@@ -212,6 +214,7 @@ export const OPTIONS = {
   'grass.windDir': [1, -1],
   'character.munduLength': ['folded', 'full'],
   'character.sleeve': ['short', 'elbow', 'long'],
+  'opening.mode': ['shuffle', 'weather', 'time-of-day'],
   'opening.force': ['auto', 'time-of-day', 'sunny', 'overcast', 'rain', 'wind', 'dawn', 'twilight', 'night'],
 };
 

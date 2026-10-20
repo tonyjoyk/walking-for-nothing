@@ -21,8 +21,9 @@ Build for hosting with `npm run build`. The output is in `dist/`.
 
 **Hosting:** GitHub Pages at https://tonyjoyk.github.io/walking-for-nothing/, deployed by `.github/workflows/deploy.yml` on
 every push to `main` and every 30 minutes (to refresh Pala's weather).
-Live weather stays off until the repository variable `LIVE_WEATHER` is set
-to `true`; setting it to anything else is the kill switch.
+Live weather is a separate opening mode, currently off (`LIVE_WEATHER` is
+`false`); the deploy still refreshes Pala's weather every 30 minutes so it
+can be switched back on.
 
 Run `npm run capture` (with the dev server running) to render every scene
 beside the reference sheet, the walk in both mundu states and the field
@@ -178,25 +179,29 @@ in the corner.
 
 ## Opening scene and the journey
 
-On load, the site opens on the scene for Kerala's time of day (night, dawn,
-day or sunset, from the sun's times at the location), with no waiting.
-It then reads `weather.json` from the site. If that file is switched on, at
-most 3 hours old, and arrives within 2 seconds, the scene eases into the
-current weather: rain, overcast, windy or clear. After that, each time he
-walks off the right and comes back in on the left, the scene moves to the
-next one: Dawn → Daylight → Windy → Rain → Sunset → Night.
+**Opening (default: shuffle).** A fresh visit opens on a random scene. Each
+reload of the same tab opens on the scene after the one that was on screen,
+so reloading steps through the day: Dawn → Daylight → Windy → Rain → Sunset →
+Night. The tab remembers the last scene in `sessionStorage` only; nothing is
+stored beyond the tab or sent anywhere. Story:
+`docs/stories/1.1.shuffle-and-advance-opening.md`.
 
-- `public/weather.json` is a placeholder (switched off). The deploy workflow
-  replaces it with Pala's current weather (`scripts/fetch-weather.mjs`) every
-  30 minutes. See `docs/spec-live-weather.md`.
-- `?weather=rain` (or `sunny`, `overcast`, `wind`, `dawn`, `twilight`,
-  `night`) forces the opening scene. `?weather=live` uses the weather even
-  when the file is switched off, to preview it.
-- In the dev panel, **Opening and journey** has live weather on/off, a forced
-  opening scene, cycling on/off, crossings per scene, and shows what the
-  site opened on and why.
-- The rules (wind thresholds, dawn and sunset windows, maximum age, location)
-  are `WEATHER_RULES` in `src/config.js`.
+After that, each time he walks off the right and comes back in on the left,
+the scene moves to the next one in the same order.
+
+**Other opening modes** (dev panel → **Opening and journey** → opening
+mode):
+- **Live weather:** Kerala's time of day, easing into Pala's current weather
+  from `weather.json` (`docs/spec-live-weather.md`). Off for now:
+  - the repository variable `LIVE_WEATHER` is `false`, so the deploy
+    publishes the file switched off;
+  - `?weather=live` previews it.
+- **Time of day:** Kerala's time of day only.
+
+`?weather=rain` (or `sunny`, `overcast`, `wind`, `dawn`, `twilight`,
+`night`) forces the opening scene. The weather rules (wind thresholds, dawn
+and sunset windows, maximum age, location) are `WEATHER_RULES` in
+`src/config.js`.
 
 ## The greeting
 

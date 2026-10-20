@@ -1,6 +1,6 @@
 import p5 from 'p5';
 import { createDefaultConfig, WEATHER_RULES } from './config.js';
-import { chooseOpeningScene, validateWeather, SCENE_NAMES } from './weather.js';
+import { chooseOpeningScene, validateWeather, SCENE_NAMES, chooseShuffleScene, readLastScene, rememberScene } from './weather.js';
 import { Scene } from './scene/Scene.js';
 import { AudioManager } from './audio.js';
 import './styles/main.css';
@@ -22,15 +22,20 @@ const scene = new Scene(config);
 const audio = new AudioManager(config);
 
 // ---------------------------------------------------------------------------
-// Opening scene (docs/spec-live-weather.md). The first frame never waits:
-// it opens on the scene for Kerala's time of day, then, if this morning's
-// weather.json arrives within the time limit, eases into the weather scene.
+// Opening scene. The first frame never waits. By opening.mode:
+//   shuffle (default)  a fresh visit opens on a random scene, a reload on the
+//                      next scene after the one last on screen
+//                      (docs/stories/1.1.shuffle-and-advance-opening.md)
+//   weather            Kerala's time of day, easing into the live weather if
+//                      weather.json arrives in time (docs/spec-live-weather.md)
+//   time-of-day        Kerala's time of day only
 //   ?weather=rain (or any scene name)  force that opening scene
-//   ?weather=live                      use the weather even if switched off
+//   ?weather=live                      weather mode, even if switched off
 // ---------------------------------------------------------------------------
 const params = new URLSearchParams(window.location.search);
 const weatherParam = params.get('weather');
 const weatherStatus = { opening: '', source: '', detail: '' };
+if (weatherParam === 'live') config.opening.mode = 'weather'; // preview live weather
 
 function forcedScene() {
   if (weatherParam && SCENE_NAMES.includes(weatherParam)) return weatherParam;
@@ -44,14 +49,28 @@ function openOn(name, reason, snap) {
   weatherStatus.detail = reason;
 }
 
+// The tab's memory of the scene on screen (sessionStorage: survives a
+// reload, cleared when the tab closes; nothing leaves the browser).
+const tabStorage = (() => { try { return window.sessionStorage; } catch { return null; } })();
+const lastScene = readLastScene(tabStorage);
+scene.onSceneChange = (name) => rememberScene(tabStorage, name);
+
 async function chooseOpening() {
   const now = new Date();
   const forced = forcedScene();
   if (forced) { openOn(forced, 'forced', true); weatherStatus.source = 'forced'; return; }
+  const mode = config.opening.force === 'time-of-day' ? 'time-of-day' : config.opening.mode;
+  if (mode === 'shuffle') {
+    // a fresh visit opens on a random scene; a reload, on the next one
+    const pick = chooseShuffleScene(lastScene);
+    openOn(pick.scene, pick.reason, true);
+    weatherStatus.source = 'shuffle';
+    return;
+  }
   const local = chooseOpeningScene(null, now);
   openOn(local.scene, local.reason, true);
   weatherStatus.source = 'time of day';
-  if (config.opening.force === 'time-of-day' || !config.opening.liveWeather) return;
+  if (mode !== 'weather') return;
   try {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), WEATHER_RULES.fetchTimeoutMs);

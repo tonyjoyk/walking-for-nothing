@@ -1,6 +1,6 @@
 # Spec: opening on today's weather
 
-**Status:** Phase A built (17 Oct 2026); Phase B built: Pala, Kottayam; GitHub Pages · **Owner:** Tony · **Decision:** Kerala's weather (option A)
+**Status:** built and live 17–18 Oct 2026; **paused 20 Oct 2026**. The default opening is now shuffle (story 1.1); live weather is the 'weather' opening mode, and `LIVE_WEATHER=false` · **Owner:** Tony · **Decision:** Kerala's weather (option A)
 
 ## Summary
 

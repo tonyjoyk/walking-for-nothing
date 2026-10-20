@@ -105,3 +105,30 @@ export function nextScene(current) {
   const i = CYCLE_ORDER.indexOf(current === 'overcast' ? 'rain' : current);
   return CYCLE_ORDER[(i + 1) % CYCLE_ORDER.length];
 }
+
+// ---------------------------------------------------------------------------
+// Shuffle opening (docs/stories/1.1.shuffle-and-advance-opening.md):
+// a fresh visit opens on a random scene; a reload of the same tab opens on
+// the scene after the one that was last on screen.
+// ---------------------------------------------------------------------------
+export const LAST_SCENE_KEY = 'wfn.lastScene';
+
+// last: the scene last on screen in this tab (or null). random: () => [0, 1).
+export function chooseShuffleScene(last, random = Math.random) {
+  if (SCENE_NAMES.includes(last)) return { scene: nextScene(last), reason: `next after ${last}` };
+  const i = Math.min(CYCLE_ORDER.length - 1, Math.floor(random() * CYCLE_ORDER.length));
+  return { scene: CYCLE_ORDER[i], reason: 'random first visit' };
+}
+
+// Storage helpers: storage may be missing or throw (private mode, blocked);
+// then nothing is remembered and every load is a fresh, random one.
+export function readLastScene(storage) {
+  try {
+    const v = storage?.getItem(LAST_SCENE_KEY);
+    return SCENE_NAMES.includes(v) ? v : null;
+  } catch { return null; }
+}
+
+export function rememberScene(storage, name) {
+  try { if (SCENE_NAMES.includes(name)) storage?.setItem(LAST_SCENE_KEY, name); } catch { /* not remembered */ }
+}

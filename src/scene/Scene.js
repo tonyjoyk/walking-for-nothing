@@ -51,6 +51,7 @@ export class Scene {
     this.fps = 60;
     this.needsManPlacement = true;
     this.onBirdsEnter = null;
+    this.onSceneChange = null; // (name) => void, whenever the scene on screen changes
     this.buildWorld();
   }
 
@@ -99,6 +100,7 @@ export class Scene {
     }
     this.sceneName = name;
     this.crossingsInScene = 0;
+    this.onSceneChange?.(name);
   }
 
   restartCharacter() { this.needsManPlacement = true; }
@@ -115,6 +117,7 @@ export class Scene {
       this.applyPreset(cfg.activePreset);
       this.sceneName = cfg.activePreset;
       this.crossingsInScene = 0;
+      this.onSceneChange?.(this.sceneName);
     }
     if (Math.round(cfg.grass.seed) !== this.seed) this.buildWorld();
     else if (cfg.grass.clumping !== this.fieldClumping) {
