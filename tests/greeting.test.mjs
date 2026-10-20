@@ -353,3 +353,31 @@ test('2.2 AC2: the head point sits just above his head', () => {
   assert.ok(scene.hitMan(h.x, h.y + 20 * v.s), 'just below the point is still him');
   assert.ok(!scene.hitMan(h.x, h.y - 20 * v.s), 'just above is sky');
 });
+
+// Story 2.3 / D-2.4: the bubble picks dark or light ink from the sky behind it.
+test('2.3: ink follows the sky, judged on the worst tenth, with hysteresis and a veil when needed', async () => {
+  const { chooseInk, contrast, INK } = await import('../src/bubble.js');
+  const sky = (r, g, b, n = 100) => Array.from({ length: n }, () => [r, g, b]);
+  const night = chooseInk(sky(0x24, 0x34, 0x7a));
+  assert.equal(night.ink, 'light');
+  assert.equal(night.veil, 0);
+  assert.ok(night.ratio >= 4.5, `night ${night.ratio.toFixed(1)}`);
+  const day = chooseInk(sky(0xa9, 0xd5, 0xe0));
+  assert.equal(day.ink, 'dark');
+  assert.equal(day.veil, 0);
+  // a dark sky with a bright moon in a corner (5%) stays light
+  assert.equal(chooseInk([...sky(0x24, 0x34, 0x7a, 95), ...sky(255, 250, 220, 5)]).ink, 'light');
+  // mid-grey: both inks about 4:1, so the current one is kept and a veil lifts it to 4.5
+  const mid = sky(0x7f, 0x7f, 0x7f);
+  for (const current of ['light', 'dark']) {
+    const p = chooseInk(mid, current);
+    assert.equal(p.ink, current);
+    assert.ok(p.veil > 0 && p.veil <= 0.3, `${current} veil ${p.veil}`);
+    assert.ok(p.ratio >= 4.5, `${current} ${p.ratio.toFixed(2)}`);
+  }
+  // every flat sky colour reaches 4.5:1
+  for (let v = 0; v <= 255; v += 15) for (const c of [[v, v, v], [v, v * 0.6, v * 0.8], [v * 0.5, v * 0.7, v]]) {
+    assert.ok(chooseInk(sky(...c)).ratio >= 4.5, `sky ${c}`);
+  }
+  assert.ok(contrast(INK.light, INK.dark) > 15);
+});

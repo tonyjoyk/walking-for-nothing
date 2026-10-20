@@ -301,14 +301,13 @@ visitor who finds it should get a short sense of the person behind the site.
 **Requirement.** When he has turned to face the visitor (after the 2 s rest,
 a click or a tap), a simple speech bubble shows this text:
 
-> Hey, I'm Tony.
+> Hey, I'm Tony, a product designer from Kerala, India.
 >
-> I'm a product designer from Kerala, India. I lead design at Resolve to Save
-> Lives, a public health nonprofit, where I design tools and services for
-> healthcare staff.
+> I lead design at Resolve to Save Lives, a public health nonprofit, where I
+> design tools and services for healthcare staff.
 >
-> The internet often feels rushed and demanding. I like creating digital
-> spaces that help people slow down, and feel calm.
+> The internet often feels rushed and demanding. So I created a digital space
+> where we can slow down and feel calm.
 
 | When | The bubble |
 | --- | --- |

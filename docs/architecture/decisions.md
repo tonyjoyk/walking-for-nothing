@@ -173,6 +173,27 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   The 3 s + 4 s timing applies only with the bubble off.
 - **Status:** in force.
 
+### D-2.4 The bubble is "Air": no box, ink chosen from the sky
+- **Date:** 20 Oct 2026. **Story:** [2.3](../stories/2.3.speech-bubble-restyle.md).
+  **Options:** [four options](../ux/research/speech-bubble-options.md) (owner picked
+  option 3, Air).
+- **Decision:**
+  - The bubble is just words: 11 px system font, 188 px wide, with a 1 px
+    hairline down to his head. No box, border or tail shape.
+  - The ink follows the scene. About every 0.4 s while the bubble shows,
+    `bubble.js` reads the canvas pixels behind the words. It picks light or
+    dark ink by the worst tenth of that patch, keeping the current ink when
+    the two are close.
+  - If neither ink reaches 4.5:1, a soft blurred veil with no edge is added
+    behind the words, only as strong as needed (dark behind light ink, pale
+    behind dark ink).
+- **Why:** the owner wanted it smaller and more minimal, and the same style
+  in every scene with enough contrast. Measured: Sunset was 3.4:1 and Rain
+  4.3:1 without the veil.
+- **Supersedes:** D-2.3's light glass bubble (its style only; its behaviour
+  stands).
+- **Status:** in force.
+
 ## Epic 3: Character and motion (D-3)
 
 ### D-3.1 Natural steps over the brief's slow crossing
