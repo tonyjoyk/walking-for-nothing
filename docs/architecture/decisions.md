@@ -127,6 +127,31 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   - The stop is planned to land with both feet down.
 - **Status:** in force.
 
+### D-2.2 Pause on hover; turn after a 2 s rest or a click
+- **Date:** 20 Oct 2026. **Story:** [2.1](../stories/2.1.pause-on-hover-turn-on-rest-or-click.md).
+  **Discussion:** [party mode](../bmad/party-mode/2026-10-20-greeting-hover-dwell-click.md).
+- **Decision:**
+  - The cursor on him makes him stop and stand (a new `waiting` state). He
+    turns only when the cursor has stayed on him for `dwellSeconds`
+    (default 2 s, timed from its arrival), or on a click.
+  - A mouse click on him works like a tap: he turns as soon as he's
+    standing and plays the whole greeting. A click elsewhere ends it.
+  - If the cursor leaves before he turns, he walks on with no cooldown, and
+    stops again if it comes back.
+  - Hover is re-tested every frame. While a greeting is under way, the box
+    is widened behind him by 0.6 of a stride, so he can't stop out from
+    under the cursor.
+  - The stop lands on the first both-feet-down moment at least 0.1 of a
+    stride ahead (was 0.2).
+- **Why:** measured, he walked 33–87 px past a ±30 px box before standing,
+  and a stale hover then cancelled the greeting mid-turn. The owner also
+  asked for a pause first, and a deliberate turn.
+- **Supersedes:** in the [greeting spec](../product/specs/greeting.md):
+  "hover starts the greeting" (P0.1), the state list (P0.2), the stop rule
+  "a fifth of a stride", and mouse clicks doing nothing. Cooldown after an
+  unturned pause is removed.
+- **Status:** in force.
+
 ## Epic 3: Character and motion (D-3)
 
 ### D-3.1 Natural steps over the brief's slow crossing
@@ -221,7 +246,7 @@ Added 20 Oct 2026 by the audio chat. Full text:
   - Not used: BBC, Sonniss, Pixabay, Zapsplat, Macaulay, and paid packs that
     forbid redistribution.
   - A test enforces the allowlist.
-- **Status:** planned.
+- **Status:** planned; **narrowed by D-6.6** (no CC BY-NC).
 
 ### D-6.3 No religious sound by default
 - **Date:** 20 Oct 2026.
@@ -246,3 +271,18 @@ Added 20 Oct 2026 by the audio chat. Full text:
   - `audio/sources.json` records the source, licence and edits for each.
   - The processed outputs and `manifest.json` are generated.
 - **Status:** planned.
+
+### D-6.6 Open-only sound set
+- **Date:** 20 Oct 2026 (chosen by Tony). **Source:** [audio architecture §7](../product/specs/audio/architecture.md).
+- **Decision:** ship only CC0, CC BY and CC BY-SA recordings. No CC BY-NC, so
+  the site can be monetised later. The licence test enforces this.
+- **Dropped (CC BY-NC):** 27492 Asian koels, 808117 Farmlife, 28107 Boat
+  trip, 28263 Odayam evening, 31948 Paddy frogs, 28264 Odayam night.
+- **Replacements:**
+  - dawn: 787307 (Goa, CC0);
+  - sunset crows: 249567 (CC0);
+  - night: 803557 Goa crickets (CC BY), plus the Kerala owlet and nightjar
+    calls (CC BY-SA).
+  - Final picks follow Tony's listening notes (story 6.1).
+- **Supersedes:** narrows D-6.2 (removes CC BY-NC from the allowlist).
+- **Status:** in force.

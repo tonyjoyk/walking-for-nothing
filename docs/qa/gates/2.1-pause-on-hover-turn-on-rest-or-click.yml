@@ -1,0 +1,18 @@
+schema: 1
+story: '2.1'
+story_title: 'Pause on hover; turn on a 2 s rest or a click'
+gate: PASS
+status_reason: 'All 8 acceptance criteria verified by unit tests (55 passing) and build; browser confirmed pointer wiring.'
+reviewer: 'QA (Claude)'
+updated: '2026-10-20'
+top_issues: []
+evidence:
+  tests_reviewed: 55
+  browser_checks:
+    - 'Local: still cursor at his back edge stayed hovering while he slowed (per-frame hit test)'
+    - 'Local: click on him then pointer away: he kept stopping (one-shot)'
+  not_covered:
+    - 'Real-time feel: in-app browser pane throttled to ~2.5 fps'
+nfr_validation:
+  performance: { status: PASS, notes: 'one extra hit test per frame' }
+  reliability: { status: PASS, notes: 'every path resolves to walking within 2.5 s of leaving' }

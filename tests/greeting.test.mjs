@@ -1,7 +1,7 @@
 // The greeting (docs/product/specs/greeting.md).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createDefaultConfig } from '../src/config.js';
+import { createDefaultConfig, validateConfig } from '../src/config.js';
 import { Scene } from '../src/scene/Scene.js';
 import { Greeting } from '../src/scene/greeting.js';
 import { characterPose, footPoints } from '../src/scene/character.js';
@@ -166,4 +166,143 @@ test('a one-shot greeting (tap or "Greet now") plays through without hovering', 
   for (let i = 0; i < 60 * 16; i++) { g.update(DT, false, cfg, {}); seen.add(g.state); }
   for (const s of ['stopping', 'settling', 'turning', 'looking', 'smiling', 'returning', 'starting']) assert.ok(seen.has(s), s);
   assert.equal(g.state, 'walking');
+});
+
+// Story 2.1 / D-2.2: pause on hover; turn after a 2 s rest or a click.
+// Hover from a given point in the stride (frames walked first).
+function hoverFrom(frames) {
+  const made = makeScene();
+  for (let i = 0; i < frames; i++) made.scene.update(DT);
+  return made;
+}
+// The man's position on screen (CSS px), chest height.
+function manOnScreen(scene, dx = 0) {
+  const v = scene.view;
+  return { x: (scene.manX - v.x0) * v.s + dx, y: (906 + scene.config.character.groundOffset - 100 - v.y0) * v.s };
+}
+
+test('2.1 AC1: the cursor on him slows him at once; he stands without turning', () => {
+  for (const frames of [0, 9, 23, 41]) {
+    const { scene } = hoverFrom(frames);
+    scene.hovering = true;
+    scene.update(DT);
+    assert.equal(scene.greeting.state, 'stopping');
+    scene.update(DT);
+    assert.ok(scene.greet.speed < 1, 'slowing by the next frame');
+    until(scene, () => scene.greeting.state === 'waiting', 4);
+    assert.equal(scene.greet.speed, 0);
+    assert.equal(scene.greet.head, 0);
+    assert.equal(scene.greet.body, 0);
+  }
+});
+
+test('2.1 AC2: he turns 2 s after the cursor arrives, or as soon as he is standing', () => {
+  for (const frames of [0, 9, 23, 41]) {
+    const { scene, cfg } = hoverFrom(frames);
+    scene.hovering = true;
+    let standing = null;
+    const t = until(scene, () => {
+      if (standing === null && scene.greeting.state === 'waiting') standing = scene.greeting.hoverT;
+      return scene.greeting.state === 'turning';
+    }, 6);
+    const expected = Math.max(cfg.greeting.dwellSeconds, standing ?? 0);
+    assert.ok(Math.abs(t - expected) < 0.05, `turned at ${t.toFixed(2)} s, expected ${expected.toFixed(2)} s`);
+  }
+});
+
+test('2.1 AC2: he does not turn while the cursor has been on him for less than 2 s', () => {
+  const { scene } = makeScene();
+  scene.hovering = true;
+  for (let t = 0; t < 1.9; t += DT) { scene.update(DT); assert.equal(scene.greet.head, 0); }
+});
+
+test('2.1 AC3: a click turns him as soon as he stands, and plays through after the cursor leaves', () => {
+  for (const when of ['walking', 'stopping', 'waiting']) {
+    const { scene } = makeScene();
+    scene.hovering = true;
+    if (when !== 'walking') until(scene, () => scene.greeting.state === when, 4);
+    scene.greetNow();
+    let waited = 0;
+    until(scene, () => {
+      if (scene.greeting.state === 'waiting') waited++;
+      return scene.greeting.state === 'turning';
+    }, 4);
+    assert.ok(waited <= 1, `${when}: stood ${waited} frames before turning`);
+    scene.hovering = false; // the visitor moves away after clicking
+    until(scene, () => scene.greeting.state === 'smiling', 8);
+    until(scene, () => scene.greeting.state === 'walking', 10);
+  }
+});
+
+test('2.1 AC4: a click elsewhere ends a clicked greeting', () => {
+  const { scene } = makeScene();
+  scene.greetNow();
+  until(scene, () => scene.greeting.state === 'looking', 6);
+  scene.greeting.release();
+  const t = until(scene, () => scene.greeting.state === 'walking', 5);
+  assert.ok(t <= 2.5);
+});
+
+test('2.1 AC5: leaving before he turns: walking within 2.5 s, no cooldown, and a return stops him again', () => {
+  const { scene } = makeScene();
+  scene.hovering = true;
+  until(scene, () => scene.greeting.state === 'waiting', 4);
+  scene.hovering = false;
+  const t = until(scene, () => scene.greeting.state === 'walking', 5);
+  assert.ok(t <= 2.5, `walking after ${t.toFixed(2)} s`);
+  assert.equal(scene.greeting.cooldown, 0);
+  scene.hovering = true;
+  scene.update(DT);
+  assert.equal(scene.greeting.state, 'stopping');
+  // and coming back while he is still starting off stops him again, smoothly
+  scene.hovering = false;
+  until(scene, () => scene.greeting.state === 'starting', 4);
+  for (let i = 0; i < 20; i++) scene.update(DT);
+  const before = scene.greet.speed;
+  scene.hovering = true;
+  scene.update(DT);
+  assert.equal(scene.greeting.state, 'stopping');
+  assert.ok(Math.abs(scene.greet.speed - before) < 0.05, `speed jumped ${before.toFixed(2)} → ${scene.greet.speed.toFixed(2)}`);
+});
+
+test('2.1 AC6: a still cursor stays on him while he stops, and he stops when he walks into one', () => {
+  for (const frames of [0, 9, 23, 41]) {
+    const { scene } = hoverFrom(frames);
+    // the cursor at his back edge: the worst case for walking out from under it
+    scene.pointer = manOnScreen(scene, -25 * scene.view.s);
+    scene.update(DT);
+    assert.equal(scene.greeting.state, 'stopping');
+    until(scene, () => scene.greeting.state === 'turning', 6); // never lost the cursor
+  }
+  const { scene } = makeScene();
+  scene.pointer = manOnScreen(scene, 140 * scene.view.s); // ahead of him
+  scene.update(DT);
+  assert.equal(scene.greeting.state, 'walking');
+  until(scene, () => scene.greeting.state === 'stopping', 6);
+  scene.pointer = null; scene.hovering = false;
+});
+
+test('2.1 AC7: no snapping through pause, leave, return, click and turn', () => {
+  const { scene } = makeScene();
+  let prev = { ...scene.greet }, worst = 0;
+  const script = [[0, true], [1.2, false], [1.6, true], [3.5, 'click'], [4, false]];
+  for (let i = 0; i < 60 * 16; i++) {
+    const t = i * DT;
+    for (const [at, what] of script) if (Math.abs(t - at) < DT / 2) { if (what === 'click') scene.greetNow(); else scene.hovering = what; }
+    scene.update(DT);
+    const g = scene.greet;
+    worst = Math.max(worst, Math.abs(g.head - prev.head), Math.abs(g.body - prev.body), Math.abs(g.smile - prev.smile), Math.abs(g.speed - prev.speed), Math.abs(g.stand - prev.stand));
+    prev = { ...g };
+  }
+  assert.ok(worst < 0.04, `largest change in one frame ${worst.toFixed(3)}`);
+});
+
+test('2.1 AC8: dwellSeconds is a validated setting', () => {
+  const cfg = createDefaultConfig();
+  assert.equal(cfg.greeting.dwellSeconds, 2);
+  const ok = validateConfig({ greeting: { dwellSeconds: 3.5 } });
+  assert.equal(ok.config.greeting.dwellSeconds, 3.5);
+  const bad = validateConfig({ greeting: { dwellSeconds: 'soon' } });
+  assert.equal(bad.config.greeting.dwellSeconds, 2);
+  assert.ok(bad.warnings.length > 0);
 });

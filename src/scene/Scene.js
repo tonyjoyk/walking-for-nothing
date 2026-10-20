@@ -17,6 +17,10 @@ import {
 } from './life.js';
 
 const MIN_VIEW_W = 760;
+// The greeting's stop (D-2.2): it lands at least this share of a gait cycle
+// ahead, so at most STOP_LEAD + 0.5 of a cycle (two feet-down moments a cycle).
+const STOP_LEAD = 0.1;
+const STOP_REACH = STOP_LEAD + 0.55; // how far behind him the hover box reaches while greeting
 
 const QUALITY = {
   low: { density: 1, rainMax: 300, grain: false, grassScale: 0.55 },
@@ -47,6 +51,7 @@ export class Scene {
     this.greeting = new Greeting();
     this.greet = this.greeting.output();
     this.hovering = false;
+    this.pointer = null; // last mouse position (CSS px), or null when it's off the page
     this.massCache = { far: {}, mid: {}, fore: {} };
     this.fps = 60;
     this.needsManPlacement = true;
@@ -157,24 +162,29 @@ export class Scene {
       this.dog.firstDone = false;
     }
     // The greeting can slow him to a stop (and back up again). The stop is
-    // planned: the next moment with both feet down (at least a fifth of a
-    // stride ahead), reached with even deceleration.
+    // planned: the next moment with both feet down (at least STOP_LEAD of a
+    // stride ahead, D-2.2), reached with even deceleration.
     const TWO_PI = Math.PI * 2;
     const stride = C.walkSpeed / Math.max(0.05, C.cadence);
+    const planStop = () => {
+      const u = (((this.walkPhase / TWO_PI) % 1) + 1) % 1;
+      let du = Infinity;
+      for (const target of [0.035, 0.535, 1.035, 1.535]) if (target - u >= STOP_LEAD) du = Math.min(du, target - u);
+      this.stopPlan = { at: this.walkPhase + du * TWO_PI, total: du * stride };
+    };
     let stopFraction;
     if (this.greeting.state === 'stopping') {
-      if (!this.stopPlan) {
-        const u = (((this.walkPhase / TWO_PI) % 1) + 1) % 1;
-        let du = Infinity;
-        for (const target of [0.035, 0.535, 1.035, 1.535]) if (target - u >= 0.2) du = Math.min(du, target - u);
-        this.stopPlan = { at: this.walkPhase + du * TWO_PI, total: du * stride };
-      }
+      if (!this.stopPlan) planStop();
       const left = Math.max(0, ((this.stopPlan.at - this.walkPhase) / TWO_PI) * stride);
       stopFraction = this.stopPlan.total > 0 ? left / this.stopPlan.total : 0;
     } else {
       this.stopPlan = null;
     }
+    // Hover is re-tested every frame, so a still cursor follows him (D-2.2).
+    if (this.pointer) this.hovering = this.hitMan(this.pointer.x, this.pointer.y, this.greeting.active);
     this.greet = this.greeting.update(dt, this.hovering, cfg.greeting, { stopFraction });
+    // plan a new stop in the frame it begins, so he slows from the next one
+    if (this.greeting.state === 'stopping' && !this.stopPlan) planStop();
     const manSpeed = C.walkSpeed * this.greet.speed;
     let crossed = false;
     let moved = 0;
@@ -246,7 +256,9 @@ export class Scene {
 
   // Is a point on screen (CSS pixels) over the man? Used for the greeting.
   // A generous box round the figure, never smaller than ~30x80 px on screen.
-  hitMan(px, py) {
+  // held: he's greeting, so the box reaches back by the most he can walk
+  // while stopping, and he can't stop out from under the cursor (D-2.2).
+  hitMan(px, py, held = false) {
     const C = this.config.character;
     if (!C.visible) return false;
     const v = this.view;
@@ -254,7 +266,8 @@ export class Scene {
     const lx = (px / v.s + v.x0 - this.manX) / C.scale;
     const ly = (py / v.s + v.y0 - (GROUND_Y + C.groundOffset)) / C.scale;
     const halfW = Math.max(30, 15 / k), top = -Math.max(270, 80 / k);
-    return Math.abs(lx - 3) <= halfW && ly >= top && ly <= 6;
+    const back = held ? (STOP_REACH * C.walkSpeed) / Math.max(0.05, C.cadence) / C.scale : 0;
+    return lx - 3 <= halfW && lx - 3 >= -halfW - back && ly >= top && ly <= 6;
   }
 
   greetNow() { this.greeting.greetNow(); }

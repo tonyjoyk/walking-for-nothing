@@ -1,6 +1,8 @@
-// The greeting (docs/product/specs/greeting.md): when the visitor rests the cursor on
-// the man he stops, turns to face them, looks, smiles, then turns back and
-// walks on. Leaving him at any point sends him straight back to walking.
+// The greeting (docs/product/specs/greeting.md, revision 2 / D-2.2): when the
+// cursor comes onto the man he stops and stands. If it stays for dwellSeconds,
+// or the visitor clicks him, he turns to face them, looks, smiles, then turns
+// back and walks on. Leaving him at any point sends him straight back to
+// walking.
 //
 // A pure state machine. Each frame: update(dt, hovering, cfg, { stopFraction })
 // stopFraction: while stopping, the share of the planned stopping distance
@@ -29,12 +31,18 @@ export class Greeting {
     this.smile = 0;
     this.cooldown = 0;
     this.rearm = false;  // the cursor must leave and come back before another greeting
-    this.oneShot = false; // a tap or "Greet now": play through without hovering
+    this.oneShot = false; // a click, tap or "Greet now": turn at once, play through without hovering
+    this.hoverT = 0;     // seconds the cursor has rested on him (the dwell clock)
+    this.turned = false; // has he begun to turn in this greeting?
+    this.stopFrom = 1;   // speed when the stop began
   }
 
-  // Start a greeting regardless of the cursor (touch tap, dev panel).
+  // Turn now, regardless of the cursor (a click or tap on him, the dev
+  // panel). Works from any state before he turns back.
   greetNow() {
-    if (this.state === 'walking') { this.oneShot = true; this.cooldown = 0; this.rearm = false; }
+    if (this.state === 'returning') return;
+    if (this.state === 'starting' && this.turned) return;
+    this.oneShot = true; this.cooldown = 0; this.rearm = false;
   }
 
   // End a one-shot greeting early (a tap elsewhere).
@@ -52,6 +60,9 @@ export class Greeting {
       return v < target ? Math.min(target, v + step) : Math.max(target, v - step);
     };
     const leave = () => goto('returning');
+    const stop = () => { this.stopFrom = Math.max(0.05, this.speed); goto('stopping'); };
+    this.hoverT = hovering ? this.hoverT + dt : 0;
+    const turnNow = this.oneShot || this.hoverT >= cfg.dwellSeconds;
     // Turning: the head moves first and the body follows a quarter of the
     // turn later, in either direction. Each part moves from where it is, so
     // turning back halfway through is always continuous.
@@ -68,21 +79,28 @@ export class Greeting {
         this.speed = ease(this.speed, 1, cfg.stopSeconds);
         this.cooldown = Math.max(0, this.cooldown - dt);
         if (!hovering) this.rearm = false;
-        if (want && this.cooldown <= 0 && (!this.rearm || this.oneShot)) goto('stopping');
+        if (want && this.cooldown <= 0 && (!this.rearm || this.oneShot)) { this.turned = false; stop(); }
         break;
 
       case 'stopping':
         // slow evenly to the planned stop (both feet down): speed falls with
         // the square root of the distance left, i.e. constant deceleration
         if (ctx.stopFraction === undefined) this.speed = ease(this.speed, 0, cfg.stopSeconds);
-        else this.speed = Math.sqrt(Math.max(0, Math.min(1, ctx.stopFraction)));
+        else this.speed = this.stopFrom * Math.sqrt(Math.max(0, Math.min(1, ctx.stopFraction)));
+        this.stand = ease(this.stand, 0, SETTLE_SECONDS); // only if a re-stop caught him mid-start
         if (this.speed <= 0.02) { this.speed = 0; goto('settling'); }
         if (!want) goto('starting');
         break;
 
       case 'settling':
         this.stand = ease(this.stand, 1, SETTLE_SECONDS);
-        if (this.stand >= 1) goto('turning');
+        if (this.stand >= 1) goto('waiting');
+        if (!want) leave();
+        break;
+
+      case 'waiting':
+        // standing, not yet turned: the cursor has to stay, or click
+        if (turnNow) { this.turned = true; goto('turning'); }
         if (!want) leave();
         break;
 
@@ -110,13 +128,17 @@ export class Greeting {
         break;
 
       case 'starting':
+        // he never turned: coming back onto him stops him again, at once
+        if (want && !this.turned) { stop(); break; }
         this.smile = 0;
         this.stand = ease(this.stand, 0, SETTLE_SECONDS);
         this.speed = ease(this.speed, 1, cfg.stopSeconds);
         if (this.speed >= 1 && this.stand <= 0) {
           this.oneShot = false;
-          this.cooldown = cfg.cooldownSeconds;
-          this.rearm = !!hovering;
+          // the cooldown and "come back again" only follow a real greeting
+          this.cooldown = this.turned ? cfg.cooldownSeconds : 0;
+          this.rearm = this.turned && !!hovering;
+          this.turned = false;
           goto('walking');
         }
         break;

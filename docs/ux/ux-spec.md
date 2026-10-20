@@ -69,12 +69,14 @@ change.
 
 ## The greeting (epic 2)
 
-- **Hover (or tap on touch):** he stops with both feet down, turns head
-  first, looks for 3 s, then smiles. About 4 s later he turns back and walks
-  on.
+- **Hover:** he stops with both feet down and stands. If the cursor stays
+  on him for 2 s, he turns head first, looks for 3 s, then smiles. About 4 s
+  later he turns back and walks on (D-2.2).
+- **Click (or tap on touch):** the same, but he turns as soon as he's
+  standing, and the greeting plays through even if the cursor leaves.
 - **Leaving:** he turns back smoothly from wherever he is.
 - **No cursor change:** the cursor doesn't change over him; it isn't a
-  button.
+  button. This still holds now that a click does something (D-2.2).
 - Spec: [greeting](../product/specs/greeting.md).
 
 ## Field depth (epic 4)

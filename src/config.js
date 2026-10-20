@@ -160,8 +160,9 @@ export function createDefaultConfig() {
     // 'weather' (Kerala's live weather) or 'time-of-day'.
     opening: { mode: 'shuffle', force: 'auto' },
     cycle: { enabled: true, crossingsPerScene: 1 },
-    // The man stops and greets the visitor on hover (docs/product/specs/greeting.md).
-    greeting: { enabled: true, stopSeconds: 0.9, turnSeconds: 1.4, lookSeconds: 3, smileSeconds: 4, cooldownSeconds: 2 },
+    // The man stops on hover and turns after dwellSeconds or a click
+    // (docs/product/specs/greeting.md, D-2.2).
+    greeting: { enabled: true, stopSeconds: 0.9, dwellSeconds: 2, turnSeconds: 1.4, lookSeconds: 3, smileSeconds: 4, cooldownSeconds: 2 },
     finish: { grain: 0.1 },
     audio: {
       enabled: false, muted: false, master: 0.5,
@@ -202,7 +203,7 @@ export const RANGES = {
   'birds.altitude': [0, 1, 0.01], 'birds.wingSpeed': [0.3, 3, 0.01], 'birds.scale': [0.5, 2, 0.01],
   'weather.rainDensity': [0.1, 1, 0.01],
   'cycle.crossingsPerScene': [1, 6, 1],
-  'greeting.stopSeconds': [0.3, 3, 0.05], 'greeting.turnSeconds': [0.5, 4, 0.05],
+  'greeting.stopSeconds': [0.3, 3, 0.05], 'greeting.dwellSeconds': [0, 6, 0.1], 'greeting.turnSeconds': [0.5, 4, 0.05],
   'greeting.lookSeconds': [0, 10, 0.1], 'greeting.smileSeconds': [1, 12, 0.1], 'greeting.cooldownSeconds': [0, 10, 0.1],
   'finish.grain': [0, 0.4, 0.005],
   'audio.master': [0, 1, 0.01], 'audio.wind': [0, 1, 0.01], 'audio.rain': [0, 1, 0.01], 'audio.birds': [0, 1, 0.01],

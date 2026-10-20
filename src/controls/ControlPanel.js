@@ -63,6 +63,7 @@ export function createPanel(app) {
   const fGr = pane.addFolder({ title: 'Greeting', expanded: false });
   fGr.addBinding(Gr, 'enabled', { label: 'greet on hover' });
   bind(fGr, Gr, 'stopSeconds', 'greeting.stopSeconds', { label: 'stop / start (s)' });
+  bind(fGr, Gr, 'dwellSeconds', 'greeting.dwellSeconds', { label: 'turn after (s)' });
   bind(fGr, Gr, 'turnSeconds', 'greeting.turnSeconds', { label: 'turn (s)' });
   bind(fGr, Gr, 'lookSeconds', 'greeting.lookSeconds', { label: 'look (s)' });
   bind(fGr, Gr, 'smileSeconds', 'greeting.smileSeconds', { label: 'smile (s)' });

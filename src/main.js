@@ -143,18 +143,23 @@ function adaptQuality(dt) {
   }
 }
 
-// The greeting (docs/product/specs/greeting.md): resting the cursor on the man makes
-// him stop and turn to the visitor. On touch screens a tap on him plays it
-// once; a tap anywhere else lets him walk on.
+// The greeting (docs/product/specs/greeting.md, D-2.2): the cursor on the man
+// makes him stop; resting it there for a moment, or clicking him, makes him
+// turn to the visitor. A tap on touch screens works like a click. A click or
+// tap anywhere else lets him walk on. The scene re-tests the hover every frame
+// from the last pointer position, so a still cursor still counts.
+const pointerOff = () => { scene.pointer = null; scene.hovering = false; };
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
-  scene.hovering = scene.hitMan(e.clientX, e.clientY);
+  scene.pointer = { x: e.clientX, y: e.clientY };
+  scene.hovering = scene.hitMan(e.clientX, e.clientY, scene.greeting.active);
 });
-document.addEventListener('mouseout', (e) => { if (!e.relatedTarget) scene.hovering = false; });
-window.addEventListener('blur', () => { scene.hovering = false; });
+document.addEventListener('mouseout', (e) => { if (!e.relatedTarget) pointerOff(); });
+window.addEventListener('blur', pointerOff);
 window.addEventListener('pointerdown', (e) => {
-  if (e.pointerType !== 'touch') return;
-  if (scene.hitMan(e.clientX, e.clientY)) scene.greetNow();
+  if (e.button > 0) return;
+  if (e.target.closest && e.target.closest('button, input, select, a, .tp-dfwv')) return; // UI, not the scene
+  if (scene.hitMan(e.clientX, e.clientY, scene.greeting.active)) scene.greetNow();
   else scene.greeting.release();
 });
 

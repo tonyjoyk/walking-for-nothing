@@ -68,7 +68,11 @@ scripts/      fetch-weather.mjs: Open-Meteo to weather.json (CI; paused feature)
 ## Epic 2: The greeting
 
 - `greeting.js` is a pure state machine: walking → stopping → settling →
-  turning → looking → smiling → returning → starting.
+  waiting → turning → looking → smiling → returning → starting. A hover
+  clock (`dwellSeconds`) or a click (`greetNow`) moves him from waiting to
+  turning (D-2.2).
+- `Scene.pointer` holds the last mouse position. Hover is re-tested from it
+  every frame, with the box widened behind him while greeting.
 - `Scene` plans the stop at the next both-feet-down point and passes the
   `stopFraction`.
 - `drawCharacter` morphs the profile outlines into front-view twins

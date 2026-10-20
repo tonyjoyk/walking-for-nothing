@@ -2,6 +2,12 @@
 
 **Status:** built (18 Oct 2026) · tests in `tests/greeting.test.mjs`
 
+> **Revised 20 Oct 2026 by [D-2.2](../../architecture/decisions.md#d-22-pause-on-hover-turn-after-a-2-s-rest-or-a-click)
+> (story [2.1](../../stories/2.1.pause-on-hover-turn-on-rest-or-click.md)).**
+> The cursor on him now only makes him **stop and stand**. He **turns** once
+> it has rested on him for 2 s, or straight away on a **click**. See
+> "Revision 2" at the end. Where the text below disagrees, Revision 2 wins.
+
 ## Summary
 
 When a visitor rests the cursor on the man, he slows, stops and slowly turns
@@ -251,3 +257,33 @@ All are non-blocking; the defaults are listed.
    - The existing slip test, run after a full greeting.
 8. **Captures.** `npm run capture` gets a `greet` job: a strip through the
    whole sequence at 2×, plus 1× frames.
+
+---
+
+## Revision 2 (20 Oct 2026): pause on hover, turn on rest or click
+
+Why: [party mode notes](../../bmad/party-mode/2026-10-20-greeting-hover-dwell-click.md).
+Decision: D-2.2.
+
+| Visitor does | He does |
+| --- | --- |
+| Puts the cursor on him | Starts slowing at once, stops with both feet down, and stands (**waiting**) |
+| Keeps it there for 2 s (timed from arrival) | Turns, looks, smiles, turns back and walks on, as before |
+| Clicks him (any time before he turns back) | Turns as soon as he's standing, and plays the whole greeting even if the cursor leaves |
+| Moves away before he has turned | Walks on with no cooldown; stops again if the cursor comes back |
+| Moves away after he has turned | Turns back and walks on, as before (then the cooldown and "come back again" rule) |
+| Clicks somewhere else | Ends a clicked greeting, the same as a tap elsewhere |
+
+**States:** walking → stopping → settling → **waiting** → turning →
+looking → smiling → returning → starting.
+
+**Hover:** tested every frame against the last pointer position. While he's
+greeting, the box extends behind him by 0.6 of a stride.
+
+**Stop:** at the first both-feet-down moment at least 0.1 of a stride ahead.
+
+**Config:** `greeting.dwellSeconds` (default 2, range 0–6), "turn after (s)"
+in the dev panel.
+
+**Unchanged:** the turn, the face, no cursor change, touch tap, "Greet
+now", the no-snap and resolve-within-2.5 s goals.
