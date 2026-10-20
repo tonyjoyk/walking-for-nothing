@@ -116,6 +116,19 @@ test('a zero-size canvas (hidden tab) does not break the view or lose the man', 
   assert.deepEqual([...new Set(ctx.stats.bad)], []);
 });
 
+test('a 0 x 0 window at start-up (main.js computes the view early) never leaves the man at NaN', () => {
+  for (const [w, h] of [[0, 0], [0, 900], [1280, 0]]) {
+    const scene = new Scene(createDefaultConfig());
+    const ctx = createFakeContext();
+    scene.computeView(w, h);       // as in p5 setup with a hidden or zero-size window
+    for (let i = 0; i < 10; i++) { scene.update(1 / 60); scene.render(ctx, w, h, 1); }
+    for (let i = 0; i < 30; i++) { scene.update(1 / 60); scene.render(ctx, 1280, 720, 1); } // window shown
+    assert.ok(Number.isFinite(scene.manX), `manX ${scene.manX} after ${w}x${h}`);
+    assert.ok(Number.isFinite(scene.view.s) && scene.view.s > 0);
+    assert.deepEqual([...new Set(ctx.stats.bad)], [], `NaN reached the canvas after ${w}x${h}`);
+  }
+});
+
 test('density above 1 draws more blades; density 1 matches the default field', () => {
   const count = (d) => {
     const cfg = createDefaultConfig(); cfg.grass.density = d;

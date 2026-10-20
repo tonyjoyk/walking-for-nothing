@@ -39,10 +39,10 @@ file.
 | 2 | The greeting | [epic-2](epics/epic-2-greeting.md) | Built before stories were used (see spec); 2.1 Pause on hover, turn on rest or click ✅; 2.2 Speech bubble ✅ | Active | Greeting review chat |
 | 3 | Character and motion | [epic-3](epics/epic-3-character.md) | Built before stories were used | Done | Setup chat |
 | 4 | Landscape and atmosphere | [epic-4](epics/epic-4-landscape.md) | Built before stories were used | Done | Setup chat |
-| 5 | Platform and delivery | [epic-5](epics/epic-5-platform.md) | Built before stories were used | Done | Setup chat |
+| 5 | Platform and delivery | [epic-5](epics/epic-5-platform.md) | Built before stories were used; 5.1 Zero-size window guard ✅ | Active | Setup chat |
 | 6 | Audio | [epic-6](epics/epic-6-audio.md) | 6.1–6.13 (all Draft); spec: [product/specs/audio/](product/specs/audio/) | Planned | Audio chat |
 
-**Next free epic:** 7. **Next free story:** 1.2 in epic 1, 2.3, 3.1, 4.1, 5.1, 6.14 in epic 6. **Next free decision:** D-0.6, D-1.5, D-2.4, D-3.5, D-4.4, D-5.3, D-6.7.
+**Next free epic:** 7. **Next free story:** 1.2 in epic 1, 2.3, 3.1, 4.1, 5.2, 6.14 in epic 6. **Next free decision:** D-0.6, D-1.5, D-2.4, D-3.5, D-4.4, D-5.3, D-6.7.
 
 ## Open cross-chat items
 

@@ -434,6 +434,9 @@ export class Scene {
   // The field is pinned to the bottom. Taller screens add sky above;
   // wider screens add land at the sides. The man is never cropped.
   computeView(cw, ch) {
+    // a hidden window or tab can report 0 x 0; keep the last good view rather
+    // than dividing by zero (that left the man at NaN for good, story 5.1)
+    if (!(cw > 0 && ch > 0)) return;
     const aspect = cw / ch;
     let s, w, h, x0, y0;
     if (aspect <= SCENE_W / SCENE_H) {

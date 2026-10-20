@@ -1,0 +1,8 @@
+schema: 1
+story: '5.1'
+story_title: 'Zero-size window guard'
+gate: PASS
+status_reason: 'Regression test fails before the fix and passes after; full suite (60) and build pass.'
+reviewer: 'QA (Claude, setup chat)'
+updated: '2026-10-20'
+top_issues: []
