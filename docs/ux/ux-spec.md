@@ -77,14 +77,14 @@ change.
 - **Leaving:** he turns back smoothly from wherever he is.
 - **No cursor change:** the cursor doesn't change over him; it isn't a
   button. This still holds now that a click does something (D-2.2).
-- **Speech bubble (D-2.3, style D-2.4 "Air"):** when he faces the visitor,
-  a few words above his head introduce Tony. It fades in and out over 0.8 s,
-  and holds about 15 s so it can be read.
-  - Style: no box. System font at 11 px, 188 px wide, a bold first line, and
-    a 1 px hairline down to his head.
-  - The ink follows the sky: dark on light skies, light on dark ones. A soft,
-    edgeless veil is added only where the sky is mid-tone, so the text is
-    always at least 4.5:1.
+- **Speech bubble (D-2.3, style D-2.5):** when he faces the visitor, a few
+  words above his head introduce Tony. It fades in and out over 0.8 s, and
+  holds about 15 s so it can be read.
+  - Style: dark 11 px system font with a bold first line, on a plain white
+    plate (8 px corners, 40% opacity), 204 px wide. A 1 px white hairline
+    runs down to his head.
+  - The same in every scene. The plate steps to 60% only if a sky is ever
+    too dark for 4.5:1 contrast.
   - It stays on screen with a 16 px margin.
   - This is the one exception to principle 1, and it's only shown once the
     greeting has been discovered.

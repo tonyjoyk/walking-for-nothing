@@ -61,28 +61,30 @@ html, body {
 }
 .credit:hover, .credit:focus-visible { color: rgba(255, 255, 255, 0.9); }
 
-/* The speech bubble (D-2.3, style "Air" chosen in story 2.3, D-2.4): no box,
-   just small words in the sky above him and a hairline down to his head.
-   Placed every frame by src/bubble.js, which also reads the sky behind the
-   words and sets .ink-dark or .ink-light, whichever has more contrast. */
+/* The speech bubble (D-2.3; style D-2.5): small dark words on a plain white
+   plate with 8 px corners, and a hairline down to his head. Placed every frame
+   by src/bubble.js, which sets the plate to 40%, or 60% where the sky behind
+   needs it for 4.5:1 contrast. */
 .bubble {
   position: fixed;
   left: 0;
   top: 0;
   box-sizing: border-box;
-  width: min(188px, calc(100vw - 32px));
+  width: min(204px, calc(100vw - 32px));
+  padding: 7px 9px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, var(--plate, 0.4));
   font: 11px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 10px rgba(0, 0, 0, 0.22);
+  color: #17211c;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.8s ease, visibility 0s linear 0.8s, color 0.8s ease, text-shadow 0.8s ease;
+  transition: opacity 0.8s ease, visibility 0s linear 0.8s, background-color 0.8s ease;
   z-index: 5;
 }
 .bubble.show {
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.8s ease, visibility 0s, color 0.8s ease, text-shadow 0.8s ease;
+  transition: opacity 0.8s ease, visibility 0s, background-color 0.8s ease;
 }
 .bubble p { margin: 0 0 0.5em; }
 .bubble p:last-child { margin-bottom: 0; }
@@ -94,26 +96,5 @@ html, body {
   top: calc(100% + 4px);
   width: 1px;
   height: 14px;
-  background: currentColor;
-  opacity: 0.7;
-}
-/* A soft veil behind the words, only as strong as the sky needs for 4.5:1
-   contrast (bubble.js sets --veil; 0 on most skies). Blurred, so it has no
-   edges: dark behind light ink, pale behind dark ink. */
-.bubble::before {
-  content: '';
-  position: absolute;
-  inset: -20px -22px;
-  z-index: -1;
-  border-radius: 20px;
-  background: rgb(16, 24, 20);
-  opacity: var(--veil, 0);
-  filter: blur(12px);
-  transition: opacity 0.8s ease, background 0.8s ease;
-}
-.bubble.ink-dark::before { background: rgb(255, 255, 255); }
-/* on light skies: dark ink with a soft light halo */
-.bubble.ink-dark {
-  color: #17211c;
-  text-shadow: 0 0 2px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.7);
 }

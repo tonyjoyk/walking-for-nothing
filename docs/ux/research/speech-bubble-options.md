@@ -39,3 +39,32 @@ Captures: `docs/media/bubble-options/<name>-day.jpg`, `-night.jpg`, and
 - Make the chosen option the default style, and remove the other three and
   the `?bubble=` switch.
 - Update the UX spec's epic 2 section, and close story 2.3.
+
+## Revision (20 Oct): a plain plate instead of the veil
+
+**Owner's feedback:** on Sunset and Rain, the blurred white veil behind the
+words looks like a smudge. The owner wants a plain, consistent background
+instead: a white rectangle with 8 px corners at about 40% opacity, or 60% if
+40% isn't enough.
+
+**UX evaluation.**
+- **Why the veil looked wrong:** it only appeared in two scenes, and its
+  soft edge read as an effect rather than an object. A plate in every scene
+  is one shape that behaves the same way everywhere, which fits the site's
+  flat, few-shapes style better.
+- **Ink:** dark (#17211c) on a white plate in every scene, so the bubble no
+  longer swaps colour from scene to scene.
+- **Measured** (dark text over the 40% plate, worst tenth of the sky):
+  Daylight 12.4, Sunset 8.0, Rain 6.8, Night 4.5, Dawn 12.8, Windy 12.8;
+  on phones 12.7 / 13.7 / 4.6. **40% passes everywhere.** Night is the
+  tightest.
+- **Recommendation:** use 40% as the standard plate. Keep 60% only as an
+  automatic safety net for any sky darker than the measured night, such as
+  mid-transition, so contrast never drops below 4.5:1. The plate's look
+  doesn't otherwise change.
+- **Kept from Air:** 11 px type, the bold first line and the hairline down
+  to his head (now white, like the plate).
+
+Captures: `docs/media/bubble-plate/`. Decision: D-2.5. Story:
+[2.4](../../stories/2.4.speech-bubble-plate.md).
+

@@ -194,6 +194,21 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   stands).
 - **Status:** in force.
 
+### D-2.5 The bubble sits on a plain 40% white plate
+- **Date:** 20 Oct 2026. **Story:** [2.4](../stories/2.4.speech-bubble-plate.md).
+  **Evaluation:** [options doc, revision](../ux/research/speech-bubble-options.md#revision-20-oct-a-plain-plate-instead-of-the-veil).
+- **Decision:**
+  - Dark words (#17211c) on a white plate with 8 px corners at 40%
+    opacity, in every scene. The adaptive ink and the blurred veil are gone.
+  - `bubble.js` still reads the sky behind the plate. It steps the plate up
+    to 60% only if 40% would give under 4.5:1, which no current scene needs.
+- **Why:** the owner found the veil unattractive on Sunset and Rain, and
+  asked for one simple, consistent background. 40% measured at least 4.5:1
+  in all six scenes.
+- **Supersedes:** D-2.4's adaptive ink and veil. Its size (11 px) and
+  hairline stay.
+- **Status:** in force.
+
 ## Epic 3: Character and motion (D-3)
 
 ### D-3.1 Natural steps over the brief's slow crossing

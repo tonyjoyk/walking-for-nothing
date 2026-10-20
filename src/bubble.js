@@ -1,52 +1,45 @@
-// The speech bubble (docs/stories/2.2.speech-bubble.md, D-2.3; style "Air",
-// story 2.3, D-2.4): shown while the man faces the visitor, placed above his
-// head every frame and kept on screen. The fade is CSS; this moves it, switches
-// it on and off, and picks dark or light ink from the sky behind the words.
+// The speech bubble (docs/stories/2.2.speech-bubble.md, D-2.3; style: story
+// 2.4, D-2.5): shown while the man faces the visitor, placed above his head
+// every frame and kept on screen. The fade is CSS; this moves it, switches it
+// on and off, and sets the white plate behind the words to 40% or 60% from the
+// sky behind them, so the dark text always has 4.5:1.
 
 const MARGIN = 16; // px from the viewport edge
-const GAP = 22;    // px between the words and his head (the hairline sits in it)
+const GAP = 22;    // px between the plate and his head (the hairline sits in it)
 const SAMPLE_EVERY = 0.4; // seconds between readings of the sky behind the words
 
 // WCAG relative luminance of an sRGB colour (0-255 channels).
 const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
 export const luminance = (r, g, b) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 export const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
-export const INK = { light: luminance(255, 255, 255), dark: luminance(0x17, 0x21, 0x1c) };
+export const INK = luminance(0x17, 0x21, 0x1c); // the text colour, #17211c
 
 const TARGET = 4.5; // WCAG AA for body text
-const VEIL = { dark: [255, 255, 255], light: [16, 24, 20] }; // the veil behind dark / light ink
+export const PLATES = [0.4, 0.6]; // the white plate's opacity: 40%, or 60% where 40% isn't enough
 
-// The worst tenth of the backdrop for an ink: light ink is judged against the
-// brightest tenth, dark ink against the darkest tenth.
-function worst(px, ink, veil) {
-  const v = VEIL[ink];
-  const lums = px.map(([r, g, b]) => luminance(r + (v[0] - r) * veil, g + (v[1] - g) * veil, b + (v[2] - b) * veil)).sort((x, y) => x - y);
-  const l = ink === 'light' ? lums[Math.floor(lums.length * 0.9)] : lums[Math.floor(lums.length * 0.1)];
-  return contrast(INK[ink], l);
+// Contrast of the dark ink over the plate, judged on the darkest tenth of the
+// sky behind it (px: [r, g, b] samples, blended with white at alpha).
+export function plateContrast(px, alpha) {
+  const lums = px.map(([r, g, b]) => luminance(r + (255 - r) * alpha, g + (255 - g) * alpha, b + (255 - b) * alpha)).sort((x, y) => x - y);
+  return contrast(INK, lums[Math.floor(lums.length * 0.1)]);
 }
 
-// Pick the ink with the better worst case over the backdrop (px: [r, g, b]
-// samples), keeping the current one when both are close so it never flickers.
-// If even the better ink is under 4.5:1, find the faintest veil that lifts it
-// there.
-export function chooseInk(px, current) {
-  const light = worst(px, 'light', 0), dark = worst(px, 'dark', 0);
-  let ink = light >= dark ? 'light' : 'dark';
-  if (current === 'light' && light >= dark * 0.85) ink = 'light';
-  if (current === 'dark' && dark >= light * 0.85) ink = 'dark';
-  let veil = 0, ratio = ink === 'light' ? light : dark;
-  while (ratio < TARGET && veil < 0.7) { veil = Math.round((veil + 0.05) * 100) / 100; ratio = worst(px, ink, veil); }
-  return { ink, veil, ratio };
+// The lightest plate that gives the dark ink 4.5:1, or the strongest one.
+export function choosePlate(px) {
+  for (const alpha of PLATES) {
+    const ratio = plateContrast(px, alpha);
+    if (ratio >= TARGET || alpha === PLATES[PLATES.length - 1]) return { alpha, ratio };
+  }
 }
 
 export function createBubble(el, scene, canvas) {
   let shown = false, fading = 0; // seconds of fade-out left
-  let ink = 'light', sinceSample = Infinity;
+  let sinceSample = Infinity;
   const probe = document.createElement('canvas');
   probe.width = 24; probe.height = 24;
   const pctx = probe.getContext('2d', { willReadFrequently: true });
 
-  // Read the canvas under the words (scaled down to 24 x 24 samples).
+  // Read the canvas under the plate (scaled down to 24 x 24 samples).
   function readSky(left, top, w, h) {
     canvas = canvas || document.querySelector('#stage canvas'); // made by p5 after this
     if (!canvas || !canvas.width) return;
@@ -56,13 +49,11 @@ export function createBubble(el, scene, canvas) {
       const d = pctx.getImageData(0, 0, probe.width, probe.height).data;
       const px = [];
       for (let i = 0; i < d.length; i += 4) px.push([d[i], d[i + 1], d[i + 2]]);
-      const pick = chooseInk(px, ink);
-      ink = pick.ink;
-      el.classList.toggle('ink-dark', ink === 'dark');
-      el.style.setProperty('--veil', pick.veil);
+      const pick = choosePlate(px);
+      el.style.setProperty('--plate', pick.alpha);
       el.dataset.contrast = pick.ratio.toFixed(1);
-      el.dataset.veil = pick.veil;
-    } catch { /* unreadable canvas: keep the current ink */ }
+      el.dataset.contrast40 = plateContrast(px, 0.4).toFixed(1);
+    } catch { /* unreadable canvas: keep the current plate */ }
   }
 
   return function update(dt) {

@@ -75,8 +75,8 @@ scripts/      fetch-weather.mjs: Open-Meteo to weather.json (CI; paused feature)
   - `src/bubble.js` places it every frame from `Scene.headPoint()` (head
     top in CSS px) and shows it while `Scene.bubbleShown` is true (facing:
     `looking` or `smiling`).
-  - It samples the canvas behind the words to choose the ink and veil
-    (D-2.4).
+  - It samples the canvas behind the plate and sets the plate to 40%, or
+    60% if needed for 4.5:1 (D-2.5).
   - Hovering the bubble counts as hovering him.
   - `greeting.js` holds the smile until `readSeconds` while the bubble is
     on.

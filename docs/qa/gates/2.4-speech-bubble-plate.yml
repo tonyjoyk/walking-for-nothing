@@ -1,0 +1,22 @@
+schema: 1
+story: '2.4'
+story_title: 'A plain 40% white plate behind the bubble'
+gate: PASS
+status_reason: 'Plain 8 px white plate at 40% in every scene; at least 4.5:1 measured in all six scenes and on phones; 60% safety step tested.'
+reviewer: 'QA (Claude)'
+updated: '2026-10-20'
+top_issues: []
+evidence:
+  tests_reviewed: 61
+  contrast_at_40:
+    sunny: 12.4
+    twilight: 8.0
+    rain: 6.8
+    night: 4.5
+    dawn: 12.8
+    wind: 12.8
+    phone_sunny: 12.7
+    phone_dawn: 13.7
+    phone_night: 4.6
+nfr_validation:
+  accessibility: { status: PASS, notes: 'WCAG AA 4.5:1; Night at the line, 60% step covers darker skies' }
