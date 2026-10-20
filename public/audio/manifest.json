@@ -1,0 +1,370 @@
+{
+  "sounds": {
+    "dawnOrchard": {
+      "role": "bed",
+      "scenes": [
+        "dawn"
+      ],
+      "channels": 2,
+      "files": [
+        {
+          "webm": "dawnOrchard.webm",
+          "m4a": "dawnOrchard.m4a",
+          "seconds": 75,
+          "from": 19.5,
+          "lufs": -28
+        }
+      ],
+      "loop": {
+        "start": 0,
+        "end": 75
+      },
+      "credit": {
+        "title": "Tropical Orchard in Spring",
+        "recordist": "Calcuttan",
+        "url": "https://freesound.org/people/Calcuttan/sounds/184798/",
+        "licence": "CC BY 4.0",
+        "edited": "trimmed, looped and levelled"
+      }
+    },
+    "dayField": {
+      "role": "bed",
+      "scenes": [
+        "sunny",
+        "overcast"
+      ],
+      "channels": 2,
+      "files": [
+        {
+          "webm": "dayField.webm",
+          "m4a": "dayField.m4a",
+          "seconds": 75,
+          "from": 38.5,
+          "lufs": -28
+        }
+      ],
+      "loop": {
+        "start": 0,
+        "end": 75
+      },
+      "credit": {
+        "title": "crickets and tropical birds village or backyard day like after rain India",
+        "recordist": "kyles",
+        "url": "https://freesound.org/people/kyles/sounds/451945/",
+        "licence": "CC0",
+        "edited": "trimmed, looped and levelled"
+      }
+    },
+    "windGrass": {
+      "role": "bed",
+      "scenes": [
+        "wind",
+        "dawn",
+        "sunny"
+      ],
+      "channels": 2,
+      "files": [
+        {
+          "webm": "windGrass.webm",
+          "m4a": "windGrass.m4a",
+          "seconds": 75,
+          "from": 6.5,
+          "lufs": -36
+        }
+      ],
+      "loop": {
+        "start": 0,
+        "end": 75
+      },
+      "credit": {
+        "title": "Wind in the African bush (Mali)",
+        "recordist": "felix.blume",
+        "url": "https://freesound.org/people/felix.blume/sounds/171445/",
+        "licence": "CC0",
+        "edited": "trimmed, looped and levelled"
+      }
+    },
+    "rainSteady": {
+      "role": "bed",
+      "scenes": [
+        "rain"
+      ],
+      "channels": 2,
+      "files": [
+        {
+          "webm": "rainSteady.webm",
+          "m4a": "rainSteady.m4a",
+          "seconds": 75,
+          "from": 0.5,
+          "lufs": -28.3
+        }
+      ],
+      "loop": {
+        "start": 0,
+        "end": 75
+      },
+      "credit": {
+        "title": "Light rain in a field of bananas trees",
+        "recordist": "felix.blume",
+        "url": "https://freesound.org/people/felix.blume/sounds/512334/",
+        "licence": "CC0",
+        "edited": "trimmed, looped and levelled"
+      }
+    },
+    "eveningBirdsToCrickets": {
+      "role": "bed",
+      "scenes": [
+        "twilight"
+      ],
+      "channels": 1,
+      "files": [
+        {
+          "webm": "eveningBirdsToCrickets.webm",
+          "m4a": "eveningBirdsToCrickets.m4a",
+          "seconds": 75,
+          "from": 110.5,
+          "lufs": -28
+        }
+      ],
+      "loop": {
+        "start": 0,
+        "end": 75
+      },
+      "credit": {
+        "title": "Birds to Crickets",
+        "recordist": "deadmanswill",
+        "url": "https://freesound.org/people/deadmanswill/sounds/568216/",
+        "licence": "CC BY 4.0",
+        "edited": "trimmed, looped and levelled"
+      }
+    },
+    "nightCrickets": {
+      "role": "bed",
+      "scenes": [
+        "night"
+      ],
+      "channels": 2,
+      "files": [
+        {
+          "webm": "nightCrickets.webm",
+          "m4a": "nightCrickets.m4a",
+          "seconds": 44.583,
+          "from": 0,
+          "lufs": -28
+        }
+      ],
+      "loop": {
+        "start": 0,
+        "end": 44.583
+      },
+      "credit": {
+        "title": "Night Crickets on a Quiet Road – Goa Ambience",
+        "recordist": "Federico_Casazza",
+        "url": "https://freesound.org/people/Federico_Casazza/sounds/803557/",
+        "licence": "CC BY 4.0",
+        "edited": "trimmed, looped and levelled"
+      }
+    },
+    "thunderDistant": {
+      "role": "thunder",
+      "scenes": [
+        "rain"
+      ],
+      "channels": 2,
+      "files": [
+        {
+          "webm": "thunderDistant-1.webm",
+          "m4a": "thunderDistant-1.m4a",
+          "seconds": 14,
+          "from": 54.5,
+          "lufs": -29.4
+        },
+        {
+          "webm": "thunderDistant-2.webm",
+          "m4a": "thunderDistant-2.m4a",
+          "seconds": 22,
+          "from": 86,
+          "lufs": -22
+        },
+        {
+          "webm": "thunderDistant-3.webm",
+          "m4a": "thunderDistant-3.m4a",
+          "seconds": 22,
+          "from": 141,
+          "lufs": -25.9
+        },
+        {
+          "webm": "thunderDistant-4.webm",
+          "m4a": "thunderDistant-4.m4a",
+          "seconds": 15,
+          "from": 180,
+          "lufs": -23.4
+        },
+        {
+          "webm": "thunderDistant-5.webm",
+          "m4a": "thunderDistant-5.m4a",
+          "seconds": 12,
+          "from": 695,
+          "lufs": -24.9
+        }
+      ],
+      "loop": null,
+      "credit": {
+        "title": "210614 Thunder, dry rolling distant some big, birds, roof",
+        "recordist": "TRP",
+        "url": "https://freesound.org/people/TRP/sounds/578230/",
+        "licence": "CC0",
+        "edited": "cut and levelled"
+      }
+    },
+    "thunderClose": {
+      "role": "thunder",
+      "scenes": [
+        "rain"
+      ],
+      "channels": 2,
+      "files": [
+        {
+          "webm": "thunderClose-1.webm",
+          "m4a": "thunderClose-1.m4a",
+          "seconds": 21.5,
+          "from": 6.5,
+          "lufs": -25.2
+        }
+      ],
+      "loop": null,
+      "credit": {
+        "title": "Rolling thunder closer rain drops ms",
+        "recordist": "TRP",
+        "url": "https://freesound.org/people/TRP/sounds/574386/",
+        "licence": "CC0",
+        "edited": "cut and levelled"
+      }
+    },
+    "crowsHouse": {
+      "role": "event",
+      "scenes": [
+        "twilight"
+      ],
+      "channels": 1,
+      "files": [
+        {
+          "webm": "crowsHouse-1.webm",
+          "m4a": "crowsHouse-1.m4a",
+          "seconds": 1.44,
+          "from": 0.45,
+          "lufs": -28
+        },
+        {
+          "webm": "crowsHouse-2.webm",
+          "m4a": "crowsHouse-2.m4a",
+          "seconds": 1.98,
+          "from": 3.61,
+          "lufs": -28
+        },
+        {
+          "webm": "crowsHouse-3.webm",
+          "m4a": "crowsHouse-3.m4a",
+          "seconds": 1.54,
+          "from": 28.51,
+          "lufs": -28
+        }
+      ],
+      "loop": null,
+      "credit": {
+        "title": "House crows",
+        "recordist": "Calcuttan",
+        "url": "https://freesound.org/people/Calcuttan/sounds/249567/",
+        "licence": "CC0",
+        "edited": "cut and levelled"
+      }
+    },
+    "koel": {
+      "role": "event",
+      "scenes": [
+        "dawn",
+        "sunny"
+      ],
+      "channels": 1,
+      "files": [
+        {
+          "webm": "koel-1.webm",
+          "m4a": "koel-1.m4a",
+          "seconds": 1.28,
+          "from": 5.01,
+          "lufs": -26
+        },
+        {
+          "webm": "koel-2.webm",
+          "m4a": "koel-2.m4a",
+          "seconds": 1.42,
+          "from": 10.65,
+          "lufs": -26
+        },
+        {
+          "webm": "koel-3.webm",
+          "m4a": "koel-3.m4a",
+          "seconds": 1.26,
+          "from": 50.87,
+          "lufs": -26
+        },
+        {
+          "webm": "koel-4.webm",
+          "m4a": "koel-4.m4a",
+          "seconds": 1.26,
+          "from": 61.33,
+          "lufs": -26
+        }
+      ],
+      "loop": null,
+      "credit": {
+        "title": "Asian koel (Eudynamys scolopaceus)",
+        "recordist": "Jairam Vijayan",
+        "url": "https://xeno-canto.org/753727",
+        "licence": "CC BY-SA 4.0",
+        "edited": "cut and levelled"
+      }
+    },
+    "kingfisher": {
+      "role": "event",
+      "scenes": [
+        "dawn",
+        "sunny"
+      ],
+      "channels": 1,
+      "files": [
+        {
+          "webm": "kingfisher-1.webm",
+          "m4a": "kingfisher-1.m4a",
+          "seconds": 1.74,
+          "from": 13.61,
+          "lufs": -27
+        },
+        {
+          "webm": "kingfisher-2.webm",
+          "m4a": "kingfisher-2.m4a",
+          "seconds": 1.8,
+          "from": 18.33,
+          "lufs": -27
+        },
+        {
+          "webm": "kingfisher-3.webm",
+          "m4a": "kingfisher-3.m4a",
+          "seconds": 1.74,
+          "from": 27.33,
+          "lufs": -27
+        }
+      ],
+      "loop": null,
+      "credit": {
+        "title": "White-throated kingfisher",
+        "recordist": "Sathyan Meppayur",
+        "url": "https://xeno-canto.org/603361",
+        "licence": "CC0",
+        "edited": "cut and levelled"
+      }
+    }
+  },
+  "about": "Generated by scripts/build-audio.mjs from audio/sources.json. Do not edit by hand.",
+  "sampleRate": 48000
+}
