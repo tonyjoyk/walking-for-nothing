@@ -135,8 +135,8 @@ place.
   licence and the edits made.
 - A test fails if any file is missing a licence, or has one outside the
   allowed list (CC0, CC-BY, CC-BY-SA, CC-BY-NC).
-- Credits are generated from the manifest into the README, and into a small
-  "Sound credits" link next to the sound button.
+- Credits are generated from the manifest into the README, and into the
+  site's single "Credits" list (D-0.5).
 - Acceptance:
   - [ ] Every CC BY, BY-SA and BY-NC file is credited on the site.
   - [ ] BY-SA files are marked as BY-SA.
@@ -186,7 +186,7 @@ The site has no analytics, so these are measured in review:
 | 2 | Freesound originals need a logged-in account to download. Will you download the shortlisted files, or set up a Freesound API key for a script? | Tony | **Yes**, for the build |
 | 3 | A distant church bell at sunset (authentic to Pala), or no religious sound at all (the default)? | Tony | No |
 | 4 | Lightning flash (P1.1) in this round, or later? | Tony | No |
-| 5 | Where should the "Sound credits" link sit: beside the sound button, or in the existing bottom-left credit line? | Tony / design | No |
+| 5 | ~~Where should the "Sound credits" link sit?~~ **Resolved by D-0.5:** one quiet "Credits" link at the bottom left, shared by sound and Open-Meteo credits, opening one list. | Tony | Resolved |
 
 ## Phasing
 
