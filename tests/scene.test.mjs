@@ -294,3 +294,22 @@ test('grass layout is deterministic for a seed', () => {
   const b = new Scene(createDefaultConfig()).field.mid.blades.slice(0, 50);
   assert.deepEqual(a, b);
 });
+
+// Story 5.2: link previews when the address is shared.
+test('5.2: the page has link-preview tags and a 1200 x 630 preview image under 300 KB', async () => {
+  const { readFileSync, statSync } = await import('node:fs');
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const meta = (p) => (html.match(new RegExp(`<meta (?:property|name)="${p}" content="([^"]*)"`)) || [])[1];
+  assert.equal(meta('og:image'), 'https://tonyjoyk.github.io/walking-for-nothing/og-image.jpg');
+  assert.equal(meta('og:url'), 'https://tonyjoyk.github.io/walking-for-nothing/');
+  assert.equal(meta('og:title'), 'Tony Joy');
+  assert.ok(meta('og:description'));
+  assert.ok(meta('og:image:alt'));
+  assert.equal(meta('twitter:card'), 'summary_large_image');
+  const img = new URL('../public/og-image.jpg', import.meta.url);
+  assert.ok(statSync(img).size < 300 * 1024, 'small enough for WhatsApp');
+  const b = readFileSync(img);
+  // JPEG size from the first SOF marker
+  let i = 2; while (i < b.length && !(b[i] === 0xff && b[i + 1] >= 0xc0 && b[i + 1] <= 0xc3)) i += 2 + b.readUInt16BE(i + 2);
+  assert.deepEqual([b.readUInt16BE(i + 7), b.readUInt16BE(i + 5)], [1200, 630]);
+});
