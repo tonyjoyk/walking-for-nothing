@@ -5,7 +5,7 @@
 ## Requirements and decisions
 
 - Research: [character study](../ux/research/character-study.md), [visual critique](../ux/research/visual-critique.md).
-- Decisions D-3.1 to D-3.5.
+- Decisions D-3.1 to D-3.7.
 
 ## Stories
 

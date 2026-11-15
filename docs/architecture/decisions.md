@@ -418,6 +418,19 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   around it, so they walk together for longer. Setting off at 20% felt too
   soon.
 - **Supersedes:** the first-visit timing in D-3.5 (6 s, past 50%).
+- **Status:** superseded by D-3.7 (she now sets off at the middle).
+
+### D-3.7 Juhu sets off once he reaches the middle
+- **Date:** 15 Nov 2026 (owner: "let him reach the middle of the frame
+  before Juhu starts joining; she joins too soon").
+- **Decision:** `firstVisitFrom` 50% (was 33%); `firstVisitDelay` stays at
+  2 s. She sets off from the left edge once he reaches the middle.
+  Simulated, she catches him at about 83% of the width on desktop (about
+  89% on a phone), a few seconds before the first scene change, and walks
+  on with him into scene 2 as before.
+- **Considered:** a quicker trot (150 instead of 120) only moved the
+  meeting point to about 78% and looked rushed, so it was rejected.
+- **Supersedes:** D-3.6's first-visit start (33%).
 - **Status:** in force.
 
 ## Epic 4: Landscape and atmosphere (D-4)

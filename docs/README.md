@@ -42,7 +42,7 @@ file.
 | 5 | Platform and delivery | [epic-5](epics/epic-5-platform.md) | Built before stories were used; 5.1 Zero-size window guard ✅; 5.2 Link preview image ✅ | Active | Setup chat |
 | 6 | Audio | [epic-6](epics/epic-6-audio.md) | 6.1–6.13 (see the epic for status); 6.14 Volume slider ✅, 6.15 Sound on and first-visit hint ✅ (Greeting review chat); spec: [product/specs/audio/](product/specs/audio/) | Planned | Audio chat |
 
-**Next free epic:** 7. **Next free story:** 1.4 in epic 1, 2.10, 3.2, 4.1, 5.3, 6.16 in epic 6. **Next free decision:** D-0.6, D-1.7, D-2.10, D-3.6, D-4.4, D-5.3, D-6.15 (D-6.7 to D-6.12 are used in the audio docs).
+**Next free epic:** 7. **Next free story:** 1.4 in epic 1, 2.10, 3.2, 4.1, 5.3, 6.16 in epic 6. **Next free decision:** D-0.6, D-1.7, D-2.10, D-3.8, D-4.4, D-5.3, D-6.15 (D-6.7 to D-6.12 are used in the audio docs).
 
 ## Open cross-chat items
 

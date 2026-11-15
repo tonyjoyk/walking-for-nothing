@@ -26,9 +26,9 @@ test('3.1: Juhu joins him in the first scene, walks into the second, skips two, 
   for (const opening of ['sunny', 'night', 'rain', 'twilight', 'wind', 'dawn']) {
     const { log, firstApproach, firstTogether } = journey(opening);
     assert.ok(firstApproach.t >= 2, `${opening}: first visit after ${firstApproach.t.toFixed(1)} s`);
-    assert.ok(firstApproach.at >= 0.33, `${opening}: he is a third of the way across`);
-    // D-3.6: she catches him around the middle, not near the far edge
-    assert.ok(firstTogether.at <= 0.62, `${opening}: together by ${firstTogether.at.toFixed(2)} of the width`);
+    // D-3.7: she sets off only once he has reached the middle, and still joins him in scene 1
+    assert.ok(firstApproach.at >= 0.5, `${opening}: he has reached the middle (${firstApproach.at.toFixed(2)})`);
+    assert.ok(firstTogether.at > 0.5 && firstTogether.at <= 0.9, `${opening}: together at ${firstTogether.at.toFixed(2)} of the width`);
     assert.ok(log[1].states.has('together'), `${opening}: with him in scene 1 (${log[1].name})`);
     assert.ok(log[2].states.has('together') && log[2].states.has('absent'), `${opening}: walks on in scene 2, then leaves`);
     assert.deepEqual([...log[3].states], ['absent'], `${opening}: scene 3 alone`);
