@@ -11,13 +11,16 @@
           "webm": "dawnOrchard.webm",
           "m4a": "dawnOrchard.m4a",
           "seconds": 75,
+          "samples": 3600000,
           "from": 19.5,
           "lufs": -28
         }
       ],
       "loop": {
         "start": 0,
-        "end": 75
+        "end": 75,
+        "startSample": 0,
+        "endSample": 3600000
       },
       "credit": {
         "title": "Tropical Orchard in Spring",
@@ -39,13 +42,16 @@
           "webm": "dayField.webm",
           "m4a": "dayField.m4a",
           "seconds": 75,
+          "samples": 3600000,
           "from": 38.5,
           "lufs": -28
         }
       ],
       "loop": {
         "start": 0,
-        "end": 75
+        "end": 75,
+        "startSample": 0,
+        "endSample": 3600000
       },
       "credit": {
         "title": "crickets and tropical birds village or backyard day like after rain India",
@@ -68,13 +74,16 @@
           "webm": "windGrass.webm",
           "m4a": "windGrass.m4a",
           "seconds": 75,
+          "samples": 3600000,
           "from": 6.5,
           "lufs": -36
         }
       ],
       "loop": {
         "start": 0,
-        "end": 75
+        "end": 75,
+        "startSample": 0,
+        "endSample": 3600000
       },
       "credit": {
         "title": "Wind in the African bush (Mali)",
@@ -95,13 +104,16 @@
           "webm": "rainSteady.webm",
           "m4a": "rainSteady.m4a",
           "seconds": 75,
+          "samples": 3600000,
           "from": 0.5,
           "lufs": -28.3
         }
       ],
       "loop": {
         "start": 0,
-        "end": 75
+        "end": 75,
+        "startSample": 0,
+        "endSample": 3600000
       },
       "credit": {
         "title": "Light rain in a field of bananas trees",
@@ -122,13 +134,16 @@
           "webm": "eveningBirdsToCrickets.webm",
           "m4a": "eveningBirdsToCrickets.m4a",
           "seconds": 75,
+          "samples": 3600000,
           "from": 110.5,
           "lufs": -28
         }
       ],
       "loop": {
         "start": 0,
-        "end": 75
+        "end": 75,
+        "startSample": 0,
+        "endSample": 3600000
       },
       "credit": {
         "title": "Birds to Crickets",
@@ -149,13 +164,16 @@
           "webm": "nightCrickets.webm",
           "m4a": "nightCrickets.m4a",
           "seconds": 44.583,
+          "samples": 2140000,
           "from": 0,
           "lufs": -28
         }
       ],
       "loop": {
         "start": 0,
-        "end": 44.583
+        "end": 44.583,
+        "startSample": 0,
+        "endSample": 2140000
       },
       "credit": {
         "title": "Night Crickets on a Quiet Road – Goa Ambience",
@@ -176,6 +194,7 @@
           "webm": "thunderDistant-1.webm",
           "m4a": "thunderDistant-1.m4a",
           "seconds": 14,
+          "samples": 672000,
           "from": 54.5,
           "lufs": -29.4
         },
@@ -183,6 +202,7 @@
           "webm": "thunderDistant-2.webm",
           "m4a": "thunderDistant-2.m4a",
           "seconds": 22,
+          "samples": 1056000,
           "from": 86,
           "lufs": -22
         },
@@ -190,6 +210,7 @@
           "webm": "thunderDistant-3.webm",
           "m4a": "thunderDistant-3.m4a",
           "seconds": 22,
+          "samples": 1056000,
           "from": 141,
           "lufs": -25.9
         },
@@ -197,6 +218,7 @@
           "webm": "thunderDistant-4.webm",
           "m4a": "thunderDistant-4.m4a",
           "seconds": 15,
+          "samples": 720000,
           "from": 180,
           "lufs": -23.4
         },
@@ -204,6 +226,7 @@
           "webm": "thunderDistant-5.webm",
           "m4a": "thunderDistant-5.m4a",
           "seconds": 12,
+          "samples": 576000,
           "from": 695,
           "lufs": -24.9
         }
@@ -228,6 +251,7 @@
           "webm": "thunderClose-1.webm",
           "m4a": "thunderClose-1.m4a",
           "seconds": 21.5,
+          "samples": 1032000,
           "from": 6.5,
           "lufs": -25.2
         }
@@ -252,6 +276,7 @@
           "webm": "crowsHouse-1.webm",
           "m4a": "crowsHouse-1.m4a",
           "seconds": 1.44,
+          "samples": 69120,
           "from": 0.45,
           "lufs": -28
         },
@@ -259,6 +284,7 @@
           "webm": "crowsHouse-2.webm",
           "m4a": "crowsHouse-2.m4a",
           "seconds": 1.98,
+          "samples": 95040,
           "from": 3.61,
           "lufs": -28
         },
@@ -266,6 +292,7 @@
           "webm": "crowsHouse-3.webm",
           "m4a": "crowsHouse-3.m4a",
           "seconds": 1.54,
+          "samples": 73920,
           "from": 28.51,
           "lufs": -28
         }
@@ -291,6 +318,7 @@
           "webm": "koel-1.webm",
           "m4a": "koel-1.m4a",
           "seconds": 1.28,
+          "samples": 61440,
           "from": 5.01,
           "lufs": -26
         },
@@ -298,6 +326,7 @@
           "webm": "koel-2.webm",
           "m4a": "koel-2.m4a",
           "seconds": 1.42,
+          "samples": 68160,
           "from": 10.65,
           "lufs": -26
         },
@@ -305,6 +334,7 @@
           "webm": "koel-3.webm",
           "m4a": "koel-3.m4a",
           "seconds": 1.26,
+          "samples": 60480,
           "from": 50.87,
           "lufs": -26
         },
@@ -312,6 +342,7 @@
           "webm": "koel-4.webm",
           "m4a": "koel-4.m4a",
           "seconds": 1.26,
+          "samples": 60480,
           "from": 61.33,
           "lufs": -26
         }
@@ -337,6 +368,7 @@
           "webm": "kingfisher-1.webm",
           "m4a": "kingfisher-1.m4a",
           "seconds": 1.74,
+          "samples": 83520,
           "from": 13.61,
           "lufs": -27
         },
@@ -344,6 +376,7 @@
           "webm": "kingfisher-2.webm",
           "m4a": "kingfisher-2.m4a",
           "seconds": 1.8,
+          "samples": 86400,
           "from": 18.33,
           "lufs": -27
         },
@@ -351,6 +384,7 @@
           "webm": "kingfisher-3.webm",
           "m4a": "kingfisher-3.m4a",
           "seconds": 1.74,
+          "samples": 83520,
           "from": 27.33,
           "lufs": -27
         }
