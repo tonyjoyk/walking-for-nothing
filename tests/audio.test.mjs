@@ -182,20 +182,20 @@ test('lightning: one flash per roll, the roll distance ÷ 0.343 s later; rolls s
       assert.ok(f.strength > 0 && f.strength <= 1);
       if (i) assert.ok(f.t - flashes[i - 1].t >= 1, 'never more than one flash a second');
     });
-    for (let i = 1; i < rolls.length; i++) assert.ok(rolls[i].t - rolls[i - 1].t >= 25 - 0.11, 'rolls at least 25 s apart');
+    for (let i = 1; i < rolls.length; i++) assert.ok(rolls[i].t - rolls[i - 1].t >= AUDIO_THUNDER.minGap - 0.11, `rolls at least ${AUDIO_THUNDER.minGap} s apart`);
     assert.ok(flashes.every((f) => f.scene === 'rain'), 'flashes only in rain');
   }
 });
 
 test('lightning: a roll on its way still arrives after the scene leaves Rain; nearer is brighter', () => {
   const s = new ThunderScheduler({ files: { far: counts.thunderDistant, close: counts.thunderClose }, rng: makeRng(2) });
-  const now = s.strike(12, { lightning: true }).now;
+  const now = s.strike(0.4, { lightning: true }).now;
   assert.equal(now.length, 1);
-  assert.ok(now[0].strength < thunderShape(6).flash);
+  assert.ok(now[0].strength < thunderShape(0.15).flash, 'nearer is brighter');
   let rolls = [];
   for (let t = 0; t < 40; t += 0.1) rolls = rolls.concat(s.step('sunny', 0.1, { lightning: true }));
   assert.equal(rolls.length, 1);
-  assert.equal(rolls[0].km, 12);
+  assert.equal(rolls[0].km, 0.4);
   // without lightning: the roll now, no flash (story 6.9 behaviour)
   const off = s.strike(6).now;
   assert.equal(off.length, 1);
@@ -229,30 +229,31 @@ function runLive(audio, seconds, seed, { lightning = true } = {}) {
   return { flashes, rolls, s };
 }
 
-test('mellow defaults: first roll ≥ 30 s after rain, rolls ≥ 60 s apart, far, no close roll, softer volume', () => {
+test('6.18 defaults: a strike early in every Rain pass, the roll right after its flash, gentle', () => {
   const A = createDefaultConfig().audio;
   assert.equal(A.thunderClose, false);
-  assert.equal(AUDIO_THUNDER.closeRoll, false);
   assert.ok(A.thunder <= 0.6, `thunder volume ${A.thunder}`);
   assert.equal(A.thunderMean, AUDIO_THUNDER.mean);
   assert.equal(A.thunderMinGap, AUDIO_THUNDER.minGap);
+  assert.equal(A.thunderMaxGap, AUDIO_THUNDER.maxGap);
   assert.deepEqual([A.thunderNearKm, A.thunderFarKm], AUDIO_THUNDER.distanceKm);
-  assert.ok(AUDIO_THUNDER.firstAfter[0] >= 30 && A.thunderMinGap >= 60 && A.thunderMean >= 90);
-  let total = 0, gaps = [];
-  for (let seed = 1; seed <= 30; seed++) {
-    for (const lightning of [true, false]) {
-      const { rolls, flashes } = runLive(createDefaultConfig().audio, 1800, seed, { lightning });
-      assert.ok(rolls.length >= 5, `only ${rolls.length} rolls in 30 min`);
-      assert.ok(rolls[0].t >= 30 - 0.11, `first roll at ${rolls[0].t}`);
-      if (lightning) assert.ok(flashes[0].t >= 30 - 0.11, `first flash at ${flashes[0].t}`);
-      for (let i = 1; i < rolls.length; i++) { assert.ok(rolls[i].t - rolls[i - 1].t >= 60 - 0.11); gaps.push(rolls[i].t - rolls[i - 1].t); }
-      assert.ok(rolls.every((r) => r.kind === 'far' && r.km >= 6 && r.km <= 12));
-      total += rolls.length;
+  for (let seed = 1; seed <= 40; seed++) {
+    const { rolls, flashes } = runLive(createDefaultConfig().audio, 600, seed);
+    // the first strike comes within 3–8 s of rain arriving
+    assert.ok(flashes[0].t >= 3 - 0.11 && flashes[0].t <= 8 + 0.11, `first flash at ${flashes[0].t.toFixed(1)} s`);
+    // the roll lands at most about a second after its flash
+    flashes.forEach((f, k) => { if (rolls[k]) assert.ok(rolls[k].t - f.t <= 1.3, `roll ${(rolls[k].t - f.t).toFixed(2)} s after its flash`); });
+    // never closer than minGap, never further apart than maxGap (plus the roll's travel)
+    for (let k = 1; k < flashes.length; k++) {
+      const g = flashes[k].t - flashes[k - 1].t;
+      assert.ok(g >= A.thunderMinGap - 0.11 && g <= A.thunderMaxGap + 1.3 + 0.11, `gap ${g.toFixed(1)} s`);
     }
+    // so any 16 s of Rain (the shortest pass, on a phone) has at least one strike
+    for (let from = 0; from + 16 <= 600; from += 2) {
+      assert.ok(flashes.some((f) => f.t >= from && f.t < from + 16), `no strike between ${from} and ${from + 16} s`);
+    }
+    assert.ok(rolls.every((r) => r.kind === 'far'), 'the soft roll, no loud close roll by default');
   }
-  assert.ok(total > 0);
-  const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
-  assert.ok(mean >= 60 && mean <= 180, `mean gap ${mean.toFixed(0)} s (about every 1–2.5 min)`);
 });
 
 test('dev values are respected: how often, minimum gap, distance range and the close roll', () => {
@@ -287,8 +288,8 @@ test('dev changes take effect live, without a new scheduler', () => {
   const after = rolls.slice(before);
   assert.ok(after.length >= 8, `${after.length} rolls after "how often" went to 20 s`);
   assert.ok(after.slice(1).every((r) => r.km <= 2));
-  // even across the change, rolls keep the minimum gap in force (≥ 10 s)
-  for (let i = 1; i < rolls.length; i++) assert.ok(rolls[i].t - rolls[i - 1].t >= 10 - 0.11);
+  // even across the change, rolls keep the minimum gap in force (the default 8 s, then 10 s)
+  for (let i = 1; i < rolls.length; i++) assert.ok(rolls[i].t - rolls[i - 1].t >= createDefaultConfig().audio.thunderMinGap - 0.11);
 });
 
 test('flash strength scales the flash; 1 is unchanged, 0 is no light; the roll still comes', () => {
@@ -316,20 +317,20 @@ test('flash strength scales the flash; 1 is unchanged, 0 is no light; the roll s
 });
 
 test('the new thunder settings are validated, clamped, and saved and loaded', () => {
-  const keys = ['thunderMean', 'thunderMinGap', 'thunderNearKm', 'thunderFarKm', 'flashStrength'];
+  const keys = ['thunderMean', 'thunderMinGap', 'thunderMaxGap', 'thunderNearKm', 'thunderFarKm', 'flashStrength'];
   for (const k of keys) assert.ok(RANGES[`audio.${k}`], `no range for audio.${k}`);
   const def = createDefaultConfig().audio;
   for (const k of keys) {
     const [lo, hi] = RANGES[`audio.${k}`];
     assert.ok(def[k] >= lo && def[k] <= hi, `${k} default out of range`);
   }
-  const ok = validateConfig({ audio: { thunderMean: 150, thunderMinGap: 45, thunderNearKm: 3, thunderFarKm: 9, thunderClose: true, flashStrength: 0.3 } });
+  const ok = validateConfig({ audio: { thunderMean: 150, thunderMinGap: 45, thunderMaxGap: 200, thunderNearKm: 3, thunderFarKm: 9, thunderClose: true, flashStrength: 0.3 } });
   assert.equal(ok.warnings.length, 0);
   assert.deepEqual(
     keys.map((k) => ok.config.audio[k]).concat(ok.config.audio.thunderClose),
-    [150, 45, 3, 9, 0.3, true],
+    [150, 45, 200, 3, 9, 0.3, true],
   );
-  const clamped = validateConfig({ audio: { thunderMean: 5, thunderMinGap: 9999, thunderNearKm: -3, thunderFarKm: 99, flashStrength: 2 } }).config.audio;
+  const clamped = validateConfig({ audio: { thunderMean: 1, thunderMinGap: 9999, thunderNearKm: -3, thunderFarKm: 99, flashStrength: 2 } }).config.audio;
   assert.equal(clamped.thunderMean, RANGES['audio.thunderMean'][0]);
   assert.equal(clamped.thunderMinGap, RANGES['audio.thunderMinGap'][1]);
   assert.equal(clamped.thunderNearKm, RANGES['audio.thunderNearKm'][0]);

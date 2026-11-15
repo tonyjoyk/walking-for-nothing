@@ -175,12 +175,15 @@ export function createDefaultConfig() {
     audio: {
       enabled: false, muted: false, master: 0.6, beds: 0.9, crossfadeSeconds: 8,
       windOn: true, wind: 1, rainOn: true, rain: 1, birdsOn: true, birds: 0.7, eventDensity: 1,
-      // Mellow thunder (story 6.17, D-6.18): soft, far and rare. thunderMean
-      // is "how often" (average s between rolls), thunderMinGap never closer;
-      // thunderNearKm/thunderFarKm the distance range; thunderClose allows
-      // one loud close roll per visit (only nearer than 5 km).
+      // Thunder in Rain (story 6.18, D-6.19; was rare and far in 6.17):
+      // at least one strike every time Rain plays, the roll right after its
+      // flash. thunderMean is "how often" (average s between rolls),
+      // thunderMinGap never closer, thunderMaxGap never further apart (so a
+      // pass across the screen always has one); thunderNearKm/thunderFarKm
+      // the distance range (0.15–0.4 km: the roll lands 0.4–1.2 s after the
+      // flash); thunderClose allows one loud close roll per visit.
       thunderOn: true, thunder: 0.55,
-      thunderMean: 100, thunderMinGap: 60, thunderNearKm: 6, thunderFarKm: 12, thunderClose: false,
+      thunderMean: 11, thunderMinGap: 8, thunderMaxGap: 13, thunderNearKm: 0.15, thunderFarKm: 0.4, thunderClose: false,
       lightning: true, // a soft sky flash before each roll (story 6.11, D-6.16)
       flashStrength: 1, // 0–1, scales the lightning's brightness (story 6.17)
     },
@@ -225,8 +228,8 @@ export const RANGES = {
   'audio.master': [0, 1, 0.01], 'audio.beds': [0, 1.5, 0.01], 'audio.crossfadeSeconds': [1, 20, 0.5],
   'audio.wind': [0, 1.5, 0.01], 'audio.rain': [0, 1.5, 0.01], 'audio.birds': [0, 1.5, 0.01],
   'audio.eventDensity': [0, 3, 0.05], 'audio.thunder': [0, 1.5, 0.01],
-  'audio.thunderMean': [20, 600, 5], 'audio.thunderMinGap': [10, 300, 5],
-  'audio.thunderNearKm': [1, 20, 0.5], 'audio.thunderFarKm': [1, 20, 0.5],
+  'audio.thunderMean': [3, 600, 1], 'audio.thunderMinGap': [2, 300, 1], 'audio.thunderMaxGap': [3, 600, 1],
+  'audio.thunderNearKm': [0.05, 20, 0.05], 'audio.thunderFarKm': [0.05, 20, 0.05],
   'audio.flashStrength': [0, 1, 0.01],
 };
 
@@ -267,9 +270,9 @@ export const AUDIO_CALLS = {
 // config.audio.thunderMean and friends (dev panel).
 export const AUDIO_THUNDER = {
   scenes: ['rain'],
-  firstAfter: [30, 50],  // seconds after rain arrives (the first strike)
-  mean: 100, minGap: 60, // seconds between rolls
-  distanceKm: [6, 12],
+  firstAfter: [3, 8],    // seconds after rain arrives (the first strike; story 6.18)
+  mean: 11, minGap: 8, maxGap: 13, // seconds between rolls: Rain always has one per pass
+  distanceKm: [0.15, 0.4], // close: the roll lands 0.4–1.2 s after its flash
   closeRoll: false,      // the loud close roll is off by default
   closeUnderKm: 5,       // thunderClose only nearer than this, once per visit
   far: 'thunderDistant', close: 'thunderClose',

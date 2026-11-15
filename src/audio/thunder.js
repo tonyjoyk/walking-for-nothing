@@ -1,13 +1,17 @@
 // Thunder in the rain scene (D-6.11). Pure: decides when a roll plays, which
 // file, and how distance shapes it. With lightning (story 6.11, D-6.16) each
 // strike is a flash now and its roll distance ÷ 0.343 seconds later.
-// Mellow thunder (story 6.17, D-6.18): rare, far and soft by default. The
-// timing, distances, close roll and flash strength come from the live
-// config.audio, so the dev panel changes them without a reload.
+// Thunder in every Rain pass (story 6.18, D-6.19; it was rare in 6.17): a
+// strike early in each pass and at most maxGap apart, the roll right after
+// its flash. The timing, distances, close roll and flash strength come from
+// the live config.audio, so the dev panel changes them without a reload.
 import { AUDIO_THUNDER } from '../config.js';
 import { nextWait } from './events.js';
 
 const lerp = (a, b, t) => a + (b - a) * t;
+// The wait between rolls: random around the mean, never under minGap, and
+// never over maxGap (story 6.18), so Rain always has a strike in each pass.
+const gap = (rng, c) => Math.min(Math.max(c.minGap, c.maxGap ?? Infinity), nextWait(rng, c.mean, c.minGap));
 
 // Distance in km -> how the roll is played. Far rolls are quieter, duller
 // and a little slower.
@@ -15,7 +19,8 @@ export function thunderShape(km, cfg = AUDIO_THUNDER) {
   const [near, far] = cfg.distanceKm;
   const t = far > near ? Math.max(0, Math.min(1, (km - near) / (far - near))) : 0;
   // flash: how bright the lightning is (near 1, far 0.35)
-  return { gainDb: -(km - near), cutoff: lerp(3000, 600, t), rate: lerp(1, 0.92, t), delay: km / 0.343, flash: lerp(1, 0.35, t) };
+  // flash: how bright the lightning is (near 1, the far end 0.6, so every strike is seen; story 6.18)
+  return { gainDb: -(km - near), cutoff: lerp(3000, 600, t), rate: lerp(1, 0.92, t), delay: km / 0.343, flash: lerp(1, 0.6, t) };
 }
 
 export class ThunderScheduler {
@@ -53,6 +58,7 @@ export class ThunderScheduler {
       ...b,
       mean: num(a.thunderMean, b.mean),
       minGap: num(a.thunderMinGap, b.minGap),
+      maxGap: num(a.thunderMaxGap, b.maxGap ?? Infinity),
       distanceKm: [Math.min(n, f), Math.max(n, f)],
       closeRoll: typeof a.thunderClose === 'boolean' ? a.thunderClose : !!b.closeRoll,
       flashStrength: num(a.flashStrength, b.flashStrength ?? 1),
@@ -67,23 +73,23 @@ export class ThunderScheduler {
       this.active = true;
       this.started = false;
       this.closeUsed = false;
-      this.timing = `${c.mean}/${c.minGap}`;
+      this.timing = `${c.mean}/${c.minGap}/${c.maxGap}`;
       this.wait = c.firstAfter[0] + (c.firstAfter[1] - c.firstAfter[0]) * this.rng();
     }
     if (!on) { this.active = false; this.wait = Infinity; return out; }
     // "how often" or the minimum gap changed (dev panel): redraw the wait
     // now, still after any roll on its way, so the change is heard at once
-    const timing = `${c.mean}/${c.minGap}`;
+    const timing = `${c.mean}/${c.minGap}/${c.maxGap}`;
     if (timing !== this.timing) {
       this.timing = timing;
-      if (this.started) this.wait = this.inFlight() + nextWait(this.rng, c.mean, c.minGap);
+      if (this.started) this.wait = this.inFlight() + gap(this.rng, c);
     }
     this.wait -= dt;
     if (this.wait > 0) return out;
     const strike = this.strike(undefined, { lightning });
     this.started = true;
     // the next strike counts from when this roll is heard, so rolls never overlap
-    this.wait = (strike.wait || 0) + nextWait(this.rng, c.mean, c.minGap);
+    this.wait = (strike.wait || 0) + gap(this.rng, c);
     return out.concat(strike.now);
   }
 

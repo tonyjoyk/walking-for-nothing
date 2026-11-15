@@ -217,6 +217,7 @@ export function createPanel(app) {
   bind(fI, A, 'thunder', 'audio.thunder', { label: 'thunder volume' });
   bind(fI, A, 'thunderMean', 'audio.thunderMean', { label: 'how often (s)' });
   bind(fI, A, 'thunderMinGap', 'audio.thunderMinGap', { label: 'min gap (s)' });
+  bind(fI, A, 'thunderMaxGap', 'audio.thunderMaxGap', { label: 'max gap (s)' });
   bind(fI, A, 'thunderNearKm', 'audio.thunderNearKm', { label: 'nearest (km)' });
   bind(fI, A, 'thunderFarKm', 'audio.thunderFarKm', { label: 'farthest (km)' });
   fI.addBinding(A, 'thunderClose', { label: 'close roll (<5 km)' });

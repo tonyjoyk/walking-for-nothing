@@ -1,0 +1,8 @@
+schema: 1
+story: '6.18'
+story_title: 'Lightning and thunder in every Rain pass'
+gate: PASS
+status_reason: 'First strike 3-8 s into Rain, at most 13 s apart, roll within about 1 s of its flash; verified in tests and in a real Rain pass; 112 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []

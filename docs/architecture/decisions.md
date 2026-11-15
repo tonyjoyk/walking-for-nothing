@@ -664,3 +664,21 @@ Added 20 Oct 2026 by the audio chat. Full text:
   visit, volume 0.9), and those numbers as restated in D-6.16.
 - **Status:** in force.
 
+### D-6.19 Lightning and thunder in every Rain pass, the thunder right after the flash
+- **Date:** 15 Nov 2026. **Story:** [6.18](../stories/6.18.thunder-every-rain-pass.md).
+- **Decision (owner):** in Rain only, every pass across the screen has at
+  least one strike, and the thunder comes as soon as the lightning.
+  - **First strike:** 3–8 s after Rain arrives. Then strikes are 8–13 s
+    apart, about 11 s on average; `thunderMaxGap` makes 13 s a hard
+    maximum. Any 16 s of Rain (the shortest pass, on a phone) has a strike.
+  - **Close strikes, 0.15–0.4 km:** the roll lands 0.4–1.2 s after its
+    flash. Every flash is clearly visible, with brightness from 1 down to
+    0.6 (was 0.35).
+  - **Still gentle:** the soft rumble recording at volume 0.55. The loud
+    close roll stays off unless it's switched on in the dev panel.
+  - The dev panel adds a "max gap (s)" control. The ranges are widened so
+    these values can be tuned.
+- **Supersedes:** D-6.18's rare, far timing (first roll after 30–50 s, every
+  1–2.5 minutes, 6–12 km away).
+- **Status:** in force.
+
