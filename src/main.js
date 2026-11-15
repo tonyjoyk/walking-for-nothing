@@ -95,6 +95,7 @@ async function chooseOpening() {
 }
 chooseOpening();
 scene.onBirdsEnter = () => audio.chirpFlock();
+audio.onFlash = (strength) => scene.flash(strength); // lightning before thunder (story 6.11)
 
 const DENSITY_CAP = { low: 1, medium: 1.5, high: 2 };
 let p5ref = null;

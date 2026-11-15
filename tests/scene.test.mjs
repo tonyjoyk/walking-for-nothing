@@ -313,3 +313,50 @@ test('5.2: the page has link-preview tags and a 1200 x 630 preview image under 3
   let i = 2; while (i < b.length && !(b[i] === 0xff && b[i + 1] >= 0xc0 && b[i + 1] <= 0xc3)) i += 2 + b.readUInt16BE(i + 2);
   assert.deepEqual([b.readUInt16BE(i + 7), b.readUInt16BE(i + 5)], [1200, 630]);
 });
+
+// Lightning (story 6.11): soft, smooth, never strobing, gentler with reduced motion.
+import { FLASH } from '../src/scene/Scene.js';
+
+function flashCurve(reduced) {
+  const cfg = createDefaultConfig();
+  cfg.playback.reducedMotion = reduced;
+  const scene = new Scene(cfg);
+  scene.applyScene('rain'); scene.snapParams();
+  assert.equal(scene.flash(1, 0.5), true);
+  const levels = [];
+  for (let i = 0; i < 180; i++) { levels.push(scene.flashLevel()); scene.update(1 / 60); }
+  return { scene, levels };
+}
+
+test('a lightning flash rises and falls smoothly, at least 0.15 s each way', () => {
+  const { levels } = flashCurve(false);
+  const peak = Math.max(...levels);
+  const at = levels.indexOf(peak);
+  assert.ok(peak > 0.9 && peak <= 1);
+  assert.ok(at / 60 >= 0.15, `rise ${at / 60} s`);
+  const end = levels.findIndex((l, i) => i > at && l <= 0.01);
+  assert.ok((end - at) / 60 >= 0.15, `fall ${(end - at) / 60} s`);
+  for (let i = 1; i < levels.length; i++) assert.ok(Math.abs(levels[i] - levels[i - 1]) < 0.15, 'no jump between frames');
+  assert.equal(levels.at(-1), 0);
+});
+
+test('reduced motion makes the flash much gentler and slower', () => {
+  const full = Math.max(...flashCurve(false).levels);
+  const gentle = flashCurve(true).levels;
+  assert.ok(Math.max(...gentle) <= FLASH.reduced.scale + 1e-9 && Math.max(...gentle) < full * 0.35);
+  assert.ok(gentle.indexOf(Math.max(...gentle)) / 60 >= 0.4);
+});
+
+test('flashes never come closer than one a second (WCAG 2.3.1), and render without NaN', () => {
+  const scene = new Scene(createDefaultConfig());
+  scene.applyScene('rain'); scene.snapParams();
+  const ctx = createFakeContext();
+  let shown = 0;
+  for (let i = 0; i < 600; i++) {
+    if (i % 10 === 0 && scene.flash(1)) shown++; // asked six times a second
+    scene.update(1 / 60);
+    if (i % 5 === 0) scene.render(ctx, 1600, 900, 1);
+  }
+  assert.ok(shown <= 10 && shown >= 9, `${shown} flashes in 10 s`);
+  assert.deepEqual([...new Set(ctx.stats.bad)], []);
+});

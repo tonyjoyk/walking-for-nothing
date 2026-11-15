@@ -212,6 +212,7 @@ export function createPanel(app) {
   bind(fI, A, 'crossfadeSeconds', 'audio.crossfadeSeconds', { label: 'crossfade (s)' });
   fI.addBinding(A, 'thunderOn', { label: 'thunder' });
   bind(fI, A, 'thunder', 'audio.thunder', { label: 'thunder volume' });
+  fI.addBinding(A, 'lightning', { label: 'lightning' });
   fI.addButton({ title: 'Bird now' }).on('click', () => audio.birdNow());
   fI.addButton({ title: 'Thunder now' }).on('click', () => audio.thunderNow());
   const soundNow = { playing: '' };

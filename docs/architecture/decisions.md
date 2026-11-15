@@ -582,3 +582,24 @@ Added 20 Oct 2026 by the audio chat. Full text:
   PRD's starting state).
 - **Status:** in force.
 
+### D-6.16 Lightning before thunder
+- **Date:** 15 Nov 2026. **Story:** [6.11](../stories/6.11.lightning.md).
+- **Decision:**
+  - Each thunder strike in Rain is a soft sky flash now and its roll
+    distance ÷ 0.343 s later (8.7 s at 3 km, 35 s at 12 km). The next strike
+    is timed from when the roll lands, so rolls stay ≥ 25 s apart and never
+    overlap. The first roll still comes ≥ 15 s after rain starts.
+  - **Lightning shows whether or not sound is on.** The thunder schedule
+    runs every frame; rolls only play while sound is on.
+  - A roll already on its way still lands if the scene leaves Rain (the
+    flash promised it).
+  - Brightness falls with distance (1 at 3 km to 0.35 at 12 km). The flash
+    is drawn over the sky and clouds only, behind the hills, rising over
+    0.18 s and falling over 0.9 s, at most one a second.
+  - **Reduced motion:** 30% strength, rise 0.45 s and fall 1.6 s.
+  - Switch: `config.audio.lightning` (default on), also in the dev panel.
+- **Why:** the gap between light and sound makes the storm feel real and
+  distant; showing it without sound keeps the rain alive for the many
+  visitors who never turn sound on.
+- **Supersedes:** nothing. Follows the UX spec's cross-epic rule on flashes.
+- **Status:** in force.

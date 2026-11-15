@@ -1,4 +1,4 @@
-import { SCENE_W, SCENE_H, FIELD_TOP, GEN_LEFT, GEN_RIGHT, rng, css, mix } from './util.js';
+import { SCENE_W, SCENE_H, HORIZON_Y, FIELD_TOP, GEN_LEFT, GEN_RIGHT, rng, css, mix } from './util.js';
 
 export function drawSky(ctx, view, P) {
   const top = view.y0;
@@ -66,4 +66,32 @@ export function drawSun(ctx, view, P) {
   ctx.beginPath(); ctx.arc(x, y, r * 1.06, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = css(P.sunColor, P.sunAlpha);
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+}
+
+// Lightning (story 6.11): the sky and clouds lift towards a cool white,
+// most where the strike is (somewhere behind the clouds, at x 0–1 of the
+// view) and fading to nothing at the horizon. Drawn before the hills, so
+// they stand dark against it. Never a full-screen white.
+const FLASH_COLOR = [226, 233, 255];
+export function drawFlash(ctx, view, level, x) {
+  if (level <= 0.003) return;
+  const top = view.y0 - 2, bottom = HORIZON_Y;
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  // an even lift over the whole sky, fading down to the horizon
+  const g = ctx.createLinearGradient(0, top, 0, bottom);
+  g.addColorStop(0, css(FLASH_COLOR, 0.28 * level));
+  g.addColorStop(0.7, css(FLASH_COLOR, 0.12 * level));
+  g.addColorStop(1, css(FLASH_COLOR, 0));
+  ctx.fillStyle = g;
+  ctx.fillRect(view.x0 - 2, top, view.w + 4, bottom - top);
+  // a soft glow where the strike is
+  const cx = view.x0 + view.w * (0.15 + 0.7 * x), cy = Math.max(top, 0) + 200;
+  const r = Math.max(520, view.w * 0.38);
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  glow.addColorStop(0, css(FLASH_COLOR, 0.3 * level));
+  glow.addColorStop(1, css(FLASH_COLOR, 0));
+  ctx.fillStyle = glow;
+  ctx.fillRect(cx - r, Math.max(top, cy - r), r * 2, Math.min(bottom, cy + r) - Math.max(top, cy - r));
+  ctx.restore();
 }

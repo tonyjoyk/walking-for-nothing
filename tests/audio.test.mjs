@@ -151,3 +151,64 @@ test('farther thunder is quieter, duller and slower', () => {
     prev = s;
   }
 });
+
+// Lightning before thunder (story 6.11, D-6.16)
+function runStorm(scenes, seed = 5) {
+  const s = new ThunderScheduler({ files: { far: counts.thunderDistant, close: counts.thunderClose }, rng: makeRng(seed) });
+  const flashes = [], rolls = [];
+  let t = 0;
+  for (const [scene, seconds] of scenes) {
+    for (let u = 0; u < seconds; u += 0.1, t += 0.1) {
+      for (const h of s.step(scene, 0.1, { lightning: true })) (h.kind === 'flash' ? flashes : rolls).push({ t, scene, ...h });
+    }
+  }
+  return { flashes, rolls };
+}
+
+test('lightning: one flash per roll, the roll distance ÷ 0.343 s later; rolls still never overlap', () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const { flashes, rolls } = runStorm([['rain', 400], ['sunny', 60]], seed);
+    assert.ok(flashes.length >= 3, `only ${flashes.length} flashes`);
+    assert.equal(rolls.length, flashes.length, 'every flash gets exactly one roll');
+    flashes.forEach((f, i) => {
+      const r = rolls[i];
+      assert.equal(r.km, f.km);
+      assert.ok(Math.abs(r.t - f.t - f.km / 0.343) <= 0.11, `roll ${(r.t - f.t).toFixed(2)} s after flash at ${f.km.toFixed(1)} km`);
+      assert.ok(f.strength > 0 && f.strength <= 1);
+      if (i) assert.ok(f.t - flashes[i - 1].t >= 1, 'never more than one flash a second');
+    });
+    for (let i = 1; i < rolls.length; i++) assert.ok(rolls[i].t - rolls[i - 1].t >= 25 - 0.11, 'rolls at least 25 s apart');
+    assert.ok(flashes.every((f) => f.scene === 'rain'), 'flashes only in rain');
+  }
+});
+
+test('lightning: a roll on its way still arrives after the scene leaves Rain; nearer is brighter', () => {
+  const s = new ThunderScheduler({ files: { far: counts.thunderDistant, close: counts.thunderClose }, rng: makeRng(2) });
+  const now = s.strike(12, { lightning: true }).now;
+  assert.equal(now.length, 1);
+  assert.ok(now[0].strength < thunderShape(3).flash);
+  let rolls = [];
+  for (let t = 0; t < 40; t += 0.1) rolls = rolls.concat(s.step('sunny', 0.1, { lightning: true }));
+  assert.equal(rolls.length, 1);
+  assert.equal(rolls[0].km, 12);
+  // without lightning: the roll now, no flash (story 6.9 behaviour)
+  const off = s.strike(6).now;
+  assert.equal(off.length, 1);
+  assert.notEqual(off[0].kind, 'flash');
+});
+
+test('lightning shows with sound off, and can be switched off in config', async () => {
+  const { SoundDirector } = await import('../src/audio/index.js');
+  for (const lightning of [true, false]) {
+    const cfg = createDefaultConfig();
+    cfg.audio.enabled = false; // sound off
+    cfg.audio.lightning = lightning;
+    const d = new SoundDirector(cfg);
+    d.thunder.files = { far: counts.thunderDistant, close: counts.thunderClose };
+    let flashes = 0;
+    d.onFlash = () => flashes++;
+    for (let t = 0; t < 120; t += 1 / 60) d.update({}, 1 / 60, 'rain');
+    if (lightning) assert.ok(flashes >= 1); else assert.equal(flashes, 0);
+  }
+  assert.equal(validateConfig({ audio: { lightning: false } }).config.audio.lightning, false);
+});
