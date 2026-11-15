@@ -134,18 +134,59 @@ html, body {
 }
 #devpanel.hidden { display: none; }
 
-/* Credit for the live weather data (Open-Meteo, CC BY 4.0): shown only when
-   the opening scene came from it. Small and quiet, bottom left. */
-.credit {
+/* The one quiet Credits link (story 6.12, D-0.5, D-6.15): small text in the
+   bottom-left corner, as quiet as the old weather credit. It opens a short
+   list on the same dark glass as the first-visit hint, rising from the link. */
+.credits {
   position: fixed;
   left: max(10px, env(safe-area-inset-left));
   bottom: max(8px, env(safe-area-inset-bottom));
-  font: 11px/1.2 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: rgba(255, 255, 255, 0.55);
-  text-decoration: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  z-index: 6;
+  font: 11px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
-.credit:hover, .credit:focus-visible { color: rgba(255, 255, 255, 0.9); }
+.credits-btn {
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: color 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.credits-btn:hover, .credits-btn:focus-visible, .credits.open .credits-btn { color: rgba(255, 255, 255, 0.9); }
+.credits-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 2px; }
+.credits-list {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  box-sizing: border-box;
+  width: min(300px, calc(100vw - 92px));
+  max-height: min(60vh, calc(100dvh - 60px));
+  overflow-y: auto;
+  padding: 10px 13px 11px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(22, 30, 25, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.credits.open .credits-list { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .credits-list { transform: none; } }
+.credits-list h3 { margin: 0 0 4px; font-size: inherit; font-weight: 600; }
+.credits-list h3 ~ h3 { margin-top: 10px; }
+.credits-list ul { margin: 0; padding: 0; list-style: none; }
+.credits-list li { margin: 0 0 4px; }
+.credits-list a { color: inherit; text-decoration: underline; text-decoration-color: rgba(255, 255, 255, 0.4); text-underline-offset: 2px; }
+.credits-list a:hover { text-decoration-color: #fff; }
+.credits-list a:focus-visible { outline: 2px solid #fff; outline-offset: 1px; border-radius: 2px; }
+.credits-list .by { color: rgba(255, 255, 255, 0.72); }
+.credits-list .note { margin: 6px 0 0; color: rgba(255, 255, 255, 0.6); }
 
 /* The speech bubble (D-2.3; style D-2.5): small dark words on a plain white
    plate with 8 px corners, and a hairline down to his head. Placed every frame

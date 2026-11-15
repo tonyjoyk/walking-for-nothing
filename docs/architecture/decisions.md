@@ -582,3 +582,24 @@ Added 20 Oct 2026 by the audio chat. Full text:
   PRD's starting state).
 - **Status:** in force.
 
+### D-6.15 How the credits are built and shown
+- **Date:** 15 Nov 2026. **Stories:** [6.4](../stories/6.4.manifest-and-credits.md), [6.12](../stories/6.12.sound-credits-on-page.md).
+- **Decision:**
+  - **One source:** `public/audio/manifest.json`. The README's "Sound
+    credits" block and the page's list are both generated from it
+    (`src/audio/credits.js`); `audio/sources.json` stays the input.
+  - **Loop points in samples:** each file has `samples`, and each bed's
+    `loop` has `startSample` and `endSample` beside the seconds.
+  - **One entry per recording**, not per cut file. CC0 recordings are listed
+    too, as a courtesy, so the list is every sound the site plays.
+  - **On the page:** the D-0.5 link is a small text button ("Credits"), a
+    disclosure. It opens a short list on the hint's dark glass, read from
+    the manifest on first open. Escape, the button, or a click elsewhere
+    closes it. The Open-Meteo credit joins the list only when live weather
+    was used.
+  - The build fails, and a test fails, on a licence outside the allowlist,
+    a missing credit field, or a README block that has drifted.
+- **Why:** the licences need title, recordist, link and licence; one
+  generated list can't fall out of step with the files.
+- **Status:** in force.
+
