@@ -30,6 +30,7 @@ openly licensed and credited.
 | [6.11](../stories/6.11.lightning.md) | Lightning before thunder (P1) | Claude |
 | [6.12](../stories/6.12.sound-credits-on-page.md) | Sound credits on the page | Claude |
 | [6.13](../stories/6.13.listening-qa.md) | Listening QA and final balance | Tony with Claude |
+| [6.14](../stories/6.14.volume-slider.md) | A volume slider for visitors (D-6.13), Done | Claude (Greeting review chat) |
 
 ## Order
 

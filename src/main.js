@@ -4,6 +4,7 @@ import { chooseOpeningScene, validateWeather, SCENE_NAMES, chooseShuffleScene, r
 import { Scene } from './scene/Scene.js';
 import { SoundDirector } from './audio/index.js';
 import { createBubble } from './bubble.js';
+import { initSoundControl } from './controls/visitorControls.js';
 import './styles/main.css';
 
 p5.disableFriendlyErrors = true; // faster; the scene does its own validation
@@ -182,27 +183,10 @@ document.addEventListener('visibilitychange', () => {
   else { p5ref.loop(); audio.resume(); }
 });
 
-// Visitor-facing sound toggle. Sound only starts after this tap.
-const soundBtn = document.getElementById('sound');
-function syncSoundButton() {
-  const on = config.audio.enabled && !config.audio.muted;
-  soundBtn.setAttribute('aria-pressed', String(on));
-  soundBtn.setAttribute('aria-label', on ? 'Turn sound off' : 'Turn sound on');
-  soundBtn.classList.toggle('on', on);
-}
-soundBtn.addEventListener('click', async () => {
-  const turningOn = !(config.audio.enabled && !config.audio.muted);
-  if (turningOn) {
-    const ok = await audio.start();
-    config.audio.enabled = ok;
-    config.audio.muted = false;
-  } else {
-    config.audio.enabled = false;
-  }
-  syncSoundButton();
-  app.onAudioChange?.();
-});
-syncSoundButton();
+// Visitor-facing sound button and volume slider (story 6.14). Sound only
+// starts after a tap or click on them (browser autoplay rules).
+const soundCtl = initSoundControl({ config, audio, onChange: () => app.onAudioChange?.() });
+const syncSoundButton = soundCtl.sync;
 
 const app = { config, scene, audio, syncSoundButton, onAudioChange: null, weatherStatus, chooseOpening };
 window.__landscape = app; // handy in the console while tuning

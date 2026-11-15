@@ -451,3 +451,24 @@ Added 20 Oct 2026 by the audio chat. Full text:
   - Final picks follow Tony's listening notes (story 6.1).
 - **Supersedes:** narrows D-6.2 (removes CC BY-NC from the allowlist).
 - **Status:** in force.
+
+### D-6.13 A volume slider for visitors
+- **Date:** 15 Nov 2026. **Story:** [6.14](../stories/6.14.volume-slider.md).
+- **Decision:**
+  - A slim glass pill with a vertical slider rises above the sound button.
+    It opens on hover (with a real pointer), on keyboard focus, or for
+    3.5 s after a tap on touch screens.
+  - The speaker button still mutes and unmutes.
+  - The slider sets `config.audio.master` (0–100%, default 60%), which the
+    sound director already glides to. The level is remembered in
+    `localStorage` (`wfn.volume`).
+  - Raising it while sound is off turns sound on. At 0 the speaker shows
+    the muted icon.
+  - All round buttons share one `.ctl` glass style with hover, press,
+    keyboard-focus and disabled states. The sound button is disabled if the
+    browser can't play audio.
+- **Why:** a visitor in a meeting can keep the site quiet and their laptop
+  loud.
+- **Supersedes:** the audio PRD's out-of-scope item "a sound settings UI
+  for visitors beyond the existing on/off button".
+- **Status:** in force.

@@ -11,12 +11,26 @@ html, body {
   height: 100vh;
   height: 100dvh;
 }
-.sound {
+.sound .wave { display: none; }
+.sound.on .wave { display: inline; }
+.sound.on .mute { display: none; }
+
+/* Visitor controls (story 6.14): one glass style for every round button,
+   stacked in the bottom-right corner. States: hover, press, focus, disabled. */
+.ctl-stack {
   position: fixed;
   right: calc(18px + env(safe-area-inset-right, 0px));
   bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 6;
+}
+.ctl {
   width: 44px;  /* comfortable touch target */
   height: 44px;
+  padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.45);
   background: rgba(30, 40, 30, 0.18);
@@ -27,14 +41,83 @@ html, body {
   place-items: center;
   cursor: pointer;
   opacity: 0.7;
-  transition: opacity 0.4s ease, background 0.4s ease;
+  transition: opacity 0.4s ease, background 0.2s ease, transform 0.15s ease;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
-.sound:hover, .sound:focus-visible { opacity: 1; }
-.sound:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-.sound .wave { display: none; }
-.sound.on .wave { display: inline; }
-.sound.on .mute { display: none; }
+.ctl:hover, .ctl:focus-visible, .ctl-stack:hover .ctl { opacity: 1; }
+.ctl:active { background: rgba(30, 40, 30, 0.34); transform: scale(0.96); }
+.ctl:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.ctl:disabled, .ctl[aria-disabled='true'] { opacity: 0.35; cursor: default; transform: none; background: rgba(30, 40, 30, 0.18); }
+
+/* The volume slider: a slim glass pill that rises above the sound button. */
+.vol {
+  position: relative;
+  width: 36px;
+  height: 116px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(30, 40, 30, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+}
+/* open on hover (only where hover is real: touch screens keep a "sticky"
+   hover after a tap), on keyboard focus (not focus left behind by a click),
+   or after a tap (.open, set for a few seconds by visitorControls.js) */
+.ctl-stack:has(:focus-visible) .vol, .ctl-stack.open .vol {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ctl-stack:hover .vol {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s;
+  }
+}
+.vol input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 92px;          /* the track's length; turned upright below */
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  position: absolute;   /* centred in the pill, then turned upright */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  cursor: pointer;
+  --fill: 60%;
+}
+.vol input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.92) var(--fill), rgba(255, 255, 255, 0.3) var(--fill));
+}
+.vol input[type='range']::-moz-range-track { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); }
+.vol input[type='range']::-moz-range-progress { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.92); }
+.vol input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.vol input[type='range']::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+.vol input[type='range']:focus-visible { outline: none; }
+.vol:has(:focus-visible) { outline: 2px solid #fff; outline-offset: 3px; }
+.vol input[type='range']:disabled { cursor: default; opacity: 0.4; }
 
 /* dev panel (only present with ?dev) */
 #devpanel {

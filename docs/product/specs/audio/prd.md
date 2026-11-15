@@ -33,6 +33,7 @@ place.
 - **Live weather sound beyond the scene.** Rain intensity follows the scene
   already; no extra weather data.
 - **A sound settings UI for visitors** beyond the existing on/off button.
+  (Superseded 15 Nov 2026 by [D-6.13](../../../architecture/decisions.md#d-613-a-volume-slider-for-visitors): a volume slider.)
 
 ## Users and stories
 

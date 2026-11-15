@@ -27,13 +27,20 @@
       <p>The internet often feels rushed and demanding. So I created a digital space where we can slow down and feel calm.</p>
       <p class="work"><a href="https://tonyjoyk.github.io/tony-joy-portfolio/" target="_blank" rel="noopener">View my work</a></p>
     </div>
-    <button id="sound" class="sound" type="button" aria-pressed="false" aria-label="Turn sound on">
-      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-        <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z" fill="currentColor" />
-        <path class="wave" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-        <path class="mute" d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-      </svg>
-    </button>
+    <!-- Visitor controls, bottom right (story 6.14): sound on/off, and a volume
+         slider that rises above it on hover, focus or tap -->
+    <div id="sound-ctl" class="ctl-stack">
+      <div class="vol">
+        <input id="volume" type="range" min="0" max="100" step="1" value="60" aria-label="Volume" aria-valuetext="60%" />
+      </div>
+      <button id="sound" class="ctl sound" type="button" aria-pressed="false" aria-label="Turn sound on">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z" fill="currentColor" />
+          <path class="wave" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          <path class="mute" d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
     <a id="credit" class="credit" href="https://open-meteo.com/" target="_blank" rel="noopener" hidden>Weather: Open-Meteo</a>
     <script type="module" src="/src/main.js"></script>
   </body>
