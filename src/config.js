@@ -175,8 +175,14 @@ export function createDefaultConfig() {
     audio: {
       enabled: false, muted: false, master: 0.6, beds: 0.9, crossfadeSeconds: 8,
       windOn: true, wind: 1, rainOn: true, rain: 1, birdsOn: true, birds: 0.7, eventDensity: 1,
-      thunderOn: true, thunder: 0.9,
+      // Mellow thunder (story 6.17, D-6.18): soft, far and rare. thunderMean
+      // is "how often" (average s between rolls), thunderMinGap never closer;
+      // thunderNearKm/thunderFarKm the distance range; thunderClose allows
+      // one loud close roll per visit (only nearer than 5 km).
+      thunderOn: true, thunder: 0.55,
+      thunderMean: 100, thunderMinGap: 60, thunderNearKm: 6, thunderFarKm: 12, thunderClose: false,
       lightning: true, // a soft sky flash before each roll (story 6.11, D-6.16)
+      flashStrength: 1, // 0–1, scales the lightning's brightness (story 6.17)
     },
   };
 }
@@ -219,6 +225,9 @@ export const RANGES = {
   'audio.master': [0, 1, 0.01], 'audio.beds': [0, 1.5, 0.01], 'audio.crossfadeSeconds': [1, 20, 0.5],
   'audio.wind': [0, 1.5, 0.01], 'audio.rain': [0, 1.5, 0.01], 'audio.birds': [0, 1.5, 0.01],
   'audio.eventDensity': [0, 3, 0.05], 'audio.thunder': [0, 1.5, 0.01],
+  'audio.thunderMean': [20, 600, 5], 'audio.thunderMinGap': [10, 300, 5],
+  'audio.thunderNearKm': [1, 20, 0.5], 'audio.thunderFarKm': [1, 20, 0.5],
+  'audio.flashStrength': [0, 1, 0.01],
 };
 
 // ---------------------------------------------------------------------------
@@ -253,11 +262,15 @@ export const AUDIO_CALLS = {
   crowsHouse: { phrase: [1, 1], gap: [0, 0], rise: 0 },
 };
 
+// Mellow thunder (story 6.17, D-6.18, superseding 6.9's timing). mean,
+// minGap, distanceKm and closeRoll are the fallbacks; the live values are
+// config.audio.thunderMean and friends (dev panel).
 export const AUDIO_THUNDER = {
   scenes: ['rain'],
-  firstAfter: [6, 14],   // seconds after rain arrives
-  mean: 40, minGap: 25,  // seconds between rolls
-  distanceKm: [3, 12],
+  firstAfter: [30, 50],  // seconds after rain arrives (the first strike)
+  mean: 100, minGap: 60, // seconds between rolls
+  distanceKm: [6, 12],
+  closeRoll: false,      // the loud close roll is off by default
   closeUnderKm: 5,       // thunderClose only nearer than this, once per visit
   far: 'thunderDistant', close: 'thunderClose',
 };

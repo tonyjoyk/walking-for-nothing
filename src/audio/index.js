@@ -30,7 +30,8 @@ export class SoundDirector {
     this.playing = [];    // readout for the dev panel
     // Thunder runs with sound on or off, so lightning shows either way
     // (story 6.11, D-6.16). File counts arrive with the manifest.
-    this.thunder = new ThunderScheduler({ files: { far: 0, close: 0 } });
+    // It reads config.audio live, so the dev panel needs no reload (6.17).
+    this.thunder = new ThunderScheduler({ files: { far: 0, close: 0 }, settings: () => this.config.audio });
     this.onFlash = null;  // (strength 0–1) => void, set by main.js
   }
 

@@ -642,3 +642,25 @@ Added 20 Oct 2026 by the audio chat. Full text:
   focused.
 - **Status:** in force.
 
+### D-6.18 Mellow thunder, with dev controls
+- **Date:** 15 Nov 2026. **Story:** [6.17](../stories/6.17.mellow-thunder.md).
+- **Decision:**
+  - Thunder in Rain is rare, far and soft by default: the first strike
+    30–50 s after rain arrives; rolls at least 60 s apart, about 100 s on
+    average (roughly every 1–2.5 minutes); 6–12 km away; thunder volume
+    0.55 (was 0.9), under the rain bed.
+  - The loud close roll is off by default (`audio.thunderClose`). Switched
+    on, it plays at most once per visit, and only nearer than 5 km.
+  - Lightning is unchanged: the flash first, the roll distance ÷ 0.343 s
+    later, rolls never overlap. A new `audio.flashStrength` (0–1, default 1)
+    scales its brightness.
+  - How often, min gap, nearest and farthest distance, close roll and
+    flash strength are in the dev panel's Sound folder, with ranges in
+    `RANGES`. The scheduler reads them live, so no reload is needed.
+- **Why:** the owner wants "a mellow thunder" for visitors who keep the
+  site open while working: not continuous, not too loud, and adjustable.
+- **Supersedes:** the thunder timing in story [6.9](../stories/6.9.thunder.md)
+  (first roll 6–14 s, ~40 s mean, 25 s min gap, 3–12 km, one close roll per
+  visit, volume 0.9), and those numbers as restated in D-6.16.
+- **Status:** in force.
+

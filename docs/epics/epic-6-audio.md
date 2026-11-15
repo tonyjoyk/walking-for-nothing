@@ -33,6 +33,7 @@ openly licensed and credited.
 | [6.14](../stories/6.14.volume-slider.md) | A volume slider for visitors (D-6.13), Done | Claude (Greeting review chat) |
 | [6.15](../stories/6.15.sound-on-and-first-visit-hint.md) | Sound on by default, first-visit hint (D-6.14), Done | Claude (Greeting review chat) |
 | [6.16](../stories/6.16.sound-only-on-the-page.md) | Sound only while the visitor is on the page (D-6.17), Done | Claude (Greeting review chat) |
+| [6.17](../stories/6.17.mellow-thunder.md) | Mellow thunder in Rain, with dev-panel controls (D-6.18), Done | Claude (Mellow thunder chat) |
 
 ## Order
 

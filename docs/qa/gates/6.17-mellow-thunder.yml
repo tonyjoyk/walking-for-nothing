@@ -1,0 +1,8 @@
+schema: 1
+story: '6.17'
+story_title: 'Mellow thunder in Rain, with dev-panel controls'
+gate: PASS
+status_reason: 'First roll >= 30 s, gaps >= 60 s (mean ~100 s), 6-12 km, no close roll by default, volume 0.55; dev values live, validated and saved; flash strength scales the flash; 111 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []
