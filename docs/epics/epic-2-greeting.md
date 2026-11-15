@@ -23,5 +23,6 @@
 | 2.8 | Bug: the bubble flashed on page load | [2.8](../stories/2.8.bubble-flash-on-load.md) | Done |
 | 2.9 | A quiet hint that he responds (hand cursor, Juhu looks up) | [2.9](../stories/2.9.interaction-signifiers.md) | Done |
 | 2.10 | Bug: the hand cursor didn't show when the pointer came to rest | [2.10](../stories/2.10.hand-cursor-on-rest.md) | Done |
+| 2.11 | The bubble holds 2 s longer (D-2.10) | [2.11](../stories/2.11.longer-bubble-hold.md) | Done |
 
 Next story: **2.11**. Candidate follow-ups (spec P1/P2): Juhu reacts; a blink while looking. Register new stories in [`docs/README.md`](../README.md) before writing them.

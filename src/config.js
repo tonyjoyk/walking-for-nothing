@@ -168,7 +168,7 @@ export function createDefaultConfig() {
     cycle: { enabled: true, crossingsPerScene: 1 },
     // The man stops on hover and turns after dwellSeconds or a click
     // (docs/product/specs/greeting.md, D-2.2).
-    greeting: { enabled: true, stopSeconds: 0.9, dwellSeconds: 1.5, turnSeconds: 1.4, lookSeconds: 3, smileSeconds: 4, cooldownSeconds: 2, bubble: true, readSeconds: 4 },
+    greeting: { enabled: true, stopSeconds: 0.9, dwellSeconds: 1.5, turnSeconds: 1.4, lookSeconds: 3, smileSeconds: 4, cooldownSeconds: 2, bubble: true, readSeconds: 6 }, // readSeconds 6: two more seconds to read the bubble (D-2.10)
     finish: { grain: 0.1 },
     // Recorded sound (Epic 6). wind and rain scale those beds; beds scales
     // the others. Mixes, birds and thunder timing: AUDIO_MIX and friends below.

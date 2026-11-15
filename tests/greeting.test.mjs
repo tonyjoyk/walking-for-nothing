@@ -419,15 +419,15 @@ test('2.6: no bridge when the bubble is not showing', () => {
   assert.ok(!scene.hitMan(h.x + 60, h.y - 11, true));
 });
 
-test('2.6: the bubble holds 4 s after its reveal, paused while the cursor is on it; a click on him dismisses it', async () => {
+test('2.6 / D-2.10: the bubble holds 6 s after its reveal, paused while the cursor is on it; a click on him dismisses it', async () => {
   const { BUBBLE_REVEAL_SECONDS } = await import('../src/scene/greeting.js');
   const { scene, cfg } = makeScene();
-  assert.equal(cfg.greeting.readSeconds, 4);
-  // a tap (no cursor): about 5 s on screen, then he turns back
+  assert.equal(cfg.greeting.readSeconds, 6);
+  // a tap (no cursor): about 7 s on screen, then he turns back
   scene.greetNow();
   until(scene, () => scene.greeting.facing, 8);
   const shown = until(scene, () => !scene.greeting.facing, 20);
-  assert.ok(Math.abs(shown - BUBBLE_REVEAL_SECONDS - 4) < 0.05, `shown for ${shown.toFixed(2)} s`);
+  assert.ok(Math.abs(shown - BUBBLE_REVEAL_SECONDS - 6) < 0.05, `shown for ${shown.toFixed(2)} s`);
 
   // the cursor resting on the bubble pauses the hold
   const b = makeScene().scene;
@@ -439,7 +439,7 @@ test('2.6: the bubble holds 4 s after its reveal, paused while the cursor is on 
   for (let i = 0; i < 60 * 12; i++) b.update(1 / 60);
   assert.ok(b.greeting.facing, 'still facing after 12 s with the cursor on the bubble');
   b.pointer = { x: h.x + 50, y: h.y + 60 }; // down onto him: the hold runs again
-  until(b, () => !b.greeting.facing, 6);
+  until(b, () => !b.greeting.facing, 8);
 
   // a click on him while he faces the visitor sends him on his way at once
   const c = makeScene().scene;

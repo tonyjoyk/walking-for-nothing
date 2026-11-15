@@ -1,0 +1,8 @@
+schema: 1
+story: '2.11'
+story_title: 'The bubble holds 2 s longer'
+gate: PASS
+status_reason: 'readSeconds 6; the hold, the pause on the bubble and the dismiss are covered by the greeting tests; tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []
