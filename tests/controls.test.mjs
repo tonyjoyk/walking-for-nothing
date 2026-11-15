@@ -79,3 +79,25 @@ test('1.3: with the cycle off, crossings keep the same scene (it loops)', async 
   for (let i = 0; i < 60 * 40; i++) s.update(1 / 60);
   assert.notEqual(s.sceneName, 'night', 'the journey moves on again');
 });
+
+// Story 6.15: sound on by default, and a first-visit hint.
+test('6.15: sound is on unless the visitor turned it off; storage problems never throw', async () => {
+  const { readSoundOn, rememberSoundOn, SOUND_KEY } = await import('../src/controls/visitorControls.js');
+  const m = new Map(); const s = { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, v) };
+  assert.equal(readSoundOn(s), true, 'default on');
+  rememberSoundOn(s, false); assert.equal(m.get(SOUND_KEY), 'off'); assert.equal(readSoundOn(s), false);
+  rememberSoundOn(s, true); assert.equal(readSoundOn(s), true);
+  const broken = { getItem() { throw new Error('x'); }, setItem() { throw new Error('x'); } };
+  assert.equal(readSoundOn(broken), true);
+  assert.doesNotThrow(() => rememberSoundOn(broken, false));
+  assert.equal(readSoundOn(null), true);
+});
+
+test('6.15: the hint is a polite status card with a labelled close button, hidden until shown', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const tag = html.match(/<div id="hint"[^>]*>/)[0];
+  assert.match(tag, /role="status"/);
+  assert.match(tag, /\shidden(\s|>)/);
+  assert.match(html, /<p class="hint-title">Sound is on<\/p>/);
+  assert.match(html, /<button class="hint-close" type="button" aria-label="Dismiss">/);
+});

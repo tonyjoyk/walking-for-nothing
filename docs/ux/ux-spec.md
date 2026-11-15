@@ -108,6 +108,8 @@ field (raised: short grass, almost no parting) and wading through hay
 
 ## Audio (epic 6)
 
-Sound is opt-in, and the visuals must stand on their own. The plan is calm,
+Sound is on by default and starts with the visitor's first click, tap or
+key; a first-visit hint says so and points at the controls (D-6.14, was
+"opt-in"). The visuals must stand on their own. The plan is calm,
 recorded sound for each scene, with no religious sound by default (D-6.3).
 Details: [audio PRD](../product/specs/audio/prd.md).

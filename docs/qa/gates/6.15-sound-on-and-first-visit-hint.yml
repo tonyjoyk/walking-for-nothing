@@ -1,0 +1,8 @@
+schema: 1
+story: '6.15'
+story_title: 'Sound on by default, with a first-visit hint'
+gate: PASS
+status_reason: 'Verified with gesture-required autoplay on desktop and phones; hint timing, pause, close and once-only behaviour checked; 89 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []

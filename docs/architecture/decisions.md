@@ -542,3 +542,30 @@ Added 20 Oct 2026 by the audio chat. Full text:
   for visitors beyond the existing on/off button".
 - **Status:** in force. Placement amended by D-1.5: the slider now slides
   out beside the speaker.
+
+### D-6.14 Sound on by default, with a first-visit hint
+- **Date:** 15 Nov 2026. **Story:** [6.15](../stories/6.15.sound-on-and-first-visit-hint.md).
+- **Decision:**
+  - **Sound on by default:** sound is on unless the visitor turned it off
+    (`localStorage` `wfn.sound`).
+    - Browsers only allow audio after an interaction, so it starts on the
+      visitor's first click, tap or key anywhere. Only events the browser
+      counts as permission are used (`navigator.userActivation`).
+    - A first click on the speaker starts the sound rather than turning it
+      off.
+  - **First-visit hint:** once per visitor (`wfn.hintSeen`), a small
+    dark-glass card to the left of the controls, with an arrow.
+    - Copy: "Sound is on. It starts with your first click. Set the volume
+      or time of day here." The middle sentence drops once sound is
+      playing.
+    - It appears after 1.5 s and fades after 6 s; the countdown pauses
+      while it's hovered or focused.
+    - It closes with ×, or when the controls are used. It isn't shown if
+      the controls were used first.
+    - `role="status"`.
+- **Why:** the owner wants music on from the start, and a minimal, familiar
+  pointer to the sound and scene controls.
+- **Supersedes:** "Sound is opt-in" (UX spec, audio section, and the audio
+  PRD's starting state).
+- **Status:** in force.
+

@@ -31,6 +31,7 @@ openly licensed and credited.
 | [6.12](../stories/6.12.sound-credits-on-page.md) | Sound credits on the page | Claude |
 | [6.13](../stories/6.13.listening-qa.md) | Listening QA and final balance | Tony with Claude |
 | [6.14](../stories/6.14.volume-slider.md) | A volume slider for visitors (D-6.13), Done | Claude (Greeting review chat) |
+| [6.15](../stories/6.15.sound-on-and-first-visit-hint.md) | Sound on by default, first-visit hint (D-6.14), Done | Claude (Greeting review chat) |
 
 ## Order
 

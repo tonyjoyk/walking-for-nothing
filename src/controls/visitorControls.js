@@ -5,6 +5,16 @@
 // remembered in this browser so a quiet setting sticks.
 
 export const VOLUME_KEY = 'wfn.volume';
+export const SOUND_KEY = 'wfn.sound'; // 'on' or 'off': the visitor's choice (default on, story 6.15)
+export const HINT_KEY = 'wfn.hintSeen';
+
+// The visitor's sound choice: true (on, the default) unless they turned it off.
+export function readSoundOn(storage) {
+  try { return storage?.getItem(SOUND_KEY) !== 'off'; } catch { return true; }
+}
+export function rememberSoundOn(storage, on) {
+  try { storage?.setItem(SOUND_KEY, on ? 'on' : 'off'); } catch { /* not remembered */ }
+}
 
 // The remembered level (0..1), or null. Storage can be missing or throw.
 export function readVolume(storage) {
@@ -28,6 +38,23 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
 
   const saved = readVolume(storage);
   if (saved !== null) A.master = saved;
+  // Sound is on by default (story 6.15, D-6.14). Browsers only let it play
+  // after the visitor's first click, tap or key, so it starts then.
+  A.enabled = readSoundOn(storage);
+  A.muted = false;
+  let started = false, startedAt = -1e9;
+  async function startOnGesture() {
+    if (started || !A.enabled) return;
+    // only events the browser counts as permission to play (a mouse press, the
+    // end of a touch, a key), else the start could stall and never retry
+    if (navigator.userActivation && !navigator.userActivation.isActive) return;
+    started = true;
+    startedAt = performance.now();
+    if (!(await turnOn())) started = false;
+    sync();
+    onChange();
+  }
+  for (const type of ['pointerdown', 'pointerup', 'touchend', 'keydown', 'click']) window.addEventListener(type, startOnGesture, { capture: true, passive: true });
 
   const isOn = () => A.enabled && !A.muted && A.master > 0;
   function sync() {
@@ -66,10 +93,13 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
   group.addEventListener('pointerdown', (e) => { lastPointer = e.pointerType; });
 
   btn.addEventListener('click', async () => {
-    if (isOn()) A.enabled = false;
+    // the click that started the sound just now isn't also a click to stop it
+    if (performance.now() - startedAt < 800) { sync(); return; }
+    if (isOn() && started) { A.enabled = false; rememberSoundOn(storage, false); }
     else {
       if (A.master <= 0) { A.master = 0.6; rememberVolume(storage, A.master); }
-      await turnOn();
+      started = true;
+      if (await turnOn()) rememberSoundOn(storage, true);
     }
     if (lastPointer === 'touch') open(3500);
     sync();
@@ -81,7 +111,7 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
     rememberVolume(storage, A.master);
     if (lastPointer === 'touch') open(3500);
     // raising the level while sound is off turns it on (the drag is a user gesture)
-    if (A.master > 0 && !(A.enabled && !A.muted)) await turnOn();
+    if (A.master > 0 && !(A.enabled && !A.muted && started)) { started = true; if (await turnOn()) rememberSoundOn(storage, true); }
     sync();
     onChange();
   });
@@ -90,7 +120,53 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
   document.addEventListener('pointerdown', (e) => { if (!group.contains(e.target)) group.classList.remove('open'); });
 
   sync();
-  return { sync };
+  return { sync, isPlaying: () => started && A.enabled && !A.muted };
+}
+
+// ---------------------------------------------------------------------------
+// First-visit hint (story 6.15): a small card beside the controls saying sound
+// is on and where to change the volume and time of day. Once per visitor; it
+// fades after a few seconds (paused while hovered or focused), or closes with
+// its close button or as soon as the controls are used.
+// ---------------------------------------------------------------------------
+export function initHint({ storage = safeLocalStorage(), isPlaying = () => false, delay = 1500, stay = 6000 } = {}) {
+  const el = document.getElementById('hint');
+  const controls = document.getElementById('controls');
+  if (!el) return;
+  let seen = false;
+  try { seen = storage?.getItem(HINT_KEY) === '1'; } catch { /* show it */ }
+  if (seen) return;
+  const body = el.querySelector('.hint-body');
+  let left = stay, timer = 0, last = 0, paused = false, open = false, used = false;
+  const markSeen = () => { try { storage?.setItem(HINT_KEY, '1'); } catch { /* shown again next time */ } };
+  const close = () => {
+    if (!open) { used = true; markSeen(); return; } // the controls were found before it showed: no need
+    open = false; clearInterval(timer);
+    el.classList.remove('show');
+    setTimeout(() => { el.hidden = true; }, 400);
+  };
+  setTimeout(() => {
+    if (used) return;
+    markSeen();
+    if (isPlaying()) body.textContent = 'Set the volume or time of day here.';
+    el.hidden = false;
+    requestAnimationFrame(() => el.classList.add('show'));
+    open = true; last = performance.now();
+    timer = setInterval(() => {
+      const now = performance.now();
+      if (!paused) left -= now - last;
+      last = now;
+      if (isPlaying()) body.textContent = 'Set the volume or time of day here.';
+      if (left <= 0) close();
+    }, 200);
+  }, delay);
+  el.querySelector('.hint-close').addEventListener('click', close);
+  el.addEventListener('pointerenter', () => { paused = true; });
+  el.addEventListener('pointerleave', () => { paused = false; });
+  el.addEventListener('focusin', () => { paused = true; });
+  el.addEventListener('focusout', () => { paused = false; });
+  controls?.addEventListener('pointerdown', close);
+  controls?.addEventListener('keydown', close);
 }
 
 function safeLocalStorage() {
