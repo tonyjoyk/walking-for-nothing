@@ -2,6 +2,8 @@
 //
 //   node scripts/build-audio.mjs          # all sources
 //   node scripts/build-audio.mjs rainSteady koel
+//   node scripts/build-audio.mjs --manifest-only   # rewrite manifest.json and the
+//                                                  # README credits, keep the audio files
 //
 // Reads audio/sources.json (what to use and how) and audio/sources.lock.json
 // (checksums), takes the originals from audio-src/ (git-ignored) and writes
@@ -14,6 +16,9 @@
 //   with short fades, each levelled to about -24 LUFS. Mono.
 // - Thunder: separate rolls found in the long recordings, cut with a soft
 //   start and a long tail, levelled to about -22 LUFS.
+// - Credits (story 6.4): every manifest entry carries title, recordist, URL,
+//   licence and an "edited" note; the build fails on a licence outside the
+//   allowlist (D-6.6) and rewrites the README's "Sound credits" block.
 // Requires ffmpeg with libopus and aac.
 
 import { spawnSync } from 'node:child_process';
@@ -21,6 +26,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSy
 import { createHash } from 'node:crypto';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ALLOWED_LICENCES as ALLOWED, checkManifest, withReadmeCredits } from '../src/audio/credits.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SR = 48000;
@@ -31,7 +37,6 @@ const BED_SECONDS = 75;        // loop length
 const BUDGET_BYTES = 6 * 1024 * 1024; // per format
 const EVENT_COUNT = { koel: 4, kingfisher: 3, crowsHouse: 3 };
 const THUNDER_COUNT = { thunderDistant: 5, thunderClose: 1 };
-const ALLOWED = ['CC0', 'CC BY 3.0', 'CC BY 4.0', 'CC BY-SA 4.0']; // D-6.6
 
 const db = (x) => 20 * Math.log10(Math.max(1e-12, x));
 const fromDb = (d) => Math.pow(10, d / 20);
@@ -193,7 +198,8 @@ function encode(pcm, ch, name, role) {
 // ---- main -----------------------------------------------------------------
 const { sources } = JSON.parse(readFileSync(join(root, 'audio/sources.json'), 'utf8'));
 const lock = JSON.parse(readFileSync(join(root, 'audio/sources.lock.json'), 'utf8')).files;
-const only = process.argv.slice(2);
+const manifestOnly = process.argv.includes('--manifest-only');
+const only = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 mkdirSync(OUT, { recursive: true });
 const manifestPath = join(OUT, 'manifest.json');
 const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : { sounds: {} };
@@ -213,20 +219,21 @@ for (const src of sources) {
     : src.role === 'thunder' ? buildThunder(src, pcm, ch, THUNDER_COUNT[src.id] || 4)
       : buildEvents(src, pcm, ch, EVENT_COUNT[src.id] || 3);
   // remove this id's old outputs, then write the new ones
-  for (const f of readdirSync(OUT)) if (f.startsWith(src.id + '.') || f.startsWith(src.id + '-')) unlinkSync(join(OUT, f));
+  if (!manifestOnly) for (const f of readdirSync(OUT)) if (f.startsWith(src.id + '.') || f.startsWith(src.id + '-')) unlinkSync(join(OUT, f));
   const files = built.clips.map((clip, n) => {
     const name = built.clips.length > 1 || src.role !== 'bed' ? `${src.id}-${n + 1}` : src.id;
     const extra = src.edits.gainDb || 0;
     const lv = level(clip.pcm, ch, TARGET[src.role] + extra);
-    encode(clip.pcm, ch, name, src.role);
+    if (!manifestOnly) encode(clip.pcm, ch, name, src.role);
     console.log(`${name.padEnd(28)} ${src.role.padEnd(7)} from ${clip.start.toFixed(1)}s, ${clip.length.toFixed(1)}s, ` +
       `${lv.I.toFixed(1)} -> ${lv.out.toFixed(1)} LUFS, peak ${lv.peak.toFixed(1)} dBFS`);
-    return { name, from: Number(clip.start.toFixed(2)), seconds: Number(clip.length.toFixed(3)), lufs: Number(lv.out.toFixed(1)) };
+    return { name, from: Number(clip.start.toFixed(2)), seconds: Number(clip.length.toFixed(3)), samples: clip.pcm.length / ch, lufs: Number(lv.out.toFixed(1)) };
   });
   manifest.sounds[src.id] = {
     role: src.role, scenes: src.scenes, channels: ch,
-    files: files.map((f) => ({ webm: `${f.name}.webm`, m4a: `${f.name}.m4a`, seconds: f.seconds, from: f.from, lufs: f.lufs })),
-    loop: src.role === 'bed' ? { start: 0, end: files[0].seconds } : null,
+    files: files.map((f) => ({ webm: `${f.name}.webm`, m4a: `${f.name}.m4a`, seconds: f.seconds, samples: f.samples, from: f.from, lufs: f.lufs })),
+    // the whole bed loops (its crossfade is baked in): seconds for reading, samples at sampleRate for playback
+    loop: src.role === 'bed' ? { start: 0, end: files[0].seconds, startSample: 0, endSample: files[0].samples } : null,
     credit: {
       title: src.title, recordist: src.recordist, url: src.url,
       licence: src.licence, edited: src.role === 'bed' ? 'trimmed, looped and levelled' : 'cut and levelled',
@@ -234,7 +241,12 @@ for (const src of sources) {
   };
 }
 
+const problems = checkManifest(manifest);
+if (problems.length) throw new Error('manifest.json:\n  ' + problems.join('\n  '));
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+const readmePath = join(root, 'README.md');
+writeFileSync(readmePath, withReadmeCredits(readFileSync(readmePath, 'utf8'), manifest));
+console.log('Wrote manifest.json and the README sound credits.');
 const size = (ext) => readdirSync(OUT).filter((f) => f.endsWith(ext)).reduce((a, f) => a + statSync(join(OUT, f)).size, 0);
 const webm = size('.webm'), m4a = size('.m4a');
 console.log(`\nOpus total ${(webm / 1048576).toFixed(2)} MB, AAC total ${(m4a / 1048576).toFixed(2)} MB (budget ${(BUDGET_BYTES / 1048576).toFixed(0)} MB per format)`);

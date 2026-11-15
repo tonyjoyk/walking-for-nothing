@@ -5,6 +5,7 @@ import { Scene } from './scene/Scene.js';
 import { SoundDirector } from './audio/index.js';
 import { createBubble } from './bubble.js';
 import { initSoundControl, initScenePicker, readSceneLock, initHint } from './controls/visitorControls.js';
+import { initCredits } from './credits.js';
 import './styles/main.css';
 
 p5.disableFriendlyErrors = true; // faster; the scene does its own validation
@@ -22,6 +23,7 @@ if (coarse || Math.min(window.innerWidth, window.innerHeight) < 600) config.play
 
 const scene = new Scene(config);
 const audio = new SoundDirector(config);
+const credits = initCredits(); // the one Credits link, bottom left (story 6.12)
 
 // ---------------------------------------------------------------------------
 // Opening scene. The first frame never waits. By opening.mode:
@@ -86,7 +88,7 @@ async function chooseOpening() {
     if (!weather) { weatherStatus.source = 'time of day (weather missing, off or stale)'; return; }
     const pick = chooseOpeningScene(weather, new Date());
     weatherStatus.source = `weather, observed ${weather.observedAt.toISOString().slice(11, 16)} UTC`;
-    document.getElementById('credit')?.removeAttribute('hidden'); // data used: credit it
+    credits.addWeather(); // data used: credit it in the Credits list (story 6.12)
     if (pick.scene !== scene.sceneName) openOn(pick.scene, pick.reason, false); // eases in
     else weatherStatus.detail = pick.reason;
   } catch (e) {

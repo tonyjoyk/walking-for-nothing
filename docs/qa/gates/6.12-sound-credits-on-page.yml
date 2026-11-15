@@ -1,0 +1,8 @@
+schema: 1
+story: '6.12'
+story_title: 'Sound credits on the page'
+gate: PASS
+status_reason: 'One quiet Credits button bottom left opens a list built from the manifest (plus Open-Meteo when live weather is used); old #credit link removed; keyboard and screen reader checked in the browser at desktop and phone sizes; 100 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []

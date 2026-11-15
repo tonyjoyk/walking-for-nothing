@@ -56,7 +56,14 @@
         <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></svg>
       </button>
     </div>
-    <a id="credit" class="credit" href="https://open-meteo.com/" target="_blank" rel="noopener" hidden>Weather: Open-Meteo</a>
+    <!-- The one quiet Credits link, bottom left (story 6.12, D-0.5): sounds
+         from public/audio/manifest.json, plus Open-Meteo while live weather is on -->
+    <div id="credits" class="credits">
+      <button id="credits-btn" class="credits-btn" type="button" aria-expanded="false" aria-controls="credits-list">Credits</button>
+      <section id="credits-list" class="credits-list" aria-labelledby="credits-btn" hidden>
+        <div class="credits-body"></div>
+      </section>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
