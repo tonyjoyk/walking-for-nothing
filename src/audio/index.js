@@ -28,6 +28,10 @@ export class SoundDirector {
     this.beds = {};       // id -> { src, gain, silentFor, startedAt }
     this.duckUntil = 0;   // birds duck under thunder
     this.playing = [];    // readout for the dev panel
+    // Thunder runs with sound on or off, so lightning shows either way
+    // (story 6.11, D-6.16). File counts arrive with the manifest.
+    this.thunder = new ThunderScheduler({ files: { far: 0, close: 0 } });
+    this.onFlash = null;  // (strength 0–1) => void, set by main.js
   }
 
   // Must be called from a user gesture (browser autoplay rules).
@@ -65,7 +69,7 @@ export class SoundDirector {
     this.loader.loadManifest().then(() => {
       const c = this.loader.counts();
       this.events = new EventScheduler({ files: c });
-      this.thunder = new ThunderScheduler({ files: { far: c[AUDIO_THUNDER.far] || 0, close: c[AUDIO_THUNDER.close] || 0 } });
+      this.thunder.files = { far: c[AUDIO_THUNDER.far] || 0, close: c[AUDIO_THUNDER.close] || 0 };
       this.loader.loadFirst(this.idsFor(this.sceneNow || 'sunny'));
     });
   }
@@ -81,6 +85,7 @@ export class SoundDirector {
   // Called every frame with the eased scene parameters and the scene name.
   update(P, dt, sceneName = 'sunny') {
     this.sceneNow = sceneName; // known before sound starts, so its files load first
+    this.stepStorm(sceneName, dt);
     if (!this.ready || !this.ctx) return;
     this.tick += dt;
     if (this.tick < 0.1) return; // automation only needs ~10 updates/s
@@ -106,7 +111,20 @@ export class SoundDirector {
 
     if (!on || !this.events) return;
     for (const ev of this.events.step(sceneName, step, A.eventDensity)) this.playEvent(ev);
-    for (const roll of this.thunder.step(sceneName, step)) this.playThunder(roll);
+  }
+
+  // Thunder and lightning, every frame. A flash goes to the scene; a roll
+  // plays only while sound is on.
+  stepStorm(sceneName, dt) {
+    this.storm(this.thunder.step(sceneName, dt, { lightning: this.config.audio.lightning }));
+  }
+
+  storm(happenings) {
+    const A = this.config.audio;
+    for (const h of happenings) {
+      if (h.kind === 'flash') this.onFlash?.(h.strength);
+      else if (this.ready && this.ctx && this.loader?.manifest && A.enabled && !A.muted) this.playThunder(h);
+    }
   }
 
   layerVolume(id) {
@@ -202,7 +220,7 @@ export class SoundDirector {
 
   // Dev panel buttons.
   birdNow() { const ev = this.events?.make(this.scene); if (ev) this.playEvent(ev); }
-  thunderNow() { const r = this.thunder?.roll(); if (r) this.playThunder(r); }
+  thunderNow() { this.storm(this.thunder.strike(undefined, { lightning: this.config.audio.lightning }).now); }
   status() {
     if (!this.ready) return 'off';
     return [...this.playing, this.lastEvent ? `last: ${this.lastEvent}` : ''].filter(Boolean).join('\n') || 'silent';

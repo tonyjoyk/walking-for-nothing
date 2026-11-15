@@ -176,6 +176,7 @@ export function createDefaultConfig() {
       enabled: false, muted: false, master: 0.6, beds: 0.9, crossfadeSeconds: 8,
       windOn: true, wind: 1, rainOn: true, rain: 1, birdsOn: true, birds: 0.7, eventDensity: 1,
       thunderOn: true, thunder: 0.9,
+      lightning: true, // a soft sky flash before each roll (story 6.11, D-6.16)
     },
   };
 }

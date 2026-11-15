@@ -5,7 +5,7 @@ import {
   SCENE_W, SCENE_H, HORIZON_Y, FIELD_TOP, GROUND_Y, WRAP_MARGIN,
   hexToRgb, lerp, mod, clamp, css, mix, shade,
 } from './util.js';
-import { drawSky, drawSun, drawStars, createStars } from './sky.js';
+import { drawSky, drawSun, drawStars, createStars, drawFlash } from './sky.js';
 import { createClouds, drawClouds } from './clouds.js';
 import { createTerrain, drawFarMountains, drawMidMountains, drawNearHills, drawTreeline, drawPalms } from './terrain.js';
 import { createField, drawFieldBase, drawBand, drawMassCached } from './field.js';
@@ -21,6 +21,14 @@ const MIN_VIEW_W = 760;
 // ahead, so at most STOP_LEAD + 0.5 of a cycle (two feet-down moments a cycle).
 const STOP_LEAD = 0.1;
 const STOP_REACH = STOP_LEAD + 0.55; // how far behind him the hover box reaches while greeting
+
+// Lightning (story 6.11, D-6.16; UX spec "Flashes"): a soft brightening of
+// the sky that rises and falls (each at least 0.15 s), at most one a second.
+// Reduced motion: much fainter and slower.
+export const FLASH = {
+  rise: 0.18, fall: 0.9, minGap: 1,
+  reduced: { scale: 0.3, rise: 0.45, fall: 1.6 },
+};
 
 const QUALITY = {
   low: { density: 1, rainMax: 300, grain: false, grassScale: 0.55 },
@@ -58,6 +66,7 @@ export class Scene {
     this.needsManPlacement = true;
     this.onBirdsEnter = null;
     this.onSceneChange = null; // (name) => void, whenever the scene on screen changes
+    this.lightning = null;     // the flash now: { t, strength, rise, fall, x }
     this.buildWorld();
   }
 
@@ -114,6 +123,28 @@ export class Scene {
   // A scene change is still easing in (the scene picker waits for it, story 1.2).
   get transitioning() { return (this.sceneAge ?? Infinity) < this.config.playback.transitionSeconds; }
 
+  // A lightning flash, strength 0–1 (near strikes are brighter). Ignored if
+  // the last one began under FLASH.minGap seconds ago, so it can never strobe.
+  flash(strength = 1, x = Math.random()) {
+    if (this.lightning && this.lightning.t < FLASH.minGap) return false;
+    const r = this.config.playback.reducedMotion ? FLASH.reduced : null;
+    this.lightning = {
+      t: 0, strength: clamp(strength, 0, 1) * (r ? r.scale : 1),
+      rise: r ? r.rise : FLASH.rise, fall: r ? r.fall : FLASH.fall, x: clamp(x, 0, 1),
+    };
+    return true;
+  }
+
+  // How bright the flash is now (0 when there is none): a smooth rise, then
+  // a smooth, slower fall.
+  flashLevel() {
+    const f = this.lightning;
+    if (!f) return 0;
+    const smooth = (u) => { u = clamp(u, 0, 1); return u * u * (3 - 2 * u); };
+    const env = f.t < f.rise ? smooth(f.t / f.rise) : 1 - smooth((f.t - f.rise) / f.fall);
+    return f.strength * env;
+  }
+
   restartCharacter() { this.needsManPlacement = true; }
   callDog() { this.dog.callNow = true; }
   spawnBirds() { this.birds.spawnNow = true; }
@@ -139,6 +170,12 @@ export class Scene {
       this.massCache = { far: {}, mid: {}, fore: {} };
     }
     if (rawDt > 0) this.fps = lerp(this.fps, 1 / rawDt, 0.05);
+    // lightning keeps real time (its roll is timed in seconds), even when paused
+    if (this.lightning) {
+      this.lightning.t += Math.max(0, rawDt || 0);
+      const f = this.lightning;
+      if (f.t >= f.rise + f.fall && f.t >= FLASH.minGap) this.lightning = null;
+    }
 
     // Parameter easing runs even when paused, so tuning stays live.
     const T = cfg.playback.transitionSeconds;
@@ -502,6 +539,7 @@ export class Scene {
     drawStars(ctx, v, P, this.stars, this.time);
     drawSun(ctx, v, P);
     drawClouds(ctx, v, P, this.clouds, this.cloudOffsets, cfg.clouds.parallax);
+    drawFlash(ctx, v, this.flashLevel(), this.lightning?.x ?? 0.5); // behind the hills
 
     // land, back to front
     drawFarMountains(ctx, P, this.terrain);

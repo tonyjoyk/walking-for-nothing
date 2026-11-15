@@ -1,0 +1,8 @@
+schema: 1
+story: '6.11'
+story_title: 'Lightning before thunder'
+gate: PASS
+status_reason: 'Flash precedes each roll by km / 0.343 s, one per roll, at most one a second; soft sky-only brightening with 0.18 s rise and 0.9 s fall; reduced motion at 30% and slower; works with sound off; config switch; 95 tests and build pass; frames captured in the rain scene.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []

@@ -27,7 +27,7 @@ openly licensed and credited.
 | [6.8](../stories/6.8.bird-events-and-flocks.md) | Bird events and flocks | Claude |
 | [6.9](../stories/6.9.thunder.md) | Thunder in the rain | Claude |
 | [6.10](../stories/6.10.sound-controls.md) | Sound controls in the dev panel | Claude |
-| [6.11](../stories/6.11.lightning.md) | Lightning before thunder (P1) | Claude |
+| [6.11](../stories/6.11.lightning.md) | Lightning before thunder (P1) (D-6.16), Done | Claude (Lightning chat) |
 | [6.12](../stories/6.12.sound-credits-on-page.md) | Sound credits on the page | Claude |
 | [6.13](../stories/6.13.listening-qa.md) | Listening QA and final balance | Tony with Claude |
 | [6.14](../stories/6.14.volume-slider.md) | A volume slider for visitors (D-6.13), Done | Claude (Greeting review chat) |
