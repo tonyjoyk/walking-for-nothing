@@ -212,7 +212,13 @@ export function createPanel(app) {
   bind(fI, A, 'crossfadeSeconds', 'audio.crossfadeSeconds', { label: 'crossfade (s)' });
   fI.addBinding(A, 'thunderOn', { label: 'thunder' });
   bind(fI, A, 'thunder', 'audio.thunder', { label: 'thunder volume' });
+  bind(fI, A, 'thunderMean', 'audio.thunderMean', { label: 'how often (s)' });
+  bind(fI, A, 'thunderMinGap', 'audio.thunderMinGap', { label: 'min gap (s)' });
+  bind(fI, A, 'thunderNearKm', 'audio.thunderNearKm', { label: 'nearest (km)' });
+  bind(fI, A, 'thunderFarKm', 'audio.thunderFarKm', { label: 'farthest (km)' });
+  fI.addBinding(A, 'thunderClose', { label: 'close roll (<5 km)' });
   fI.addBinding(A, 'lightning', { label: 'lightning' });
+  bind(fI, A, 'flashStrength', 'audio.flashStrength', { label: 'flash strength' });
   fI.addButton({ title: 'Bird now' }).on('click', () => audio.birdNow());
   fI.addButton({ title: 'Thunder now' }).on('click', () => audio.thunderNow());
   const soundNow = { playing: '' };
