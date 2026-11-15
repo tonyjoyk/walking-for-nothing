@@ -32,7 +32,7 @@ export class Dog {
       if (c.crossed && this.firstDone) this.crossings++;
       const due = this.callNow ||
         (c.allowed && (!this.firstDone ? this.timer >= cfg.firstVisitDelay : this.crossings >= cfg.aloneCrossings));
-      if (due && (this.callNow || c.allowed)) this.tryStart(c);
+      if (due && (this.callNow || c.allowed)) this.tryStart(c, !this.firstDone);
       return;
     }
 
@@ -48,10 +48,11 @@ export class Dog {
         if (Math.abs(gap) < 6) { this.state = 'together'; this.crossings = 0; this.togetherD = 0; }
       } else {
         gaitTarget = Math.abs(gap) > 30 ? 0.6 : 0;
-        // "one crossing together" = walking one screen-width side by side,
-        // however far across the screen she joined him
-        this.togetherD += c.manSpeed * dt;
-        if (!c.allowed || this.togetherD >= cfg.togetherCrossings * c.trackLen * 0.85) this.state = 'departing';
+        // she walks on with him into the next scene (togetherCrossings scene
+        // changes) and leaves once he is past the middle of it, wherever she
+        // joined him; a scene change alone never sends her away (D-3.5)
+        if (c.crossed) this.crossings++;
+        if (this.crossings >= cfg.togetherCrossings && c.manX >= c.view.x0 + c.view.w * 0.55) this.state = 'departing';
       }
     } else { // departing: trot on ahead and leave the frame
       desired = c.manSpeed + cfg.approachSpeed * 0.75;
@@ -94,11 +95,14 @@ export class Dog {
     this.lastX = x;
   }
 
-  tryStart(c) {
+  tryStart(c, first = false) {
     const { view, manX } = c;
     const left = view.x0;
-    // wait until the man is well inside the frame so she can come from behind
-    if (manX < left + 230 || manX > left + view.w * 0.62) return;
+    // wait until the man is well inside the frame so she can come from behind;
+    // her first visit waits until he is past firstVisitFrom of the width (D-3.5)
+    const from = first ? left + view.w * (c.cfg.firstVisitFrom ?? 0) : left + 230;
+    const to = first ? left + view.w * 0.8 : left + view.w * 0.62;
+    if (manX < from || manX > to) return;
     const startX = left - 120;
     this.d = c.manD - (manX - startX);
     this.speed = c.manSpeed + c.cfg.approachSpeed * 0.8;

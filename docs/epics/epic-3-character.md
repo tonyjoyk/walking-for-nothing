@@ -5,12 +5,13 @@
 ## Requirements and decisions
 
 - Research: [character study](../ux/research/character-study.md), [visual critique](../ux/research/visual-critique.md).
-- Decisions D-3.1 to D-3.4.
+- Decisions D-3.1 to D-3.5.
 
 ## Stories
 
 | # | Title | Link | Status |
 | --- | --- | --- | --- |
 | (pre-story) | Feet planting, gait data, pendulum arms, cloth mundu, head and arms, look controls | commits 084ab98 to 7bfd8ed | Done |
+| 3.1 | Juhu in the first scene and in every scene | [3.1](../stories/3.1.juhu-every-scene.md) | Done |
 
-Next story: **3.1**. Register new stories in [`docs/README.md`](../README.md) before writing them.
+Next story: **3.2**. Register new stories in [`docs/README.md`](../README.md) before writing them.

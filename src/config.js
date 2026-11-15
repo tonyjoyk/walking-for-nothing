@@ -144,8 +144,13 @@ export function createDefaultConfig() {
     },
     dog: {
       enabled: true,
-      presets: { sunny: true, twilight: false, night: false, rain: false, wind: false, dawn: true },
-      aloneCrossings: 2, togetherCrossings: 1, firstVisitDelay: 20,
+      // Juhu's rhythm (docs/stories/3.1.juhu-every-scene.md, D-3.5): she joins
+      // him in the first scene once he has walked firstVisitDelay seconds and
+      // is past firstVisitFrom of the width, walks on with him into the next
+      // scene, leaves, and returns after aloneCrossings more crossings (so she
+      // skips two scenes). Every scene allows her.
+      presets: { sunny: true, twilight: true, night: true, rain: true, wind: true, dawn: true },
+      aloneCrossings: 3, togetherCrossings: 1, firstVisitDelay: 6, firstVisitFrom: 0.5,
       approachSpeed: 120, easeSeconds: 2.5, spacing: 108, scale: 1,
     },
     birds: {
@@ -199,7 +204,7 @@ export const RANGES = {
   'character.armSwing': [0, 2, 0.01], 'character.fabric': [0, 2.5, 0.01],
   'character.groundOffset': [-20, 20, 0.5], 'character.clothStiffness': [0.2, 2, 0.01],
   'character.build': [0.85, 1.2, 0.01], 'character.shirtLoose': [0.5, 1.6, 0.01],
-  'dog.aloneCrossings': [0, 8, 1], 'dog.togetherCrossings': [1, 6, 1], 'dog.firstVisitDelay': [0, 180, 1],
+  'dog.aloneCrossings': [0, 8, 1], 'dog.togetherCrossings': [1, 6, 1], 'dog.firstVisitDelay': [0, 180, 1], 'dog.firstVisitFrom': [0, 0.8, 0.01],
   'dog.approachSpeed': [20, 220, 1], 'dog.easeSeconds': [0.3, 8, 0.1], 'dog.spacing': [40, 220, 1],
   'dog.scale': [0.6, 1.4, 0.01],
   'birds.flockSize': [1, 12, 1], 'birds.interval': [5, 180, 1], 'birds.speed': [20, 180, 1],

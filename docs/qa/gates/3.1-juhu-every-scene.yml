@@ -1,0 +1,8 @@
+schema: 1
+story: '3.1'
+story_title: 'Juhu in the first scene and in every scene'
+gate: PASS
+status_reason: 'Rhythm verified from all six openings by test; colours checked in six scene captures; 81 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []

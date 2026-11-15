@@ -312,6 +312,24 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   - Border colour dark green (changed 17 Oct, from gold kasavu).
 - **Status:** in force.
 
+### D-3.5 Juhu joins in the first scene, in every scene, every fourth scene
+- **Date:** 15 Nov 2026. **Story:** [3.1](../stories/3.1.juhu-every-scene.md).
+- **Decision:**
+  - She's allowed in every scene. Her colours already follow each scene's
+    light, the same tint and brightness as the man.
+  - **First visit:** at least `firstVisitDelay` (6 s) after load, once he's
+    past `firstVisitFrom` (50%) of the width. She trots in from the left,
+    joins him in the first scene and walks on with him into the second.
+  - **Leaving:** after `togetherCrossings` (1) scene change, once he's past
+    the middle of the screen. A scene change alone never sends her away.
+  - **Returning:** after `aloneCrossings` (3) crossings. The rhythm is with
+    him in scenes 1–2, alone in 3–4, with him in 5–6, and so on.
+- **Why:** the owner wants visitors to meet Juhu straight away, and in any
+  scene.
+- **Supersedes:** "Dawn and Daylight only"; the 20 s first visit; "2
+  crossings alone"; and leaving after one screen-width together.
+- **Status:** in force.
+
 ## Epic 4: Landscape and atmosphere (D-4)
 
 ### D-4.1 Mountains follow the six-scene reference

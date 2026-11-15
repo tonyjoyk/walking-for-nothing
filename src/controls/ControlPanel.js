@@ -162,6 +162,7 @@ export function createPanel(app) {
   bind(fF, D, 'aloneCrossings', 'dog.aloneCrossings', { label: 'crossings alone' });
   bind(fF, D, 'togetherCrossings', 'dog.togetherCrossings', { label: 'crossings together' });
   bind(fF, D, 'firstVisitDelay', 'dog.firstVisitDelay', { label: 'first visit (s)' });
+  bind(fF, D, 'firstVisitFrom', 'dog.firstVisitFrom', { label: 'first visit from (width)' });
   bind(fF, D, 'approachSpeed', 'dog.approachSpeed', { label: 'catch-up speed' });
   bind(fF, D, 'easeSeconds', 'dog.easeSeconds', { label: 'trot to walk (s)' });
   bind(fF, D, 'spacing', 'dog.spacing', { label: 'spacing' });

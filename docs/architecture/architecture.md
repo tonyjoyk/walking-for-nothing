@@ -100,6 +100,8 @@ scripts/      fetch-weather.mjs: Open-Meteo to weather.json (CI; paused feature)
 - **Arms:** driven, damped pendulums.
 - **Mundu:** a Verlet cloth with leg-capsule collision. The drawn
   construction (border, wrap, waistband) is built from the cloth points.
+- **Juhu:** `dog.js`, a state machine (absent → approaching → together →
+  departing). Her visits are counted in scene crossings (D-3.5).
 
 ## Epic 4: Landscape and atmosphere
 
