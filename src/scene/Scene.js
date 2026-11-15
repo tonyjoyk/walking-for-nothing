@@ -81,6 +81,7 @@ export class Scene {
 
   // ---- parameters -------------------------------------------------------
   snapParams() {
+    this.sceneAge = Infinity; // a snapped scene has no transition to wait for
     for (const [k, v] of Object.entries(this.config.scene)) {
       this.P[k] = typeof v === 'string' ? hexToRgb(v) : v;
     }
@@ -106,8 +107,12 @@ export class Scene {
     }
     this.sceneName = name;
     this.crossingsInScene = 0;
+    this.sceneAge = 0;
     this.onSceneChange?.(name);
   }
+
+  // A scene change is still easing in (the scene picker waits for it, story 1.2).
+  get transitioning() { return (this.sceneAge ?? Infinity) < this.config.playback.transitionSeconds; }
 
   restartCharacter() { this.needsManPlacement = true; }
   callDog() { this.dog.callNow = true; }
@@ -123,8 +128,10 @@ export class Scene {
       this.applyPreset(cfg.activePreset);
       this.sceneName = cfg.activePreset;
       this.crossingsInScene = 0;
+      this.sceneAge = 0;
       this.onSceneChange?.(this.sceneName);
     }
+    this.sceneAge = (this.sceneAge ?? Infinity) + Math.max(0, rawDt || 0);
     if (Math.round(cfg.grass.seed) !== this.seed) this.buildWorld();
     else if (cfg.grass.clumping !== this.fieldClumping) {
       this.field = createField(this.seed, cfg.grass.clumping);

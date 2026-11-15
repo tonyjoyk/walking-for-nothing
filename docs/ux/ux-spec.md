@@ -6,7 +6,9 @@
 ## Principles
 
 1. **The scene is the interface.** No menus, text or buttons, except the
-   sound toggle and a credit line when third-party data is shown.
+   sound toggle and a credit line when third-party data is shown. (Since
+   15 Nov 2026 the controls are sound, volume and time of day, in one quiet
+   glass stack in the bottom-right corner: D-6.13, D-1.5.)
 2. **Calm over spectacle.** Nothing snaps; every change eases over at least
    about 0.8 s.
 3. **Discovered, not announced.** Interactions (the greeting) are found by

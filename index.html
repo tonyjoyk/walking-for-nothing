@@ -27,9 +27,15 @@
       <p>The internet often feels rushed and demanding. So I created a digital space where we can slow down and feel calm.</p>
       <p class="work"><a href="https://tonyjoyk.github.io/tony-joy-portfolio/" target="_blank" rel="noopener">View my work</a></p>
     </div>
-    <!-- Visitor controls, bottom right (story 6.14): sound on/off, and a volume
-         slider that rises above it on hover, focus or tap -->
-    <div id="sound-ctl" class="ctl-stack">
+    <!-- Visitor controls, bottom right: the time-of-day picker (story 1.2)
+         above the sound button, whose volume slider slides out beside it on
+         hover, focus or tap (story 6.14) -->
+    <div id="controls" class="ctl-stack">
+    <div id="scene-ctl" class="scene-ctl">
+      <div id="scene-list" class="scene-list" role="group" aria-label="Time of day"></div>
+      <button id="scene-btn" class="ctl" type="button" aria-expanded="false" aria-controls="scene-list" aria-label="Time of day"></button>
+    </div>
+    <div id="sound-ctl" class="sound-ctl">
       <div class="vol">
         <input id="volume" type="range" min="0" max="100" step="1" value="60" aria-label="Volume" aria-valuetext="60%" />
       </div>
@@ -40,6 +46,7 @@
           <path class="mute" d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
         </svg>
       </button>
+    </div>
     </div>
     <a id="credit" class="credit" href="https://open-meteo.com/" target="_blank" rel="noopener" hidden>Weather: Open-Meteo</a>
     <script type="module" src="/src/main.js"></script>

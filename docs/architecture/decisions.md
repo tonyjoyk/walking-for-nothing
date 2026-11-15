@@ -116,6 +116,31 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
 - **Supersedes:** "open on the weather" (D-1.1) as the default.
 - **Status:** in force.
 
+### D-1.5 A time-of-day picker for visitors
+- **Date:** 15 Nov 2026. **Story:** [1.2](../stories/1.2.scene-picker.md).
+- **Decision:**
+  - A round glass button above the sound button shows the current scene's
+    icon. A click or tap opens six minimal line icons: Dawn, Day, Windy,
+    Rain, Sunset, Night.
+    - The current one is shown as selected.
+    - All six are disabled while a scene change is still easing in
+      (`transitionSeconds`, 4 s).
+    - Escape or a click elsewhere closes it, and so does picking a scene.
+  - Picking a scene calls `scene.applyScene`, so the change eases in and is
+    remembered for the next reload. Crossings carry on through the cycle
+    from there.
+  - **Mobile:** every button is a 44 px target. The six open upwards, or
+    leftwards as a row when the screen is short (a phone on its side, 520 px
+    tall or less).
+  - **Placement:** because this button sits above the speaker, the volume
+    slider (D-6.13) slides out to the left of the speaker as a horizontal
+    pill, rather than rising above it.
+- **Why:** the owner wants visitors to be able to choose the time of day.
+- **Supersedes:** UX principle 1's "no buttons except the sound toggle"
+  (the controls are now sound and time of day), and D-6.13's slider
+  placement.
+- **Status:** in force.
+
 ## Epic 2: The greeting (D-2)
 
 ### D-2.1 The turn is a morph of the profile rig, not a second drawing
@@ -487,4 +512,5 @@ Added 20 Oct 2026 by the audio chat. Full text:
   loud.
 - **Supersedes:** the audio PRD's out-of-scope item "a sound settings UI
   for visitors beyond the existing on/off button".
-- **Status:** in force.
+- **Status:** in force. Placement amended by D-1.5: the slider now slides
+  out beside the speaker.

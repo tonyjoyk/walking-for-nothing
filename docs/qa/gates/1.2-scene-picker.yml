@@ -1,0 +1,8 @@
+schema: 1
+story: '1.2'
+story_title: 'A time-of-day picker for visitors'
+gate: PASS
+status_reason: 'Picker verified with real input at desktop, phone portrait and phone landscape sizes; disabled during transitions; volume pill no longer overlaps; 85 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []

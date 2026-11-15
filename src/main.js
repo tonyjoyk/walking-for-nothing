@@ -4,7 +4,7 @@ import { chooseOpeningScene, validateWeather, SCENE_NAMES, chooseShuffleScene, r
 import { Scene } from './scene/Scene.js';
 import { SoundDirector } from './audio/index.js';
 import { createBubble } from './bubble.js';
-import { initSoundControl } from './controls/visitorControls.js';
+import { initSoundControl, initScenePicker } from './controls/visitorControls.js';
 import './styles/main.css';
 
 p5.disableFriendlyErrors = true; // faster; the scene does its own validation
@@ -129,6 +129,7 @@ new p5((p) => {
     scene.update(dt);
     scene.render(p.drawingContext, p.width, p.height, p.pixelDensity());
     updateBubble(dt);
+    scenePicker.update();
     // minimal hand cursor while the pointer is on the man himself (D-2.9)
     const onMan = !!scene.pointer && scene.hitMan(scene.pointer.x, scene.pointer.y, scene.greeting.active, false);
     if (onMan !== cursorOnMan) { cursorOnMan = onMan; document.documentElement.classList.toggle('on-man', onMan); }
@@ -187,6 +188,8 @@ document.addEventListener('visibilitychange', () => {
 // starts after a tap or click on them (browser autoplay rules).
 const soundCtl = initSoundControl({ config, audio, onChange: () => app.onAudioChange?.() });
 const syncSoundButton = soundCtl.sync;
+// the time-of-day picker above it (story 1.2)
+const scenePicker = initScenePicker({ scene, config });
 
 const app = { config, scene, audio, syncSoundButton, onAudioChange: null, weatherStatus, chooseOpening };
 window.__landscape = app; // handy in the console while tuning

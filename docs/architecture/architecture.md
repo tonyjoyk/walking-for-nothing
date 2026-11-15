@@ -53,6 +53,10 @@ scripts/      fetch-weather.mjs: Open-Meteo to weather.json (CI; paused feature)
 
 ## Epic 1: Opening and journey
 
+- **Time-of-day picker (D-1.5):** `initScenePicker` in
+  `src/controls/visitorControls.js`. It's updated every frame from
+  `scene.sceneName` and `scene.transitioning`; picking calls
+  `scene.applyScene`.
 - **`chooseOpening()` in `main.js`:**
   - A forced scene comes first (`?weather=` or the dev panel).
   - Otherwise, by `opening.mode`: `shuffle` (default), `weather` (paused,
