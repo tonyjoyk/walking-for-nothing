@@ -26,7 +26,10 @@ export function createPanel(app) {
   // A. Presets and playback --------------------------------------------
   const fA = pane.addFolder({ title: 'Presets and playback' });
   fA.addBinding(config, 'activePreset', { label: 'scene', options: presetOptions })
-    .on('change', () => { scene.applyPreset(config.activePreset); pane.refresh(); });
+    // applyScene, not applyPreset: it also sets the scene's name, which the sound,
+    // the visitor's scene picker and the journey follow (applyPreset changed the
+    // picture only, so the sound stayed on the old scene)
+    .on('change', () => { scene.applyScene(config.activePreset); pane.refresh(); });
   fA.addBinding(config.playback, 'playing', { label: 'play' });
   bind(fA, config.playback, 'transitionSeconds', 'playback.transitionSeconds', { label: 'transition (s)' });
   bind(fA, config.playback, 'speed', 'playback.speed', { label: 'speed' });

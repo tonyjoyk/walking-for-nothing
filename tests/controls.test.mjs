@@ -101,3 +101,16 @@ test('6.15: the hint is a polite status card with a labelled close button, hidde
   assert.match(html, /<p class="hint-title">Sound is on<\/p>/);
   assert.match(html, /<button class="hint-close" type="button" aria-label="Dismiss">/);
 });
+
+// The dev panel's scene dropdown now goes through applyScene, so the sound follows it.
+test('dev panel: changing the scene updates the scene name the sound follows', async () => {
+  const { createDefaultConfig } = await import('../src/config.js');
+  const { Scene } = await import('../src/scene/Scene.js');
+  const cfg = createDefaultConfig();
+  const s = new Scene(cfg); s.computeView(1280, 720); s.update(1 / 60);
+  s.applyScene('sunny'); s.update(1 / 60);
+  cfg.activePreset = 'night'; s.applyScene(cfg.activePreset); s.update(1 / 60);
+  assert.equal(s.sceneName, 'night');
+  const src = readFileSync(new URL('../src/controls/ControlPanel.js', import.meta.url), 'utf8');
+  assert.match(src, /\.on\('change', \(\) => \{ scene\.applyScene\(config\.activePreset\)/);
+});
