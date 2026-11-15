@@ -165,8 +165,12 @@ export function initHint({ storage = safeLocalStorage(), isPlaying = () => false
   el.addEventListener('pointerleave', () => { paused = false; });
   el.addEventListener('focusin', () => { paused = true; });
   el.addEventListener('focusout', () => { paused = false; });
-  controls?.addEventListener('pointerdown', close);
-  controls?.addEventListener('keydown', close);
+  // using the controls, or opening the Credits list (story 6.12), closes it:
+  // on a phone the Credits list would otherwise cover the card
+  for (const el2 of [controls, document.getElementById('credits')]) {
+    el2?.addEventListener('pointerdown', close);
+    el2?.addEventListener('keydown', close);
+  }
 }
 
 function safeLocalStorage() {
