@@ -1,0 +1,8 @@
+schema: 1
+story: '2.10'
+story_title: "The hand cursor didn't show when the pointer came to rest (bug)"
+gate: PASS
+status_reason: 'Not overwritten; timing cause proven (frame-only toggle). Now toggled in the pointer handler too; verified with the animation loop stopped.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []
