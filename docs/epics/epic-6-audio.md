@@ -29,7 +29,7 @@ openly licensed and credited.
 | [6.10](../stories/6.10.sound-controls.md) | Sound controls in the dev panel | Claude |
 | [6.11](../stories/6.11.lightning.md) | Lightning before thunder (P1) (D-6.16), Done | Claude (Lightning chat) |
 | [6.12](../stories/6.12.sound-credits-on-page.md) | Sound credits on the page (D-6.15), Done | Claude (Sound credits chat) |
-| [6.13](../stories/6.13.listening-qa.md) | Listening QA and final balance | Tony with Claude |
+| [6.13](../stories/6.13.listening-qa.md) | Listening QA and final balance, Approved (ready for the listening session) | Tony with Claude |
 | [6.14](../stories/6.14.volume-slider.md) | A volume slider for visitors (D-6.13), Done | Claude (Greeting review chat) |
 | [6.15](../stories/6.15.sound-on-and-first-visit-hint.md) | Sound on by default, first-visit hint (D-6.14), Done | Claude (Greeting review chat) |
 | [6.16](../stories/6.16.sound-only-on-the-page.md) | Sound only while the visitor is on the page (D-6.17), Done | Claude (Greeting review chat) |
