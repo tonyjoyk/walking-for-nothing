@@ -33,6 +33,10 @@ export function choosePlate(px) {
 }
 
 export function createBubble(el, scene, canvas) {
+  // The bubble starts `hidden` in index.html, so it can't flash before the
+  // stylesheet arrives (story 2.8). The styles are in place by now, so it
+  // starts from its styled, invisible state and no fade-out plays.
+  el.hidden = false;
   let shown = false, fading = 0; // seconds of fade-out left
   let sinceSample = Infinity;
   const probe = document.createElement('canvas');

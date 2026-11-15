@@ -1,0 +1,8 @@
+schema: 1
+story: '2.8'
+story_title: 'The bubble flashed on page load (bug)'
+gate: PASS
+status_reason: 'Bubble starts hidden in the HTML and is revealed by bubble.js once styles are loaded; never drawn on load in dev or live; greeting unchanged.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []
