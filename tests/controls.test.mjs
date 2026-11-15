@@ -93,13 +93,26 @@ test('6.15: sound is on unless the visitor turned it off; storage problems never
   assert.equal(readSoundOn(null), true);
 });
 
-test('6.15: the hint is a polite status card with a labelled close button, hidden until shown', () => {
+// Story 6.19 (D-6.20): the speaker shows off until sound plays; a small cue invites a tap.
+test('6.19: the speaker starts off, and the sound cue is a hidden polite status pill with no close button', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  const tag = html.match(/<div id="hint"[^>]*>/)[0];
+  assert.match(html, /<button id="sound" class="ctl sound" type="button" aria-pressed="false" aria-label="Turn sound on">/);
+  const tag = html.match(/<div id="sound-cue"[^>]*>/)[0];
   assert.match(tag, /role="status"/);
   assert.match(tag, /\shidden(\s|>)/);
-  assert.match(html, /<p class="hint-title">Sound is on<\/p>/);
-  assert.match(html, /<button class="hint-close" type="button" aria-label="Dismiss">/);
+  assert.doesNotMatch(html, /id="hint"|hint-close/);
+  const cue = html.slice(html.indexOf('<div id="sound-cue"'), html.indexOf('</div>', html.indexOf('<div id="sound-cue"')));
+  assert.doesNotMatch(cue, /<button/);
+});
+
+test('6.19: the sound shows off until it really plays, and the cue wording follows the pointer', async () => {
+  const { cueText } = await import('../src/controls/visitorControls.js');
+  assert.equal(cueText(true), 'Click for sound');
+  assert.equal(cueText(false), 'Tap for sound');
+  const src = readFileSync(new URL('../src/controls/visitorControls.js', import.meta.url), 'utf8');
+  assert.match(src, /let wanted = readSoundOn\(storage\);\s*A\.enabled = false;/, 'off until it starts');
+  assert.match(src, /const isOn = \(\) => started && A\.enabled/, 'the speaker shows on only once started');
+  assert.match(src, /if \(started \|\| !wanted\) return;/, 'a remembered "off" keeps clicks on the page silent');
 });
 
 // The dev panel's scene dropdown now goes through applyScene, so the sound follows it.

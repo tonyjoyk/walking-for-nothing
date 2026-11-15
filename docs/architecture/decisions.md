@@ -352,6 +352,16 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   spec's non-goal "Juhu greeting the visitor".
 - **Status:** in force.
 
+### D-2.10 The bubble holds 6 s after its reveal
+- **Date:** 15 Nov 2026. **Story:** [2.11](../stories/2.11.longer-bubble-hold.md).
+- **Decision (owner):** `readSeconds` is 6 (was 4), so the bubble stays
+  about 7 s on screen in all before he turns back. It still pauses while
+  the cursor is on the bubble.
+- **Why:** the owner found the bubble went away too soon while the cursor
+  rested on him.
+- **Supersedes:** the 4 s hold in D-2.7.
+- **Status:** in force.
+
 ## Epic 3: Character and motion (D-3)
 
 ### D-3.1 Natural steps over the brief's slow crossing
@@ -682,3 +692,27 @@ Added 20 Oct 2026 by the audio chat. Full text:
   1–2.5 minutes, 6–12 km away).
 - **Status:** in force.
 
+### D-6.20 The speaker shows off until sound plays; a "Click for sound" cue
+- **Date:** 15 Nov 2026. **Story:** [6.19](../stories/6.19.sound-off-until-tapped.md).
+- **Decision (owner):**
+  - **Off until it plays:** on load the speaker shows off. Sound still
+    starts on the visitor's first click, tap or key anywhere, including on
+    the man, or on a click on the speaker. Then the speaker shows on.
+    Browsers don't count hover, scroll or mouse movement, so those can't
+    start it.
+  - **Remembered off:** a visitor who turns sound off stays silent on later
+    visits (`wfn.sound=off`), as in D-6.14; clicks on the page don't start
+    it, and the cue doesn't show.
+  - **The cue:** on every visit while the sound is off, a small dark-glass
+    pill beside the speaker, "Click for sound" (or "Tap for sound" on touch
+    screens), with two soft rings from the speaker. It fades in after
+    1.5 s and out 5 s later, or at once when sound starts or the controls
+    are used. No close button; a click on it is a click on the page.
+    `role="status"`. With reduced motion: no rings, a steady soft glow.
+- **Why:** the speaker said "on" while the page was silent. The owner wants
+  it off by default, with a minimal, on-theme invitation that goes away by
+  itself.
+- **Supersedes:** in D-6.14, the speaker showing "on" before sound plays and
+  the first-visit card ("Sound is on…", once per visitor, `wfn.hintSeen`).
+  D-6.14's "remember off" rule stays.
+- **Status:** in force.

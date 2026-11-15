@@ -4,7 +4,7 @@ import { chooseOpeningScene, validateWeather, SCENE_NAMES, chooseShuffleScene, r
 import { Scene } from './scene/Scene.js';
 import { SoundDirector } from './audio/index.js';
 import { createBubble } from './bubble.js';
-import { initSoundControl, initScenePicker, readSceneLock, initHint } from './controls/visitorControls.js';
+import { initSoundControl, initScenePicker, readSceneLock, initSoundCue } from './controls/visitorControls.js';
 import { initCredits } from './credits.js';
 import './styles/main.css';
 
@@ -211,8 +211,8 @@ document.addEventListener('visibilitychange', () => {
 // starts after a tap or click on them (browser autoplay rules).
 const soundCtl = initSoundControl({ config, audio, onChange: () => app.onAudioChange?.() });
 const syncSoundButton = soundCtl.sync;
-// first-visit hint beside the controls (story 6.15)
-initHint({ isPlaying: soundCtl.isPlaying });
+// a small "Click for sound" cue beside the speaker while sound is off (story 6.19)
+initSoundCue({ wantsSound: soundCtl.wantsSound, isPlaying: soundCtl.isPlaying });
 // the time-of-day picker above it (stories 1.2, 1.3)
 const scenePicker = initScenePicker({ scene, config, storage: tabStorage });
 

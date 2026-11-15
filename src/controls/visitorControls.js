@@ -6,7 +6,6 @@
 
 export const VOLUME_KEY = 'wfn.volume';
 export const SOUND_KEY = 'wfn.sound'; // 'on' or 'off': the visitor's choice (default on, story 6.15)
-export const HINT_KEY = 'wfn.hintSeen';
 
 // The visitor's sound choice: true (on, the default) unless they turned it off.
 export function readSoundOn(storage) {
@@ -38,13 +37,15 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
 
   const saved = readVolume(storage);
   if (saved !== null) A.master = saved;
-  // Sound is on by default (story 6.15, D-6.14). Browsers only let it play
-  // after the visitor's first click, tap or key, so it starts then.
-  A.enabled = readSoundOn(storage);
+  // Browsers only let sound play after the visitor's first click, tap or key,
+  // so it starts then, unless they turned it off before (story 6.15). Until it
+  // really plays, the speaker shows off (story 6.19, D-6.20).
+  let wanted = readSoundOn(storage);
+  A.enabled = false;
   A.muted = false;
   let started = false, startedAt = -1e9;
   async function startOnGesture() {
-    if (started || !A.enabled) return;
+    if (started || !wanted) return;
     // only events the browser counts as permission to play (a mouse press, the
     // end of a touch, a key), else the start could stall and never retry
     if (navigator.userActivation && !navigator.userActivation.isActive) return;
@@ -56,7 +57,7 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
   }
   for (const type of ['pointerdown', 'pointerup', 'touchend', 'keydown', 'click']) window.addEventListener(type, startOnGesture, { capture: true, passive: true });
 
-  const isOn = () => A.enabled && !A.muted && A.master > 0;
+  const isOn = () => started && A.enabled && !A.muted && A.master > 0;
   function sync() {
     const on = isOn();
     btn.setAttribute('aria-pressed', String(on));
@@ -95,11 +96,11 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
   btn.addEventListener('click', async () => {
     // the click that started the sound just now isn't also a click to stop it
     if (performance.now() - startedAt < 800) { sync(); return; }
-    if (isOn() && started) { A.enabled = false; rememberSoundOn(storage, false); }
+    if (isOn()) { A.enabled = false; wanted = false; rememberSoundOn(storage, false); }
     else {
       if (A.master <= 0) { A.master = 0.6; rememberVolume(storage, A.master); }
-      started = true;
-      if (await turnOn()) rememberSoundOn(storage, true);
+      started = true; startedAt = performance.now();
+      if (await turnOn()) { wanted = true; rememberSoundOn(storage, true); }
     }
     if (lastPointer === 'touch') open(3500);
     sync();
@@ -111,7 +112,7 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
     rememberVolume(storage, A.master);
     if (lastPointer === 'touch') open(3500);
     // raising the level while sound is off turns it on (the drag is a user gesture)
-    if (A.master > 0 && !(A.enabled && !A.muted && started)) { started = true; if (await turnOn()) rememberSoundOn(storage, true); }
+    if (A.master > 0 && !(A.enabled && !A.muted && started)) { started = true; startedAt = performance.now(); if (await turnOn()) { wanted = true; rememberSoundOn(storage, true); } }
     sync();
     onChange();
   });
@@ -120,57 +121,49 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
   document.addEventListener('pointerdown', (e) => { if (!group.contains(e.target)) group.classList.remove('open'); });
 
   sync();
-  return { sync, isPlaying: () => started && A.enabled && !A.muted };
+  return { sync, isPlaying: () => started && A.enabled && !A.muted, wantsSound: () => wanted };
 }
 
 // ---------------------------------------------------------------------------
-// First-visit hint (story 6.15): a small card beside the controls saying sound
-// is on and where to change the volume and time of day. Once per visitor; it
-// fades after a few seconds (paused while hovered or focused), or closes with
-// its close button or as soon as the controls are used.
+// Sound cue (story 6.19, D-6.20): on every visit while the sound is off, a
+// small dark-glass pill beside the speaker ("Click for sound", or "Tap for
+// sound" on touch screens) and two soft rings from the speaker. It fades in
+// after delay ms and out after stay ms, or at once when sound starts or the
+// controls are used. Not shown if the visitor turned sound off themselves.
 // ---------------------------------------------------------------------------
-export function initHint({ storage = safeLocalStorage(), isPlaying = () => false, delay = 1500, stay = 6000 } = {}) {
-  const el = document.getElementById('hint');
+export const cueText = (fine) => (fine ? 'Click for sound' : 'Tap for sound');
+
+export function initSoundCue({ wantsSound = () => true, isPlaying = () => false, delay = 1500, stay = 5000 } = {}) {
+  const el = document.getElementById('sound-cue');
+  const btn = document.getElementById('sound');
   const controls = document.getElementById('controls');
-  if (!el) return;
-  let seen = false;
-  try { seen = storage?.getItem(HINT_KEY) === '1'; } catch { /* show it */ }
-  if (seen) return;
-  const body = el.querySelector('.hint-body');
-  let left = stay, timer = 0, last = 0, paused = false, open = false, used = false;
-  const markSeen = () => { try { storage?.setItem(HINT_KEY, '1'); } catch { /* shown again next time */ } };
+  if (!el || !wantsSound()) return;
+  let open = false, done = false, poll = 0;
   const close = () => {
-    if (!open) { used = true; markSeen(); return; } // the controls were found before it showed: no need
-    open = false; clearInterval(timer);
+    if (done) return;
+    done = true; clearInterval(poll);
+    btn?.classList.remove('cue');
+    if (!open) return;
+    open = false;
     el.classList.remove('show');
     setTimeout(() => { el.hidden = true; }, 400);
   };
+  // sound starting (any click, tap or key) or the controls being used ends it
+  poll = setInterval(() => { if (isPlaying() || !wantsSound()) close(); }, 150);
+  controls?.addEventListener('pointerdown', close);
+  controls?.addEventListener('keydown', close);
   setTimeout(() => {
-    if (used) return;
-    markSeen();
-    if (isPlaying()) body.textContent = 'Set the volume or time of day here.';
+    if (done) return;
+    if (isPlaying() || !wantsSound()) { close(); return; }
+    let fine = false;
+    try { fine = window.matchMedia('(pointer: fine)').matches; } catch { /* touch wording */ }
+    el.querySelector('.sound-cue-text').textContent = cueText(fine);
     el.hidden = false;
     requestAnimationFrame(() => el.classList.add('show'));
-    open = true; last = performance.now();
-    timer = setInterval(() => {
-      const now = performance.now();
-      if (!paused) left -= now - last;
-      last = now;
-      if (isPlaying()) body.textContent = 'Set the volume or time of day here.';
-      if (left <= 0) close();
-    }, 200);
+    btn?.classList.add('cue');
+    open = true;
+    setTimeout(close, stay);
   }, delay);
-  el.querySelector('.hint-close').addEventListener('click', close);
-  el.addEventListener('pointerenter', () => { paused = true; });
-  el.addEventListener('pointerleave', () => { paused = false; });
-  el.addEventListener('focusin', () => { paused = true; });
-  el.addEventListener('focusout', () => { paused = false; });
-  // using the controls, or opening the Credits list (story 6.12), closes it:
-  // on a phone the Credits list would otherwise cover the card
-  for (const el2 of [controls, document.getElementById('credits')]) {
-    el2?.addEventListener('pointerdown', close);
-    el2?.addEventListener('keydown', close);
-  }
 }
 
 function safeLocalStorage() {

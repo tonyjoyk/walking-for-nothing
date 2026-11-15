@@ -1,0 +1,8 @@
+schema: 1
+story: '6.19'
+story_title: 'The speaker shows off until sound plays, with a "Click for sound" cue'
+gate: PASS
+status_reason: 'Verified with gesture-required autoplay on desktop and phones: off on load, cue timing, start by any click or the speaker, remembered off, reduced motion; tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []

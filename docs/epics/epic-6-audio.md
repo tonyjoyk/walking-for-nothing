@@ -35,6 +35,7 @@ openly licensed and credited.
 | [6.16](../stories/6.16.sound-only-on-the-page.md) | Sound only while the visitor is on the page (D-6.17), Done | Claude (Greeting review chat) |
 | [6.18](../stories/6.18.thunder-every-rain-pass.md) | Lightning and thunder in every Rain pass (D-6.19), Done | Claude (Greeting review chat) |
 | [6.17](../stories/6.17.mellow-thunder.md) | Mellow thunder in Rain, with dev-panel controls (D-6.18), Done | Claude (Mellow thunder chat) |
+| [6.19](../stories/6.19.sound-off-until-tapped.md) | The speaker shows off until sound plays, with a "Click for sound" cue (D-6.20), Done | Claude (Interaction hints chat) |
 
 ## Order
 
