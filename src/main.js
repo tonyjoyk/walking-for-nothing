@@ -110,7 +110,15 @@ function applyQuality() {
 
 const bubbleEl = document.getElementById('bubble');
 const updateBubble = createBubble(bubbleEl, scene);
+// Minimal hand cursor while the pointer is on the man himself (D-2.9). Set in
+// the pointer handler as well as each frame: browsers only redraw the cursor
+// when the mouse moves, so a change made a frame later would not show until
+// the next movement (the hand seemed missing when the pointer came to rest).
 let cursorOnMan = false;
+function updateHandCursor() {
+  const onMan = !!scene.pointer && scene.hitMan(scene.pointer.x, scene.pointer.y, scene.greeting.active, false);
+  if (onMan !== cursorOnMan) { cursorOnMan = onMan; document.documentElement.classList.toggle('on-man', onMan); }
+}
 
 new p5((p) => {
   p5ref = p;
@@ -133,9 +141,8 @@ new p5((p) => {
     scene.render(p.drawingContext, p.width, p.height, p.pixelDensity());
     updateBubble(dt);
     scenePicker.update();
-    // minimal hand cursor while the pointer is on the man himself (D-2.9)
-    const onMan = !!scene.pointer && scene.hitMan(scene.pointer.x, scene.pointer.y, scene.greeting.active, false);
-    if (onMan !== cursorOnMan) { cursorOnMan = onMan; document.documentElement.classList.toggle('on-man', onMan); }
+    // he walks under a still pointer: keep the hand cursor in step (D-2.9)
+    updateHandCursor();
     audio.update(scene.P, dt, scene.sceneName);
   };
 });
@@ -164,11 +171,12 @@ function adaptQuality(dt) {
 // or tap well away from him and the bubble does too. The scene re-tests the
 // hover every frame from the last pointer position, so a still cursor counts,
 // and while the bubble shows, it counts as part of him.
-const pointerOff = () => { scene.pointer = null; scene.hovering = false; };
+const pointerOff = () => { scene.pointer = null; scene.hovering = false; updateHandCursor(); };
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
   scene.pointer = { x: e.clientX, y: e.clientY };
   scene.hovering = scene.hitMan(e.clientX, e.clientY, scene.greeting.active);
+  updateHandCursor(); // now, so this very movement shows the hand
 });
 document.addEventListener('mouseout', (e) => { if (!e.relatedTarget) pointerOff(); });
 window.addEventListener('blur', pointerOff);
