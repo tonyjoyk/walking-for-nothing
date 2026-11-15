@@ -191,9 +191,18 @@ window.addEventListener('pointerdown', (e) => {
   else scene.greeting.release();
 });
 
+// Sound only while the visitor is on the page (story 6.16, D-6.17): a hidden
+// tab or minimised window pauses everything (battery on phones); another app
+// or window in front fades the sound out while the scene keeps moving.
+const syncAway = () => audio.setAway(!document.hasFocus() || document.hidden);
+window.addEventListener('blur', syncAway);
+window.addEventListener('focus', syncAway);
+syncAway();
+
 // Pause everything when the tab is hidden (battery on phones).
 document.addEventListener('visibilitychange', () => {
   if (!p5ref) return;
+  syncAway();
   if (document.hidden) { p5ref.noLoop(); audio.suspend(); }
   else { p5ref.loop(); audio.resume(); }
 });

@@ -40,9 +40,9 @@ file.
 | 3 | Character and motion | [epic-3](epics/epic-3-character.md) | Built before stories were used; 3.1 Juhu in every scene ✅ (Greeting review chat) | Active | Setup chat |
 | 4 | Landscape and atmosphere | [epic-4](epics/epic-4-landscape.md) | Built before stories were used | Done | Setup chat |
 | 5 | Platform and delivery | [epic-5](epics/epic-5-platform.md) | Built before stories were used; 5.1 Zero-size window guard ✅; 5.2 Link preview image ✅ | Active | Setup chat |
-| 6 | Audio | [epic-6](epics/epic-6-audio.md) | 6.1–6.13 (see the epic for status); 6.14 Volume slider ✅, 6.15 Sound on and first-visit hint ✅ (Greeting review chat); 6.11 Lightning ✅ (Lightning chat); 6.4 Manifest and credits ✅, 6.12 Sound credits on the page ✅ (Sound credits chat); spec: [product/specs/audio/](product/specs/audio/) | Planned | Audio chat |
+| 6 | Audio | [epic-6](epics/epic-6-audio.md) | 6.1–6.13 (see the epic for status); 6.14 Volume slider ✅, 6.15 Sound on and first-visit hint ✅, 6.16 Sound only on the page ✅ (Greeting review chat); 6.11 Lightning ✅ (Lightning chat); 6.4 Manifest and credits ✅, 6.12 Sound credits on the page ✅ (Sound credits chat); spec: [product/specs/audio/](product/specs/audio/) | Planned | Audio chat |
 
-**Next free epic:** 7. **Next free story:** 1.4 in epic 1, 2.11, 3.2, 4.1, 5.3, 6.16 in epic 6. **Next free decision:** D-0.6, D-1.7, D-2.10, D-3.8, D-4.4, D-5.3, D-6.17 (D-6.15 is taken by the sound credits chat; D-6.7 to D-6.12 are used in the audio docs).
+**Next free epic:** 7. **Next free story:** 1.4 in epic 1, 2.11, 3.2, 4.1, 5.3, 6.17 in epic 6. **Next free decision:** D-0.6, D-1.7, D-2.10, D-3.8, D-4.4, D-5.3, D-6.18 ( D-6.7 to D-6.12 are used in the audio docs).
 
 ## Open cross-chat items
 

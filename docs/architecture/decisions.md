@@ -625,3 +625,20 @@ Added 20 Oct 2026 by the audio chat. Full text:
 - **Supersedes:** nothing. Follows the UX spec's cross-epic rule on flashes.
 - **Status:** in force.
 
+### D-6.17 Sound only while the visitor is on the page
+- **Date:** 15 Nov 2026. **Story:** [6.16](../stories/6.16.sound-only-on-the-page.md).
+- **Decision:**
+  - **Hidden tab or minimised window:** everything pauses, the scene and
+    the sound (as before, for battery on phones).
+  - **Another app or window in front** (the page visible, but the browser
+    not focused): the sound fades out over about 2 s, and the scene keeps
+    moving. It fades back in when the visitor returns.
+    `SoundDirector.setAway()` is driven by window `blur`/`focus` and
+    `visibilitychange`.
+- **Why:** the owner: "when I'm not on the browser page, the sound should
+  not play". They chose this over keeping sound as background ambience
+  while working.
+- **Supersedes:** sound continuing while the page is visible but not
+  focused.
+- **Status:** in force.
+

@@ -54,6 +54,9 @@ export class SoundDirector {
   }
 
   suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend(); }
+  // The visitor is elsewhere (another app or window; story 6.16): the master
+  // fades out over a second or two, and back in when they return.
+  setAway(away) { this.away = !!away; }
   resume() { if (this.ctx && this.config.audio.enabled) this.ctx.resume(); }
 
   build() {
@@ -93,7 +96,7 @@ export class SoundDirector {
     this.tick = 0;
     const A = this.config.audio;
     const now = this.ctx.currentTime;
-    const on = A.enabled && !A.muted;
+    const on = A.enabled && !A.muted && !this.away;
     this.master.gain.setTargetAtTime(on ? A.master : 0, now, 0.6);
     this.bus.beds.gain.setTargetAtTime(A.beds, now, 0.3);
     this.bus.synth.gain.setTargetAtTime(A.beds, now, 0.3);

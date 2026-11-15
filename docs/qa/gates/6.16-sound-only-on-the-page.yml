@@ -1,0 +1,8 @@
+schema: 1
+story: '6.16'
+story_title: 'Sound only while the visitor is on the page'
+gate: PASS
+status_reason: 'Hidden tab pauses; another app in front fades the sound to silence in about 2 s and back on return; 106 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []
