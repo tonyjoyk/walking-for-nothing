@@ -1,0 +1,8 @@
+schema: 1
+story: '1.3'
+story_title: 'Picker: labelled options, a menu button, a looping pick'
+gate: PASS
+status_reason: 'Audit findings fixed; verified with real input at three sizes; label contrast at least 5.0:1; 87 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []

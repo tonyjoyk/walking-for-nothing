@@ -4,7 +4,7 @@ import { chooseOpeningScene, validateWeather, SCENE_NAMES, chooseShuffleScene, r
 import { Scene } from './scene/Scene.js';
 import { SoundDirector } from './audio/index.js';
 import { createBubble } from './bubble.js';
-import { initSoundControl, initScenePicker } from './controls/visitorControls.js';
+import { initSoundControl, initScenePicker, readSceneLock } from './controls/visitorControls.js';
 import './styles/main.css';
 
 p5.disableFriendlyErrors = true; // faster; the scene does its own validation
@@ -61,6 +61,9 @@ async function chooseOpening() {
   const now = new Date();
   const forced = forcedScene();
   if (forced) { openOn(forced, 'forced', true); weatherStatus.source = 'forced'; return; }
+  // a scene the visitor picked in this tab stays, looping (story 1.3, D-1.6)
+  const locked = readSceneLock(tabStorage);
+  if (locked) { config.cycle.enabled = false; openOn(locked, 'picked by the visitor', true); weatherStatus.source = 'picked'; return; }
   const mode = config.opening.force === 'time-of-day' ? 'time-of-day' : config.opening.mode;
   if (mode === 'shuffle') {
     // a fresh visit opens on a random scene; a reload, on the next one
@@ -188,8 +191,8 @@ document.addEventListener('visibilitychange', () => {
 // starts after a tap or click on them (browser autoplay rules).
 const soundCtl = initSoundControl({ config, audio, onChange: () => app.onAudioChange?.() });
 const syncSoundButton = soundCtl.sync;
-// the time-of-day picker above it (story 1.2)
-const scenePicker = initScenePicker({ scene, config });
+// the time-of-day picker above it (stories 1.2, 1.3)
+const scenePicker = initScenePicker({ scene, config, storage: tabStorage });
 
 const app = { config, scene, audio, syncSoundButton, onAudioChange: null, weatherStatus, chooseOpening };
 window.__landscape = app; // handy in the console while tuning

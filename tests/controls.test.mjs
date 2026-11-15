@@ -52,3 +52,30 @@ test('1.2: a scene change counts as easing in for transitionSeconds; a snapped s
   for (let t = 0; t < cfg.playback.transitionSeconds + 0.1; t += 1 / 60) s.update(1 / 60);
   assert.equal(s.transitioning, false);
 });
+
+// Story 1.3: labelled options, "All scenes", and a picked scene that loops.
+test('1.3: the options are "All scenes" then the six, each with a label; a picked scene is remembered per tab', async () => {
+  const { OPTIONS, readSceneLock, rememberSceneLock, LOCK_KEY } = await import('../src/controls/visitorControls.js');
+  assert.deepEqual(OPTIONS.map(([, l]) => l), ['All scenes', 'Dawn', 'Day', 'Windy', 'Rain', 'Sunset', 'Night']);
+  const m = new Map(); const s = { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, v), removeItem: (k) => m.delete(k) };
+  assert.equal(readSceneLock(s), null);
+  rememberSceneLock(s, 'night'); assert.equal(m.get(LOCK_KEY), 'night'); assert.equal(readSceneLock(s), 'night');
+  rememberSceneLock(s, null); assert.equal(readSceneLock(s), null);
+  m.set(LOCK_KEY, 'overcast'); assert.equal(readSceneLock(s), null, 'only the six can be picked');
+  const broken = { getItem() { throw new Error('x'); }, setItem() { throw new Error('x'); }, removeItem() { throw new Error('x'); } };
+  assert.equal(readSceneLock(broken), null);
+  assert.doesNotThrow(() => rememberSceneLock(broken, 'rain'));
+});
+
+test('1.3: with the cycle off, crossings keep the same scene (it loops)', async () => {
+  const { createDefaultConfig } = await import('../src/config.js');
+  const { Scene } = await import('../src/scene/Scene.js');
+  const cfg = createDefaultConfig();
+  const s = new Scene(cfg); s.computeView(1280, 720); s.update(1 / 60);
+  cfg.cycle.enabled = false; s.applyScene('night');
+  for (let i = 0; i < 60 * 90; i++) s.update(1 / 60); // several crossings
+  assert.equal(s.sceneName, 'night');
+  cfg.cycle.enabled = true;
+  for (let i = 0; i < 60 * 40; i++) s.update(1 / 60);
+  assert.notEqual(s.sceneName, 'night', 'the journey moves on again');
+});

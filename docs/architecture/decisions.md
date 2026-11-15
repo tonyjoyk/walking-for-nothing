@@ -139,6 +139,34 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
 - **Supersedes:** UX principle 1's "no buttons except the sound toggle"
   (the controls are now sound and time of day), and D-6.13's slider
   placement.
+- **Status:** revised by D-1.6 before release: labelled options, a menu
+  button, a loop, and no auto-close or lock.
+
+### D-1.6 The picker: labelled options, a menu button, and a loop
+- **Date:** 15 Nov 2026. **Story:** [1.3](../stories/1.3.scene-picker-labels-and-loop.md).
+  **Audit:** in the story.
+- **Decision:**
+  - **Closed:** a menu (hamburger) icon. **Open:** a close icon (×).
+  - **The list stays open** until the visitor closes it: with ×, or Escape
+    on a keyboard. A pick or a tap elsewhere doesn't close it.
+  - **Options:** glass pills with an icon and a name. "All scenes" comes
+    first, then Dawn, Day, Windy, Rain, Sunset and Night.
+    - Labels are white on darker glass (62%): at least 5:1, measured, over
+      the brightest sky.
+    - The selected option is a white pill with dark text.
+  - **Picking a scene** eases to it and loops it (`cycle.enabled` off). It's
+    remembered for the tab (`sessionStorage` `wfn.sceneLock`), so a reload
+    stays on it.
+  - **"All scenes"** restarts the journey from the current scene and clears
+    the memory.
+  - **No lock after a pick:** a new pick eases from wherever the scene is.
+  - **Short screens** (520 px tall or less): a two-column grid to the left
+    of the button.
+- **Why:** owner feedback and a usability audit. The icons alone were
+  ambiguous, the list closed too eagerly, a pick didn't hold, and the 4 s
+  lock blocked moving between scenes.
+- **Supersedes:** D-1.5's icon-only options, auto-close and 4 s lock; and,
+  for a picked scene, D-1.2's "each crossing moves to the next scene".
 - **Status:** in force.
 
 ## Epic 2: The greeting (D-2)

@@ -98,75 +98,92 @@ function safeLocalStorage() {
 }
 
 // ---------------------------------------------------------------------------
-// Scene picker (docs/stories/1.2.scene-picker.md): one glass button showing
-// the current time of day opens a small stack of six; picking one eases the
-// scene there. The six are disabled while a scene change is still easing in.
+// Time-of-day picker (docs/stories/1.3.scene-picker-labels-and-loop.md,
+// D-1.6). A menu button above the speaker opens labelled options: "All
+// scenes" (the journey cycles, as normal) and the six scenes. Picking a scene
+// eases there and loops it; the choice is remembered for this tab. The list
+// stays open until the visitor closes it (the button becomes a close icon).
 // ---------------------------------------------------------------------------
 
 export const SCENES = [
   ['dawn', 'Dawn'], ['sunny', 'Day'], ['wind', 'Windy'],
   ['rain', 'Rain'], ['twilight', 'Sunset'], ['night', 'Night'],
 ];
+export const OPTIONS = [['all', 'All scenes'], ...SCENES];
+export const LOCK_KEY = 'wfn.sceneLock';
 
 // Minimal line icons, 24 x 24, drawn with currentColor.
 const ICON_PATHS = {
+  all: '<path d="M4.5 10a7.5 7.5 0 0 1 13.4-3.6M19.5 14a7.5 7.5 0 0 1-13.4 3.6"/><path d="M18.4 3.2v3.6h-3.6M5.6 20.8v-3.6h3.6"/>',
   dawn: '<path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 4v5M9.5 6.5 12 4l2.5 2.5"/>',
   sunny: '<circle cx="12" cy="12" r="3.8"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6"/>',
   wind: '<path d="M3 9h10.5a2.75 2.75 0 1 0-2.75-2.75M3 13h14.5a2.75 2.75 0 1 1-2.75 2.75M3 17h6"/>',
   rain: '<path d="M7.5 14.5a3.8 3.8 0 0 1-.4-7.6 5.2 5.2 0 0 1 10 1.4 3.1 3.1 0 0 1-.6 6.2z"/><path d="M9 17.5l-.8 2M12.5 17.5l-.8 2M16 17.5l-.8 2"/>',
   twilight: '<path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 4v5M9.5 6.5 12 9l2.5-2.5"/>',
   night: '<path d="M18.5 14.6A7.2 7.2 0 0 1 9.4 5.5a7.2 7.2 0 1 0 9.1 9.1z"/>',
+  menu: '<path d="M5 7.5h14M5 12h14M5 16.5h14"/>',
+  close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
 };
-export const sceneIcon = (name) =>
-  `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name] || ICON_PATHS.sunny}</svg>`;
+export const sceneIcon = (name, size = 20) =>
+  `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name] || ICON_PATHS.sunny}</svg>`;
 
 // Overcast is Rain without the rain; the picker shows it as Rain.
 export const pickerScene = (name) => (name === 'overcast' ? 'rain' : SCENES.some(([n]) => n === name) ? name : 'sunny');
 
-export function initScenePicker({ scene, config }) {
+// The scene a visitor picked in this tab (sessionStorage), or null.
+export function readSceneLock(storage) {
+  try { const v = storage?.getItem(LOCK_KEY); return SCENES.some(([n]) => n === v) ? v : null; } catch { return null; }
+}
+export function rememberSceneLock(storage, name) {
+  try { if (name) storage?.setItem(LOCK_KEY, name); else storage?.removeItem(LOCK_KEY); } catch { /* not remembered */ }
+}
+
+export function initScenePicker({ scene, config, storage = null }) {
   const group = document.getElementById('scene-ctl');
   const btn = document.getElementById('scene-btn');
   const list = document.getElementById('scene-list');
-  const label = Object.fromEntries(SCENES);
 
-  list.innerHTML = SCENES.map(([name, text]) =>
-    `<button class="ctl scene-opt" type="button" data-scene="${name}" aria-pressed="false" aria-label="${text}" title="${text}">${sceneIcon(name)}</button>`).join('');
+  list.innerHTML = OPTIONS.map(([name, text]) =>
+    `<button class="scene-opt" type="button" data-scene="${name}" aria-pressed="false">${sceneIcon(name, 18)}<span>${text}</span></button>`).join('');
   const opts = [...list.querySelectorAll('.scene-opt')];
 
-  let shown = null, busy = null, isOpen = false;
-  const setOpen = (open, focusBack = false) => {
+  let isOpen = false, shown = null;
+  const setOpen = (open) => {
     isOpen = open;
     group.classList.toggle('open', open);
     btn.setAttribute('aria-expanded', String(open));
-    if (!open && focusBack) btn.focus();
+    btn.setAttribute('aria-label', open ? 'Close the time of day options' : 'Choose the time of day');
+    btn.title = open ? 'Close' : 'Time of day';
+    btn.innerHTML = sceneIcon(open ? 'close' : 'menu');
   };
 
-  // keep the button and the six in step with the scene (called every frame)
+  // what is selected: "All scenes" while the journey cycles, else the scene
+  const selected = () => (config.cycle.enabled ? 'all' : pickerScene(scene.sceneName || config.activePreset));
   function update() {
-    const now = pickerScene(scene.sceneName || config.activePreset);
-    const moving = scene.transitioning;
-    if (now === shown && moving === busy) return;
-    if (now !== shown) {
-      btn.innerHTML = sceneIcon(now);
-      btn.setAttribute('aria-label', `Time of day: ${label[now]}. Change it`);
-      btn.title = `Time of day: ${label[now]}`;
-      for (const o of opts) o.setAttribute('aria-pressed', String(o.dataset.scene === now));
-    }
-    for (const o of opts) o.disabled = moving;
-    shown = now; busy = moving;
+    const now = selected();
+    if (now === shown) return;
+    for (const o of opts) o.setAttribute('aria-pressed', String(o.dataset.scene === now));
+    shown = now;
   }
 
   btn.addEventListener('click', () => setOpen(!isOpen));
   list.addEventListener('click', (e) => {
     const o = e.target.closest('.scene-opt');
-    if (!o || o.disabled) return;
-    if (o.dataset.scene !== shown) scene.applyScene(o.dataset.scene);
-    setOpen(false, true);
-    update();
+    if (!o) return;
+    const name = o.dataset.scene;
+    if (name === 'all') {
+      config.cycle.enabled = true; // the journey carries on from this scene
+      rememberSceneLock(storage, null);
+    } else {
+      config.cycle.enabled = false; // stay in this scene, looping
+      if (name !== pickerScene(scene.sceneName || config.activePreset)) scene.applyScene(name);
+      rememberSceneLock(storage, name);
+    }
+    update(); // the list stays open: the visitor closes it
   });
-  group.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) { e.stopPropagation(); setOpen(false, true); } });
-  document.addEventListener('pointerdown', (e) => { if (isOpen && !group.contains(e.target)) setOpen(false); });
+  group.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) { e.stopPropagation(); setOpen(false); btn.focus(); } });
 
+  setOpen(false);
   update();
   return { update, close: () => setOpen(false) };
 }
