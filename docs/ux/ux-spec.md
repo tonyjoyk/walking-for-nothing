@@ -70,7 +70,7 @@ change.
 ## The greeting (epic 2)
 
 - **Hover:** he stops with both feet down and stands. If the cursor stays
-  on him for 2 s, he turns head first, looks for 3 s, then smiles. About 4 s
+  on him for 1.5 s (D-2.8), he turns head first, looks for 3 s, then smiles. About 4 s
   later he turns back and walks on (D-2.2).
 - **Click (or tap on touch):** the same, but he turns as soon as he's
   standing, and the greeting plays through even if the cursor leaves.

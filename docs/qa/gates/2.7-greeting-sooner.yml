@@ -1,0 +1,8 @@
+schema: 1
+story: '2.7'
+story_title: 'The greeting comes sooner'
+gate: PASS
+status_reason: 'Rest 1.5 s, settle 0.65 s, bubble from 60% of the turn; bubble now about 3.0 s after hover (was about 3.5 s); no-snap limit held; 79 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []

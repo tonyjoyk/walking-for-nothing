@@ -210,10 +210,10 @@ test('2.1 AC2: he turns 2 s after the cursor arrives, or as soon as he is standi
   }
 });
 
-test('2.1 AC2: he does not turn while the cursor has been on him for less than 2 s', () => {
-  const { scene } = makeScene();
+test('2.1 AC2 / 2.7: he does not turn while the cursor has been on him for less than dwellSeconds (1.5 s)', () => {
+  const { scene, cfg } = makeScene();
   scene.hovering = true;
-  for (let t = 0; t < 1.9; t += DT) { scene.update(DT); assert.equal(scene.greet.head, 0); }
+  for (let t = 0; t < cfg.greeting.dwellSeconds - 0.1; t += DT) { scene.update(DT); assert.equal(scene.greet.head, 0); }
 });
 
 test('2.1 AC3: a click turns him as soon as he stands, and plays through after the cursor leaves', () => {
@@ -299,26 +299,28 @@ test('2.1 AC7: no snapping through pause, leave, return, click and turn', () => 
 
 test('2.1 AC8: dwellSeconds is a validated setting', () => {
   const cfg = createDefaultConfig();
-  assert.equal(cfg.greeting.dwellSeconds, 2);
+  assert.equal(cfg.greeting.dwellSeconds, 1.5); // story 2.7 (was 2)
   const ok = validateConfig({ greeting: { dwellSeconds: 3.5 } });
   assert.equal(ok.config.greeting.dwellSeconds, 3.5);
   const bad = validateConfig({ greeting: { dwellSeconds: 'soon' } });
-  assert.equal(bad.config.greeting.dwellSeconds, 2);
+  assert.equal(bad.config.greeting.dwellSeconds, 1.5);
   assert.ok(bad.warnings.length > 0);
 });
 
 // Story 2.2 / D-2.3: the speech bubble.
-test('2.2 AC1/5: the bubble shows only while he faces the visitor', () => {
+test('2.2 AC1/5 / 2.7: the bubble shows from late in the turn while he faces the visitor, never otherwise', async () => {
+  const { BUBBLE_AT_TURN } = await import('../src/scene/greeting.js');
   const { scene } = makeScene();
   scene.hovering = true;
   const seen = new Map();
   for (let i = 0; i < 60 * 30; i++) {
     scene.update(DT);
-    const s = scene.greeting.state;
+    let s = scene.greeting.state;
+    if (s === 'turning') s += scene.greeting.bodyP >= BUBBLE_AT_TURN ? '-late' : '-early';
     seen.set(s, (seen.get(s) || new Set()).add(scene.bubbleShown));
   }
-  for (const s of ['looking', 'smiling']) assert.deepEqual([...seen.get(s)], [true], s);
-  for (const s of ['walking', 'stopping', 'settling', 'waiting', 'turning', 'returning', 'starting']) {
+  for (const s of ['turning-late', 'looking', 'smiling']) assert.deepEqual([...seen.get(s)], [true], s);
+  for (const s of ['walking', 'stopping', 'settling', 'waiting', 'turning-early', 'returning', 'starting']) {
     if (seen.has(s)) assert.deepEqual([...seen.get(s)], [false], s);
   }
 });
@@ -326,10 +328,10 @@ test('2.2 AC1/5: the bubble shows only while he faces the visitor', () => {
 test('2.2 AC3 / 2.6 AC3: with the bubble on, he faces the visitor for readSeconds after the reveal', async () => {
   const { scene, cfg } = makeScene();
   scene.greetNow(); // a click: plays through without the cursor
-  until(scene, () => scene.greeting.state === 'looking', 6);
+  until(scene, () => scene.bubbleShown, 6);
   const facing = until(scene, () => scene.greeting.state === 'returning', 40);
   const { BUBBLE_REVEAL_SECONDS } = await import('../src/scene/greeting.js');
-  assert.ok(Math.abs(facing - BUBBLE_REVEAL_SECONDS - cfg.greeting.readSeconds) < 0.05, `faced for ${facing.toFixed(2)} s`);
+  assert.ok(Math.abs(facing - BUBBLE_REVEAL_SECONDS - cfg.greeting.readSeconds) < 0.05, `bubble shown for ${facing.toFixed(2)} s`);
 });
 
 test('2.2 AC7: with the bubble off, the timing is 3 s + 4 s and nothing shows', () => {

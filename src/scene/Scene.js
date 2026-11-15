@@ -287,8 +287,7 @@ export class Scene {
 
   // The speech bubble (D-2.3): shown while he faces the visitor.
   get bubbleShown() {
-    const s = this.greeting.state;
-    return this.config.greeting.enabled && this.config.greeting.bubble && this.config.character.visible && (s === 'looking' || s === 'smiling');
+    return this.config.greeting.enabled && this.config.greeting.bubble && this.config.character.visible && this.greeting.facing; // from late in the turn (story 2.7)
   }
 
   // The top of his head on screen (CSS px), for placing the bubble.

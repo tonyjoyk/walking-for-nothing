@@ -16,13 +16,16 @@
 
 const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 const HEAD_LEAD = 0.25;      // the head leads the body by this share of the turn
-const SETTLE_SECONDS = 0.8;  // feet come together and the arms settle
+const SETTLE_SECONDS = 0.65; // feet come together and the arms settle (story 2.7; was 0.8; the shortest that stays under the no-snap limit)
 const SMILE_GROW = 1.5;      // seconds for the smile to spread
 const SMILE_FADE = 0.8;
 // The bubble's text takes this long to appear (main.css, D-2.7); its
 // readSeconds hold starts after it, and pauses while the cursor is on the
 // bubble (ctx.holdBubble).
 export const BUBBLE_REVEAL_SECONDS = 1.1;
+// The bubble starts to appear once his body has turned this far, so its
+// reveal overlaps the end of the turn (story 2.7).
+export const BUBBLE_AT_TURN = 0.6;
 
 export class Greeting {
   constructor() {
@@ -53,8 +56,11 @@ export class Greeting {
   // End a one-shot greeting early (a tap elsewhere).
   release() { this.oneShot = false; }
 
-  // He's facing the visitor (the bubble shows now, if it's on).
-  get facing() { return this.state === 'looking' || this.state === 'smiling'; }
+  // He's facing the visitor, or most of the way round (the bubble shows now,
+  // if it's on).
+  get facing() {
+    return this.state === 'looking' || this.state === 'smiling' || (this.state === 'turning' && this.bodyP >= BUBBLE_AT_TURN);
+  }
 
   // A click or tap on him while he faces the visitor: turn back now (D-2.7).
   dismiss() {
@@ -115,20 +121,22 @@ export class Greeting {
 
       case 'waiting':
         // standing, not yet turned: the cursor has to stay, or click
-        if (turnNow) { this.turned = true; goto('turning'); }
+        if (turnNow) { this.turned = true; this.faceT = 0; goto('turning'); }
         if (!want) leave();
         break;
 
       case 'turning':
         turnToward(1);
-        if (this.bodyP >= 1) { this.faceT = 0; goto('looking'); }
+        if (this.facing && !ctx.holdBubble) this.faceT += dt; // the bubble's time starts as it appears
+        if (this.bodyP >= 1) goto('looking');
         if (!want) leave();
         break;
 
       case 'looking':
       case 'smiling': {
-        // with the speech bubble on (D-2.3, D-2.7) he faces them for its reveal
-        // plus readSeconds, paused while the cursor is on the bubble; without
+        // with the speech bubble on (D-2.3, D-2.7) he faces them until its reveal
+        // plus readSeconds have passed since it appeared (late in the turn,
+        // story 2.7), paused while the cursor is on the bubble; without
         // it, he looks for lookSeconds and smiles for smileSeconds
         if (!ctx.holdBubble) this.faceT += dt;
         if (this.state === 'looking') {

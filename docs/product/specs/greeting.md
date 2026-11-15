@@ -373,3 +373,28 @@ Story: [2.6](../../stories/2.6.bubble-reach-hold-reveal.md).
 This replaces the Revision 3 non-goal "animation of the text": the owner
 now wants a reveal. A letter-by-letter typing effect is still out.
 
+---
+
+## Revision 6 (15 Nov 2026): the greeting comes sooner
+
+Decision: [D-2.8](../../architecture/decisions.md#d-28-a-sooner-greeting).
+Story: [2.7](../../stories/2.7.greeting-sooner.md).
+
+**Owner:** the bubble should come a little faster, after about 1.5 s of
+hovering. It then shows about 4 s before going away by itself. Leaving him
+still means a slow turn back and walking on.
+
+- **Measured before:** he first finishes his step and stands, then turns
+  for 1.4 s. The bubble appeared about 3.5 s after the hover; lowering the
+  rest alone to 1.5 s only gained about 0.1 s.
+- **Change (owner chose "overlap the steps"):**
+  - the rest before turning drops from 2 s to **1.5 s**;
+  - he settles in **0.65 s** (was 0.8 s), the shortest that stays within
+    the "never snaps" limit;
+  - the bubble starts revealing once his turn is **60% done**, instead of
+    after it.
+- **Result:** the bubble appears about **3.0 s** after the hover on average
+  (2.5–3.7 s, depending on where he is in his stride).
+- **Hold:** reveal plus 4 s, counted from when the bubble appears, paused
+  while the cursor is on the bubble (as Revision 5).
+

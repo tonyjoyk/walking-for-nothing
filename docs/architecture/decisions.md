@@ -265,6 +265,19 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   3 s look and 4 s smile no longer set the length while the bubble is on.
 - **Status:** in force.
 
+### D-2.8 A sooner greeting
+- **Date:** 15 Nov 2026. **Story:** [2.7](../stories/2.7.greeting-sooner.md).
+- **Decision:**
+  - `dwellSeconds` is 1.5 (was 2).
+  - The settle into a stand takes 0.65 s (was 0.8).
+  - The bubble shows from 60% of his turn (`BUBBLE_AT_TURN`), and its
+    reveal-plus-4 s hold counts from that moment.
+- **Why:** the owner wants the bubble sooner. Measured, it falls from about
+  3.5 s to about 3.0 s after the hover.
+- **Supersedes:** D-2.2's 2 s default; the spec's 0.8 s settle; and D-2.3
+  and D-2.7's "the bubble shows once he faces the visitor".
+- **Status:** in force.
+
 ## Epic 3: Character and motion (D-3)
 
 ### D-3.1 Natural steps over the brief's slow crossing
