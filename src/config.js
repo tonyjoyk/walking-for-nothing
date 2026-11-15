@@ -144,13 +144,14 @@ export function createDefaultConfig() {
     },
     dog: {
       enabled: true,
-      // Juhu's rhythm (docs/stories/3.1.juhu-every-scene.md, D-3.5): she joins
-      // him in the first scene once he has walked firstVisitDelay seconds and
-      // is past firstVisitFrom of the width, walks on with him into the next
+      // Juhu's rhythm (docs/stories/3.1.juhu-every-scene.md, D-3.5, D-3.6): she
+      // sets off after him firstVisitDelay seconds after load, once he is
+      // firstVisitFrom of the way across (two-thirds of the way to the middle),
+      // and catches him just past the middle; she walks on with him into the next
       // scene, leaves, and returns after aloneCrossings more crossings (so she
       // skips two scenes). Every scene allows her.
       presets: { sunny: true, twilight: true, night: true, rain: true, wind: true, dawn: true },
-      aloneCrossings: 3, togetherCrossings: 1, firstVisitDelay: 6, firstVisitFrom: 0.5,
+      aloneCrossings: 3, togetherCrossings: 1, firstVisitDelay: 2, firstVisitFrom: 0.33,
       approachSpeed: 120, easeSeconds: 2.5, spacing: 108, scale: 1,
     },
     birds: {

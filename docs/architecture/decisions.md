@@ -338,9 +338,10 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
 - **Decision:**
   - She's allowed in every scene. Her colours already follow each scene's
     light, the same tint and brightness as the man.
-  - **First visit:** at least `firstVisitDelay` (6 s) after load, once he's
-    past `firstVisitFrom` (50%) of the width. She trots in from the left,
-    joins him in the first scene and walks on with him into the second.
+  - **First visit:** at least `firstVisitDelay` after load, once he's past
+    `firstVisitFrom` of the width. She trots in from the left, joins him in
+    the first scene and walks on with him into the second. (Timing changed
+    by D-3.6.)
   - **Leaving:** after `togetherCrossings` (1) scene change, once he's past
     the middle of the screen. A scene change alone never sends her away.
   - **Returning:** after `aloneCrossings` (3) crossings. The rhythm is with
@@ -349,6 +350,21 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   scene.
 - **Supersedes:** "Dawn and Daylight only"; the 20 s first visit; "2
   crossings alone"; and leaving after one screen-width together.
+- **Status:** in force, except the first-visit timing (see D-3.6).
+
+### D-3.6 Juhu catches him around the middle of the first scene
+- **Date:** 15 Nov 2026.
+- **Decision:** `firstVisitDelay` 2 s and `firstVisitFrom` 33% (were 6 s
+  and 50%). She sets off when he's two-thirds of the way to the middle and
+  joins him just past it, at about 55% of the width on desktop (about 70%
+  on a phone). She also brakes faster than she speeds up, so arriving at a
+  trot doesn't carry her past her place and leave her walking backwards.
+- **Why:** starting from the middle, she only caught him at about 80% of
+  the width, and off-screen on phones, so they barely walked together. The
+  owner wants her to set off before he reaches the middle and join him
+  around it, so they walk together for longer. Setting off at 20% felt too
+  soon.
+- **Supersedes:** the first-visit timing in D-3.5 (6 s, past 50%).
 - **Status:** in force.
 
 ## Epic 4: Landscape and atmosphere (D-4)

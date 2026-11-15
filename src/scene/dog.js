@@ -68,8 +68,10 @@ export class Dog {
       gaitTarget = 1;
     }
 
-    // smooth acceleration and gait blending
-    const acc = 1 - Math.exp(-dt * 1.6);
+    // smooth acceleration and gait blending; she brakes faster than she
+    // speeds up, so arriving at a trot (or him stopping) doesn't carry her
+    // far past her place and leave her walking backwards to it
+    const acc = 1 - Math.exp(-dt * (desired < this.speed ? 4 : 1.6));
     this.speed = lerp(this.speed, desired, acc);
     const gk = 1 - Math.exp(-dt * (3 / Math.max(0.3, cfg.easeSeconds)));
     this.gait = lerp(this.gait, gaitTarget, gk);
@@ -108,7 +110,8 @@ export class Dog {
     const { view, manX } = c;
     const left = view.x0;
     // wait until the man is well inside the frame so she can come from behind;
-    // her first visit waits until he is past firstVisitFrom of the width (D-3.5)
+    // her first visit waits until he is past firstVisitFrom of the width (a
+    // third of the way), so she catches him around the middle (D-3.6)
     const from = first ? left + view.w * (c.cfg.firstVisitFrom ?? 0) : left + 230;
     const to = first ? left + view.w * 0.8 : left + view.w * 0.62;
     if (manX < from || manX > to) return;
