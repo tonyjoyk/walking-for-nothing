@@ -21,12 +21,18 @@ export class Dog {
     this.callNow = false;
     this.lastX = null;
     this.togetherD = 0;
+    this.attend = 0;    // 0..1: looking up at him, tail up and wagging (D-2.9)
   }
 
   // ctx: { dt, cfg, allowed, manD, manSpeed, manX, screenX(d), view, crossed, trackLen }
   update(c) {
     const { dt, cfg } = c;
     this.timer += dt;
+    // When the visitor hovers or greets him, she looks up at him and wags
+    // (D-2.9): eased in over ~0.5 s, out over ~0.9 s. She stops with him
+    // anyway, because she keeps pace with him.
+    const wantAttend = c.attention && this.state === 'together' ? 1 : 0;
+    this.attend = wantAttend > this.attend ? Math.min(1, this.attend + dt / 0.5) : Math.max(0, this.attend - dt / 0.9);
 
     if (this.state === 'absent') {
       if (c.crossed && this.firstDone) this.crossings++;
@@ -36,13 +42,16 @@ export class Dog {
       return;
     }
 
-    const target = c.manD - cfg.spacing * cfg.scale;
+    // while she attends to him she stands half a body-length further back,
+    // so her raised head and tail aren't hidden behind him (D-2.9)
+    const target = c.manD - (cfg.spacing + 60 * this.attend) * cfg.scale;
     const gap = target - this.d;
     let desired;
     let gaitTarget;
 
     if (this.state === 'approaching' || this.state === 'together') {
-      desired = c.manSpeed + clamp(gap * 1.1, -c.manSpeed * 0.6, cfg.approachSpeed);
+      // she may take a slow step back to that spot if he has already stopped
+      desired = c.manSpeed + clamp(gap * 1.1, -Math.max(c.manSpeed * 0.6, 30 * this.attend), cfg.approachSpeed);
       if (this.state === 'approaching') {
         gaitTarget = clamp((this.speed - c.manSpeed) / (cfg.approachSpeed * 0.45), 0, 1);
         if (Math.abs(gap) < 6) { this.state = 'together'; this.crossings = 0; this.togetherD = 0; }
@@ -204,8 +213,12 @@ export function drawDog(ctx, x, y, scale, dog, C, time) {
   const psi = dog.psi;
   const { by, legs } = dogPose(dog, scale);
   const hb = by * 0.6 + Math.sin(psi * Math.PI * 4 + 0.8) * 0.8;
-  const tail = (dog.tail ?? Math.sin(psi * Math.PI * 2 + 1.2) * (2 + g * 2)) + Math.sin(time * 1.3) * 1.5;
-  const ear = dog.ear || 0;
+  // attention (D-2.9): head lifts toward his face, tail rises and wags (~2.4 Hz)
+  const att = smooth(clamp(dog.attend || 0, 0, 1));
+  const wag = att * Math.sin(time * Math.PI * 2 * 2.4) * 7;
+  const tail = (dog.tail ?? Math.sin(psi * Math.PI * 2 + 1.2) * (2 + g * 2)) + Math.sin(time * 1.3) * 1.5 * (1 - att) + wag;
+  const lift = -16 * att; // tail tip carried higher
+  const ear = (dog.ear || 0) - 0.12 * att; // ears forward, alert
 
   ctx.save();
   ctx.translate(x, y);
@@ -221,16 +234,16 @@ export function drawDog(ctx, x, y, scale, dog, C, time) {
   ctx.fillStyle = C.saddle;
   ctx.beginPath();
   ctx.moveTo(-50, -84 + by);
-  ctx.quadraticCurveTo(-74 + tail, -72 + by, -80 + tail, -40 + by);
-  ctx.quadraticCurveTo(-80 + tail, -30 + by, -73 + tail, -29 + by);
-  ctx.quadraticCurveTo(-66, -50 + by, -50, -68 + by);
+  ctx.quadraticCurveTo(-74 + tail, -72 + by + lift * 0.6, -80 + tail, -40 + by + lift);
+  ctx.quadraticCurveTo(-80 + tail, -30 + by + lift, -73 + tail, -29 + by + lift);
+  ctx.quadraticCurveTo(-66, -50 + by + lift * 0.5, -50, -68 + by);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = C.tanShade;
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(-58, -64 + by);
-  ctx.quadraticCurveTo(-70 + tail, -50 + by, -74 + tail, -32 + by);
+  ctx.quadraticCurveTo(-70 + tail, -50 + by + lift * 0.6, -74 + tail, -32 + by + lift);
   ctx.stroke();
 
   // body
@@ -267,7 +280,10 @@ export function drawDog(ctx, x, y, scale, dog, C, time) {
   leg(ctx, legs[0], C.tan, 11, 6);
   leg(ctx, legs[1], C.tan, 9.5, 6);
 
-  // head: broad skull, strong wedge muzzle, upright ears
+  // head: broad skull, strong wedge muzzle, upright ears. When she attends
+  // to him, the head tips up about the neck to look at his face (D-2.9).
+  ctx.save();
+  if (att > 0) { ctx.translate(46, -104 + hb); ctx.rotate(-0.42 * att); ctx.translate(-46, 104 - hb); }
   ctx.fillStyle = C.tan;
   ctx.beginPath();
   ctx.ellipse(55, -113 + hb, 16, 13.5, -0.2, 0, Math.PI * 2);
@@ -303,6 +319,7 @@ export function drawDog(ctx, x, y, scale, dog, C, time) {
   ctx.beginPath();
   ctx.arc(65, -117 + hb, 1.5, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore(); // head
 
   ctx.restore();
 }

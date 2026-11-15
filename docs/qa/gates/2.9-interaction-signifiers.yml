@@ -1,0 +1,8 @@
+schema: 1
+story: '2.9'
+story_title: 'A quiet hint that he responds'
+gate: PASS
+status_reason: 'Hand cursor over the man (real mouse check); Juhu looks up and wags while he is hovered or greeting; 81 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-15'
+top_issues: []

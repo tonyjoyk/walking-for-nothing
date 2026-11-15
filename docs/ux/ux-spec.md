@@ -75,8 +75,9 @@ change.
 - **Click (or tap on touch):** the same, but he turns as soon as he's
   standing, and the greeting plays through even if the cursor leaves.
 - **Leaving:** he turns back smoothly from wherever he is.
-- **No cursor change:** the cursor doesn't change over him; it isn't a
-  button. This still holds now that a click does something (D-2.2).
+- **Hint (D-2.9):** a minimal hand cursor over him, and Juhu, if she's
+  with him, stops, looks up at him and wags her tail while he's hovered or
+  greeting. This replaces the earlier "no cursor change" rule.
 - **Speech bubble (D-2.3, style D-2.5):** when he faces the visitor, a few
   words above his head introduce Tony. It fades in and out over 0.8 s, and
   holds briefly (D-2.7).

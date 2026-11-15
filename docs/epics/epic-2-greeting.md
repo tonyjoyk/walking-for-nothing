@@ -21,5 +21,6 @@
 | 2.6 | Reach the bubble, hold on touch, reveal the text | [2.6](../stories/2.6.bubble-reach-hold-reveal.md) | Done |
 | 2.7 | The greeting comes sooner | [2.7](../stories/2.7.greeting-sooner.md) | Done |
 | 2.8 | Bug: the bubble flashed on page load | [2.8](../stories/2.8.bubble-flash-on-load.md) | Done |
+| 2.9 | A quiet hint that he responds (hand cursor, Juhu looks up) | [2.9](../stories/2.9.interaction-signifiers.md) | Done |
 
-Next story: **2.9**. Candidate follow-ups (spec P1/P2): Juhu reacts; a blink while looking. Register new stories in [`docs/README.md`](../README.md) before writing them.
+Next story: **2.10**. Candidate follow-ups (spec P1/P2): Juhu reacts; a blink while looking. Register new stories in [`docs/README.md`](../README.md) before writing them.

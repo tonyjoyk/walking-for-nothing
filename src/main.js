@@ -106,6 +106,7 @@ function applyQuality() {
 
 const bubbleEl = document.getElementById('bubble');
 const updateBubble = createBubble(bubbleEl, scene);
+let cursorOnMan = false;
 
 new p5((p) => {
   p5ref = p;
@@ -127,6 +128,9 @@ new p5((p) => {
     scene.update(dt);
     scene.render(p.drawingContext, p.width, p.height, p.pixelDensity());
     updateBubble(dt);
+    // minimal hand cursor while the pointer is on the man himself (D-2.9)
+    const onMan = !!scene.pointer && scene.hitMan(scene.pointer.x, scene.pointer.y, scene.greeting.active, false);
+    if (onMan !== cursorOnMan) { cursorOnMan = onMan; document.documentElement.classList.toggle('on-man', onMan); }
     audio.update(scene.P, dt, scene.sceneName);
   };
 });

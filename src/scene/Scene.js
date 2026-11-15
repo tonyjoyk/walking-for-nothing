@@ -234,6 +234,8 @@ export class Scene {
     this.dog.update({
       dt, cfg: cfg.dog, allowed: dogAllowed, manD: this.manD, manSpeed,
       manX: this.manX, view: this.view, crossed, trackLen, screenX: (d) => this.screenX(d),
+      // the visitor is on him, or he's greeting them (D-2.9)
+      attention: this.hovering || ['stopping', 'settling', 'waiting', 'turning', 'looking', 'smiling'].includes(this.greeting.state),
     });
 
     // birds
@@ -264,7 +266,8 @@ export class Scene {
   // while stopping, and he can't stop out from under the cursor (D-2.2).
   // While the bubble shows, the box spans him and the bubble, so the cursor
   // (or a tap) can travel between them (D-2.7).
-  hitMan(px, py, held = false) {
+  // bridge: false leaves out the bubble's box (for the hand cursor, D-2.9).
+  hitMan(px, py, held = false, bridge = true) {
     const C = this.config.character;
     if (!C.visible) return false;
     const v = this.view;
@@ -274,7 +277,7 @@ export class Scene {
     const halfW = Math.max(30, 15 / k), top = -Math.max(270, 80 / k);
     const back = held ? (STOP_REACH * C.walkSpeed) / Math.max(0.05, C.cadence) / C.scale : 0;
     if (lx - 3 <= halfW && lx - 3 >= -halfW - back && ly >= top && ly <= 6) return true;
-    const b = held && this.bubbleShown && this.bubbleRect;
+    const b = held && bridge && this.bubbleShown && this.bubbleRect;
     if (!b) return false;
     const PAD = 12;
     const toX = (u) => (this.manX + u * C.scale - v.x0) * v.s;

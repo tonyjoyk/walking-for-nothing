@@ -278,6 +278,27 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
   and D-2.7's "the bubble shows once he faces the visitor".
 - **Status:** in force.
 
+### D-2.9 Two quiet signifiers: a hand cursor, and Juhu looking up
+- **Date:** 15 Nov 2026. **Story:** [2.9](../stories/2.9.interaction-signifiers.md).
+  **Research:** [inspiration board](https://miro.com/app/board/uXjVENr-NAc=/).
+- **Decision:**
+  - **Hand cursor:** a minimal hand cursor (custom 24 px SVG, with
+    `pointer` as a fallback) shows while the pointer is on him. It uses the
+    greeting's hover box but not the bubble's area.
+  - **Juhu's reaction:** while the visitor hovers him or he's greeting (and
+    she's with him), she attends:
+    - she stands about 60 units further back, taking a slow step back if
+      needed;
+    - her head tips up toward his face;
+    - her ears go forward;
+    - her tail rises and wags at about 2.4 Hz.
+- **Why:** the owner wants a subtle hint that he can be hovered or clicked.
+  Two quiet cues, a familiar one (the cursor) and one in the world (the
+  dog's attention), keep it "discovered" rather than announced.
+- **Supersedes:** "no cursor change" (UX spec, D-2.2), and the greeting
+  spec's non-goal "Juhu greeting the visitor".
+- **Status:** in force.
+
 ## Epic 3: Character and motion (D-3)
 
 ### D-3.1 Natural steps over the brief's slow crossing

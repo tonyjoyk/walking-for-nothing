@@ -398,3 +398,27 @@ still means a slow turn back and walking on.
 - **Hold:** reveal plus 4 s, counted from when the bubble appears, paused
   while the cursor is on the bubble (as Revision 5).
 
+---
+
+## Revision 7 (15 Nov 2026): hinting that he responds
+
+Decision: [D-2.9](../../architecture/decisions.md#d-29-two-quiet-signifiers-a-hand-cursor-and-juhu-looking-up).
+Story: [2.9](../../stories/2.9.interaction-signifiers.md).
+Research: [inspiration board](https://miro.com/app/board/uXjVENr-NAc=/).
+
+**Owner's choice** (from the inspiration board), two signifiers:
+
+1. **A minimal hand cursor** while the pointer is on him. It's a small,
+   thin-outlined white hand, so it reads on light and dark skies.
+2. **Juhu responds:** while the visitor hovers or greets him, and she's
+   with him:
+   - she stops with him and stands half a body-length back;
+   - she looks up at his face, ears forward;
+   - she raises her tail and wags it.
+
+   It eases in over about 0.5 s and out over about 0.9 s.
+
+This makes P2.1 "Juhu reacts" real, and replaces the non-goal "Juhu
+greeting the visitor". On touch screens there's no hover, so only Juhu's
+reaction to a tap shows.
+
