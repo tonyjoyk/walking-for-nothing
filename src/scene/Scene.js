@@ -227,7 +227,8 @@ export class Scene {
     }
     // Hover is re-tested every frame, so a still cursor follows him (D-2.2).
     if (this.pointer) this.hovering = this.hitMan(this.pointer.x, this.pointer.y, this.greeting.active);
-    // the cursor on the bubble itself pauses its hold (D-2.7)
+    // only the cursor on the bubble itself pauses its hold, so the link can be
+    // reached; on him, the hold runs as usual (D-2.7, D-2.11)
     const b = this.bubbleRect, p = this.pointer;
     const holdBubble = !!(b && p && this.bubbleShown && p.x >= b.left && p.x <= b.right && p.y >= b.top && p.y <= b.bottom);
     this.greet = this.greeting.update(dt, this.hovering, cfg.greeting, { stopFraction, holdBubble });

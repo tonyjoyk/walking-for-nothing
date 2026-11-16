@@ -11,7 +11,7 @@
 const SEEN_KEY = 'wfn.greeted';
 const PLAY_MS = 1900; // matches the CSS animation
 
-export function createGhostTap(el, scene, { delay = 2500, force = false } = {}) {
+export function createGhostTap(el, scene, { delay = 2500, force = false, ready = () => true } = {}) {
   const store = (() => { try { return window.localStorage; } catch { return null; } })();
   const greetedBefore = () => { try { return store?.getItem(SEEN_KEY) === '1'; } catch { return false; } };
   let state = (!el || (greetedBefore() && !force)) ? 'done' : 'waiting';
@@ -47,8 +47,9 @@ export function createGhostTap(el, scene, { delay = 2500, force = false } = {}) 
     if (!C.visible || !scene.view) return;
     if (state === 'waiting') {
       clock += dt * 1000;
-      // wait out the delay, and for him to be walking (not mid-greeting)
-      if (clock < delay || scene.greeting.active) return;
+      // wait out the delay and ready() (the sound cue gone, plus 3 s; D-2.12),
+      // and for him to be walking (not mid-greeting)
+      if (clock < delay || !ready() || scene.greeting.active) return;
       const p = chest();
       if (p.x < 40 || p.x > window.innerWidth - 40) return; // off screen: wait for him
       state = 'playing'; playFor = PLAY_MS;

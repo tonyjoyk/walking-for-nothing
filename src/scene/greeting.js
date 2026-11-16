@@ -20,8 +20,8 @@ const SETTLE_SECONDS = 0.65; // feet come together and the arms settle (story 2.
 const SMILE_GROW = 1.5;      // seconds for the smile to spread
 const SMILE_FADE = 0.8;
 // The bubble's text takes this long to appear (main.css, D-2.7); its
-// readSeconds hold starts after it, and pauses while the cursor is on the
-// bubble (ctx.holdBubble).
+// readSeconds hold starts after it, and pauses only while the cursor is on
+// the bubble itself (ctx.holdBubble, D-2.11).
 export const BUBBLE_REVEAL_SECONDS = 1.1;
 // The bubble starts to appear once his body has turned this far, so its
 // reveal overlaps the end of the turn (story 2.7).
@@ -121,7 +121,14 @@ export class Greeting {
 
       case 'waiting':
         // standing, not yet turned: the cursor has to stay, or click
-        if (turnNow) { this.turned = true; this.faceT = 0; goto('turning'); }
+        if (turnNow) {
+          this.turned = true; this.faceT = 0;
+          // with the bubble on, once he turns he sees the greeting through: the
+          // cursor slipping off him no longer ends it, only the hold running out
+          // or a click or tap elsewhere (release) or on him (dismiss) (D-2.11)
+          if (cfg.bubble) this.oneShot = true;
+          goto('turning');
+        }
         if (!want) leave();
         break;
 

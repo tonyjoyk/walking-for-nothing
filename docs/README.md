@@ -36,13 +36,13 @@ file.
 | Epic | Title | File | Stories | Status | Owner (chat) |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Opening and journey | [epic-1](epics/epic-1-opening-and-journey.md) | 1.1 Shuffle opening ✅; 1.2 Time-of-day picker ✅, 1.3 Picker labels and loop ✅ (Greeting review chat) | Active | Setup chat (fork) |
-| 2 | The greeting | [epic-2](epics/epic-2-greeting.md) | Built before stories were used (see spec); 2.1 Pause on hover, turn on rest or click ✅; 2.2 Speech bubble ✅; 2.3 Smaller bubble (Air) ✅; 2.4 Plain plate ✅; 2.5 View my work link ✅; 2.6 Bubble reach, hold, reveal ✅; 2.7 Greeting sooner ✅; 2.8 Bubble flash on load (bug) ✅; 2.9 Hint: hand cursor, Juhu looks up ✅; 2.10 Hand cursor on rest (bug) ✅; 2.11 Longer bubble hold ✅ | Active | Greeting review chat |
+| 2 | The greeting | [epic-2](epics/epic-2-greeting.md) | Built before stories were used (see spec); 2.1 Pause on hover, turn on rest or click ✅; 2.2 Speech bubble ✅; 2.3 Smaller bubble (Air) ✅; 2.4 Plain plate ✅; 2.5 View my work link ✅; 2.6 Bubble reach, hold, reveal ✅; 2.7 Greeting sooner ✅; 2.8 Bubble flash on load (bug) ✅; 2.9 Hint: hand cursor, Juhu looks up ✅; 2.10 Hand cursor on rest (bug) ✅; 2.11 Longer bubble hold ✅; 2.12 Bubble hold 9 s from the reveal; a click elsewhere ends it ✅ | Active | Greeting review chat |
 | 3 | Character and motion | [epic-3](epics/epic-3-character.md) | Built before stories were used; 3.1 Juhu in every scene ✅ (Greeting review chat) | Active | Setup chat |
 | 4 | Landscape and atmosphere | [epic-4](epics/epic-4-landscape.md) | Built before stories were used | Done | Setup chat |
 | 5 | Platform and delivery | [epic-5](epics/epic-5-platform.md) | Built before stories were used; 5.1 Zero-size window guard ✅; 5.2 Link preview image ✅ | Active | Setup chat |
 | 6 | Audio | [epic-6](epics/epic-6-audio.md) | 6.1–6.13 (see the epic for status; 6.13 listening pack Approved, waiting for Tony's session); 6.14 Volume slider ✅, 6.15 Sound on and first-visit hint ✅, 6.16 Sound only on the page ✅ (Greeting review chat); 6.17 Mellow thunder ✅ (Mellow thunder chat), 6.18 Thunder in every Rain pass ✅ (Greeting review chat); 6.11 Lightning ✅ (Lightning chat); 6.4 Manifest and credits ✅, 6.12 Sound credits on the page ✅ (Sound credits chat); 6.19 Sound off until tapped, with a cue ✅ (Interaction hints chat); spec: [product/specs/audio/](product/specs/audio/) | Active | Audio chat, Greeting review chat |
 
-**Next free epic:** 7. **Next free story:** 1.4 in epic 1, 2.12, 3.2, 4.1, 5.3, 6.20 in epic 6. **Next free decision:** D-0.6, D-1.7, D-2.11, D-3.8, D-4.4, D-5.3, D-6.21 (D-6.7 to D-6.12 are used in the audio docs).
+**Next free epic:** 7. **Next free story:** 1.4 in epic 1, 2.13, 3.2, 4.1, 5.3, 6.20 in epic 6. **Next free decision:** D-0.6, D-1.7, D-2.13, D-3.8, D-4.4, D-5.3, D-6.21 (D-6.7 to D-6.12 are used in the audio docs).
 
 ## Open cross-chat items
 

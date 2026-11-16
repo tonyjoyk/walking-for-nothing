@@ -360,6 +360,36 @@ are `D-0.<n>` (see the rules in [`docs/README.md`](../README.md)).
 - **Why:** the owner found the bubble went away too soon while the cursor
   rested on him.
 - **Supersedes:** the 4 s hold in D-2.7.
+- **Status:** superseded by D-2.11 (9 s).
+
+### D-2.11 A 9 s hold from the reveal; a click elsewhere ends it
+- **Date:** 16 Nov 2026. **Story:** [2.12](../stories/2.12.bubble-hold-and-click-away.md).
+- **Decision (owner):**
+  - **Hold 9 s from the moment the bubble is fully revealed** (`readSeconds`
+    9, was 6), whether or not the cursor is on him. Then he turns back and
+    walks on, even with the cursor still on him.
+  - Only the cursor on the bubble itself pauses the hold, so the "View my
+    work" link can be reached (as in D-2.7).
+  - **Once he has turned, the cursor slipping off him doesn't end the
+    greeting early;** the same hold carries on.
+  - **A click or tap anywhere outside him and the bubble ends it at once:**
+    he turns back and walks on. A click on him still does too. The press
+    itself updates the pointer position, so it counts even if no pointer
+    move came first.
+- **Why:** the owner wants one predictable reading time from the reveal,
+  and a simple way out: click or tap elsewhere.
+- **Supersedes:** D-2.10's 6 s; in D-2.7, the cursor leaving him ending the
+  greeting after he has turned.
+- **Status:** in force.
+
+### D-2.12 The tap hint on the man waits for the sound cue
+- **Date:** 16 Nov 2026.
+- **Decision (owner):** the ghost tap (a tap circle on his chest, once)
+  starts only 3 s after the "Click for sound" cue has gone: after it fades
+  (about 7 s after load), or after it closes early because sound started.
+  So the two hints never overlap. On a typical load it plays at about 10 s.
+- **Why:** the owner found the two hints overlapping and competing.
+- **Supersedes:** the ghost tap's 2.5 s start.
 - **Status:** in force.
 
 ## Epic 3: Character and motion (D-3)

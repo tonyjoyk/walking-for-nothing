@@ -136,20 +136,20 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
 // ---------------------------------------------------------------------------
 export const cueText = (fine) => (fine ? 'Click for sound' : 'Tap for sound');
 
-export function initSoundCue({ wantsSound = () => true, isPlaying = () => false, delay = 1500, stay = 5000 } = {}) {
+export function initSoundCue({ wantsSound = () => true, isPlaying = () => false, delay = 1500, stay = 5000, onGone = () => {} } = {}) {
   const el = document.getElementById('sound-cue');
   const btn = document.getElementById('sound');
   const controls = document.getElementById('controls');
-  if (!el || !wantsSound()) return;
+  if (!el || !wantsSound()) { onGone(); return; }
   let open = false, done = false, poll = 0;
   const close = () => {
     if (done) return;
     done = true; clearInterval(poll);
     btn?.classList.remove('cue');
-    if (!open) return;
+    if (!open) { onGone(); return; }
     open = false;
     el.classList.remove('show');
-    setTimeout(() => { el.hidden = true; }, 400);
+    setTimeout(() => { el.hidden = true; onGone(); }, 400); // gone once faded (the ghost tap waits on this)
   };
   // sound starting (any click, tap or key) or the controls being used ends it
   poll = setInterval(() => { if (isPlaying() || !wantsSound()) close(); }, 150);

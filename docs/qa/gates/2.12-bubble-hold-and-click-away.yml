@@ -1,0 +1,8 @@
+schema: 1
+story: '2.12'
+story_title: 'The bubble holds 9 s from its reveal; a click elsewhere ends it'
+gate: PASS
+status_reason: '9 s from the reveal with or without the cursor on him; pause only on the bubble; a click elsewhere ends it at once; unit tests and headless Chrome; 115 tests and build pass.'
+reviewer: 'QA (Claude)'
+updated: '2026-11-16'
+top_issues: []

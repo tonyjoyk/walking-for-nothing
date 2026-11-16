@@ -113,8 +113,14 @@ function applyQuality() {
 
 const bubbleEl = document.getElementById('bubble');
 const updateBubble = createBubble(bubbleEl, scene);
-// Ghost tap (cue 15): a tap circle on him, once; ?ghost replays it every load
-const updateGhostTap = createGhostTap(document.getElementById('ghost-tap'), scene, { force: params.has('ghost') });
+// Ghost tap (cue 15): a tap circle on him, once; ?ghost replays it every load.
+// It waits until the "Click for sound" cue has gone, plus 3 s, so the two
+// hints never overlap (D-2.12).
+let soundCueGoneAt = null;
+const updateGhostTap = createGhostTap(document.getElementById('ghost-tap'), scene, {
+  force: params.has('ghost'),
+  ready: () => soundCueGoneAt !== null && performance.now() - soundCueGoneAt >= 3000,
+});
 // Minimal hand cursor while the pointer is on the man himself (D-2.9). Set in
 // the pointer handler as well as each frame: browsers only redraw the cursor
 // when the mouse moves, so a change made a frame later would not show until
@@ -189,6 +195,9 @@ window.addEventListener('blur', pointerOff);
 window.addEventListener('pointerdown', (e) => {
   if (e.button > 0) return;
   if (e.target.closest && e.target.closest('button, input, select, a, .tp-dfwv, .bubble')) return; // UI or the bubble, not the scene
+  // the press itself says where the pointer is, so a click away from him counts
+  // as away even if no move arrived first (D-2.11)
+  if (e.pointerType !== 'touch') { scene.pointer = { x: e.clientX, y: e.clientY }; scene.hovering = scene.hitMan(e.clientX, e.clientY, scene.greeting.active); }
   if (scene.greeting.facing && scene.hitMan(e.clientX, e.clientY)) scene.greeting.dismiss(); // on him again: bye
   else if (scene.hitMan(e.clientX, e.clientY, scene.greeting.active)) scene.greetNow();
   else scene.greeting.release();
@@ -215,7 +224,7 @@ document.addEventListener('visibilitychange', () => {
 const soundCtl = initSoundControl({ config, audio, onChange: () => app.onAudioChange?.() });
 const syncSoundButton = soundCtl.sync;
 // a small "Click for sound" cue beside the speaker while sound is off (story 6.19)
-initSoundCue({ wantsSound: soundCtl.wantsSound, isPlaying: soundCtl.isPlaying });
+initSoundCue({ wantsSound: soundCtl.wantsSound, isPlaying: soundCtl.isPlaying, onGone: () => { soundCueGoneAt = performance.now(); } });
 // the time-of-day picker above it (stories 1.2, 1.3)
 const scenePicker = initScenePicker({ scene, config, storage: tabStorage });
 
