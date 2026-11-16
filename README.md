@@ -1,241 +1,199 @@
-# Living Landscape
+# Walking for Nothing
 
-A quiet personal site. A man walks through a field in Kerala, forever.
-Juhu, his German Shepherd, joins him now and then. The weather changes.
+A quiet personal site by Tony Joy. A man in a white mundu walks through a
+field in Kerala, forever. Juhu, his German Shepherd, joins him now and then.
+The light and weather change as he walks.
 
-Everything is drawn in code with p5.js. No images, no sound files.
+**Live site:** https://tonyjoyk.github.io/walking-for-nothing/
 
-![The six states](docs/media/preview-six-states.png)
+The scene is drawn in code with p5.js. The sound is real, openly licensed
+field recordings.
 
-**Project docs** (PRD, UX, architecture, decisions, epics, stories): start at
-[`docs/README.md`](docs/README.md).
+![The six scenes](docs/media/preview-six-states.png)
+
+**Contents:** [What a visitor can do](#what-a-visitor-can-do) ·
+[Run it](#run-it) · [Where things are](#where-things-are) ·
+[How it works](#how-it-works) · [The dev panel](#the-dev-panel) ·
+[Tests, captures and hosting](#tests-captures-and-hosting) ·
+[Project docs](#project-docs) · [Credits](#credits) ·
+[Known limits](#known-limits)
+
+## What a visitor can do
+
+The site has no menu and no instructions. The scene is the interface, and
+everything is found by chance.
+
+- **Watch.** He walks across the screen; each time he walks off the right
+  and comes back on the left, the scene moves on: Dawn, Day, Windy, Rain,
+  Sunset, Night.
+- **Say hello.** Rest the cursor on him (or tap him on a phone). He stops,
+  turns to face you, and a small speech bubble introduces Tony with a
+  "View my work" link. It stays 9 seconds after it appears; a click or tap
+  anywhere else sends him on his way.
+- **Notice the hints.** A hand cursor shows over him, Juhu looks up at him
+  when he's greeted, and a soft tap circle on his chest shows that he can
+  be tapped (a few seconds after the sound pill, until the visitor first
+  greets him).
+- **Listen.** Sound starts on the first click, tap or key anywhere (browsers
+  allow nothing earlier). A small "Click for sound" pill by the speaker says
+  so, then fades. Turning sound off lasts for that visit only.
+- **Adjust,** bottom right: the speaker (with a volume slider on hover) and
+  a time-of-day menu to stay in one scene.
+- **Credits,** bottom left: every recording and its licence.
 
 ## Run it
+
+You need Node.js.
 
 ```bash
 npm install
 npm run dev
 ```
 
-- Visitor view: `http://localhost:5173/`
-- Tuning view: `http://localhost:5173/?dev`
+Then open:
 
-Build for hosting with `npm run build`. The output is in `dist/`.
-
-**Hosting:** GitHub Pages at https://tonyjoyk.github.io/walking-for-nothing/, deployed by `.github/workflows/deploy.yml` on
-every push to `main` and every 30 minutes (to refresh Pala's weather).
-Live weather is a separate opening mode, currently off (`LIVE_WEATHER` is
-`false`); the deploy still refreshes Pala's weather every 30 minutes so it
-can be switched back on.
-
-Run `npm run capture` (with the dev server running) to render every scene
-beside the reference sheet, the walk in both mundu states and the field
-depth strip into `captures/`.
-
-Run the regression tests with `npm test`. They render every preset, every
-control extreme and several screen sizes headlessly, and check for NaN
-geometry, sliding feet and paws, and config save/load.
-
-## The dev panel
-
-Add `?dev` to the URL to load it. Visitors never download it.
-
-| Key | Action |
+| Address | What it shows |
 | --- | --- |
-| `H` | Hide or show the panel |
-| `Space` | Play or pause |
+| `http://localhost:5173/` | The site as visitors see it |
+| `http://localhost:5173/?dev` | The site with the tuning panel |
+| `?weather=rain` | Opens on a given scene (also `sunny`, `overcast`, `wind`, `dawn`, `twilight`, `night`) |
+| `?ghost` | Plays the tap circle on every load (normally only until the visitor greets him) |
 
-Panel groups: presets and playback, lighting and palette, clouds, field and
-grass, character, Juhu, birds, weather, sound, and save and share.
+`npm run build` makes the hosted version in `dist/`.
 
-Useful buttons:
+## Where things are
 
-- **Call Juhu now** starts her approach right away, so you can tune her gait.
-- **Send birds now** spawns a flock.
-- **Reset to preset** throws away your manual changes.
-- **Download JSON** saves every setting. **Load JSON** restores them.
-  Bad values in a loaded file are skipped and listed in the console.
-
-### Locking in a look
-
-When a scene looks right, export the JSON. Copy its `scene` values into
-that preset in `src/config.js`, and any other changed values into
-`createDefaultConfig()`. Tuning you don't export is lost on reload.
-
-### Removing the panel
-
-You don't need to. It only loads with `?dev`. If you want it gone:
-
-1. Delete `src/controls/ControlPanel.js`.
-2. Delete the `?dev` block at the bottom of `src/main.js`.
-3. Remove `tweakpane` from `package.json`.
+```
+index.html             the page: canvas, speech bubble, controls, credits
+src/
+  main.js              starts everything: p5 setup, pointer and greeting input,
+                       sound, the visitor controls, ?dev loader
+  config.js            the six scene presets, defaults, ranges, sound tables
+  bubble.js            places the speech bubble and keeps its text readable
+  ghostTap.js          the one-time tap circle on the man
+  credits.js           the Credits list (bottom left)
+  weather.js           live weather (switched off for now)
+  scene/               everything drawn on the canvas
+    Scene.js           state, easing between scenes, draw order
+    character.js       the man: rig, gait, arms, turning to face you
+    greeting.js        the greeting's state machine and timings
+    mundu.js           the mundu as a simulated cloth
+    dog.js             Juhu: when she comes and goes, her gaits
+    sky.js, clouds.js, terrain.js, field.js, life.js
+                       sky, clouds, hills, grass, birds, rain, lightning
+    gaitData.js        measured walking curves (UCI, CC BY 4.0)
+  audio/               recorded sound: beds, birds, thunder, credits
+  controls/
+    visitorControls.js speaker, volume, "Click for sound", time-of-day menu
+    ControlPanel.js    the dev panel (only loaded with ?dev)
+  styles/main.css      all page styles
+public/audio/          processed recordings and manifest.json
+tests/                 automated tests (npm test)
+tools/capture.mjs      renders scenes to images (npm run capture)
+docs/                  product, UX and architecture docs, decisions, stories
+```
 
 ## How it works
 
-```
-src/
-  main.js              p5 setup, resize, tab pause, sound button, ?dev loader
-  config.js            six presets, defaults, control ranges, JSON validation
-  audio/               recorded sound: beds per scene, birds, thunder (Web Audio)
-  scene/
-    Scene.js           state, parameter easing, wrap, render order, debug view
-    util.js            coordinate constants, seeded random, colour helpers
-    sky.js             sky gradient, sun or moon, stars
-    clouds.js          painted cumulus clouds
-    terrain.js         mountains with facets, hills, treeline, coconut palms
-    field.js           grass: clumped blades, cached undergrowth, wind, parting
-    character.js       the man: IK rig, feet, gait, pendulum arms, look, rim light
-    gaitData.js        measured hip/knee/ankle curves (UCI, CC BY 4.0)
-    mundu.js           the mundu as a Verlet cloth that wraps the legs
-    dog.js             Juhu: state machine, IK legs, walk and trot gaits
-    life.js            birds, rain, leaves, haze, mist, light, paint grain
-  controls/
-    ControlPanel.js    Tweakpane panel (dev only)
-```
+**One place, six moods.** Each scene preset is the same set of colours and
+numbers. Moving to a new scene eases every value toward the new one; the
+geometry never changes. Mountains, clouds, grass and palms come from a seed,
+so the world is the same on every visit.
 
-**One place, six conditions.** Each preset is the same set of keys:
-colours and numbers. Changing preset eases every value toward the new one
-over the transition time. Geometry never changes.
-
-**Coordinates.** The scene is drawn in a 1920 × 1080 space. The field is
-pinned to the bottom. Taller screens show more sky. Wider screens show more
-land. Narrow screens show a centred slice, never less than 760 wide, so the
+**Any screen size.** The scene is drawn in a 1920 × 1080 space with the
+field pinned to the bottom. Taller screens show more sky, wider ones more
+land, and narrow ones a centred slice (never less than 760 wide), so the
 man stays readable.
 
-**Seeded geometry.** Mountains, clouds, grass and palms come from a seed.
-Same seed, same world. "New layout" in the grass group picks a new seed.
+**The walk.** One phase value drives the whole body and advances with
+distance walked, so his feet never slide.
+- **Legs** follow joint angles measured from real walkers. A planted foot is
+  pinned to the ground and rolls heel, flat, toe.
+- **Arms** are damped pendulums that swing more behind than in front.
+- **The mundu** is a small cloth simulation that drapes over the legs, full
+  length or folded at the knee.
+- **The grass** grows in clumps, sways in gusts and parts around his legs
+  and Juhu's paws. The near grass is drawn in front of them, so it hides
+  their feet.
 
-**Occlusion.** Grass is drawn in three bands. The far band sits behind the
-man and Juhu. The mid and front bands sit in front, which hides their
-lower legs.
+**The greeting.** `greeting.js` is a small state machine:
+1. After about 1.5 seconds of hover (or a tap), he stops with both feet
+   down and turns to you, head first.
+2. The bubble's lines fade in over about a second.
+3. It holds 9 seconds, paused only while the cursor is on the bubble. A
+   click or tap elsewhere ends it at once; a click on him also does.
+4. He turns back and walks on.
 
-**The field.** Each band has an undergrowth layer (staggered rows of fine
-tufts) under its blades, so the ground never shows through. Undergrowth is
-painted once into an offscreen bitmap per band and reused; it is redrawn
-only when the view, colours or grass settings change. Blades grow in
-fanned clumps, curve more towards the tip, and lean in a wind made of
-noise drifting downwind, so gusts roll across in patches. Blades part
-around the man's legs and Juhu's paws. Controls: **clumping** and
-**undergrowth** in the grass group.
+The turn blends each profile shape into a front-view twin, so at the start
+it is exactly the profile figure.
 
-**The walk.** One phase value drives the whole body, and it advances with
-distance walked, not time, so the legs can never run ahead of the ground.
-The default is a slow stroll: 0.42 m steps at about 67 steps a minute, about 33
-seconds per screen crossing.
-- **Legs:** hip, knee and ankle follow joint angles measured from real
-  walkers (`gaitData.js`), scaled to the step length. While a foot is down
-  it is pinned to the ground by two-bone IK and rolls heel, flat, toe. The
-  knee's small bend after heel strike sets the hip height, so the body dips
-  after each contact and rises over the planted foot.
-- **Arms:** driven, damped pendulums hanging from shoulders that move with
-  the trunk, pulled gently towards measured arm-swing ranges. They swing
-  more behind than in front, the elbow bends on the forward swing, and they
-  settle to a relaxed hang when he stops.
-- **Mundu:** a small Verlet cloth (five chains from the waistband) that
-  collides with the legs and drapes over the seat, so the legs never show
-  through above the hem. Choose folded (knee) or full (ankle) length.
-- **Head and arms:** the head is one profile (skull, brow, projecting nose,
-  lips, chin, jaw) with a single beard shape along the jaw and hair that
-  follows the skull; inside it there is only an eye and a brow. Each arm is
-  one continuous tapered shape with a smooth elbow, a small hand and a
-  sleeve cut square at a rolled cuff.
-- **Light:** a low sun puts a rim light on the side of the figure facing it.
+**Juhu.** She sets off from the left once he reaches the middle of the
+screen, trots to catch up, and walks beside him into the next scene. Then
+she trots ahead and leaves, skips two scenes, and comes back. Her paws stay
+planted while they carry weight, and her tail and ears follow her body on
+springs.
 
-The **Character** section of the dev panel has groups for body, hair,
-shirt, mundu and walk: height, build, skin, hair and beard, shirt colour,
-sleeve and looseness, mundu and kasavu colours, mundu length, cloth
-stiffness, walking speed, steps per minute, arm swing, knee lift, bob,
-and a **ground offset** that moves the man and Juhu up or down together.
+**The journey.** A fresh visit opens on a random scene. Reloading the same
+tab opens the next one. Each crossing of the screen moves to the next scene,
+unless the visitor picked one in the time-of-day menu.
 
-**Light and shadow.** The mountains follow flat landscape illustration:
-one dominant peak with smaller peaks beside it (more continue past the
-frame on wide screens). Each peak's sun-facing side is a single lit plane
-that fades into the haze, and distant ranges are paler with less contrast.
-The man and Juhu have soft contact shadows, and long shadows that fall
-across the grass when the sun is low. Grass blades darken towards their
-roots.
+**Sound.** Each scene has a looping recording (a bed), with one-off birds,
+and lightning followed by thunder in Rain. Sound fades out when the page
+isn't in front, and stops when the tab is hidden. The mix and event tables
+are in `src/config.js` (`AUDIO_MIX`, `AUDIO_EVENTS`, `AUDIO_THUNDER`).
 
-**Field depth.** The ground offset (Character → Body) also sets how deep
-the figures are in the field. Raised, the grass in front of them is short
-and barely moves, so he walks on a grassy field; lowered, the hay is tall
-and parts as he wades through it. **Grass parting** (Field and grass) sets
-the strongest it gets.
+To change the recordings:
+1. List them in `audio/sources.json` and put the originals in `audio-src/`
+   (not committed).
+2. Run `node scripts/build-audio.mjs`. It writes `public/audio/`,
+   `manifest.json`, and the "Sound credits" list in this README.
 
-**The mundu** has two states. **Full** reaches the ankles and hides the
-legs. **Folded** is hitched up and tucked at the front, so the hem rises
-towards the front and the shins show. In both, the border (dark green by
-default) runs along the hem and up the edge of the outer layer, and is
-drawn from the cloth's own points so it moves with it.
+## The dev panel
 
-**Juhu.** Her states are `absent → approaching → together → departing`.
-She trots to catch up, eases into a walk beside him, walks one screen width
-with him, then trots ahead and leaves. She is gone for two crossings, then
-returns. Her first visit comes 20 seconds after load. Her walk uses a
-four-beat pattern; her trot moves diagonal legs together. Her legs use the
-same IK planting as the man's, so paws stay put while they carry weight.
-Her tail and ears follow her body on springs.
+Add `?dev` to the address. Visitors never download it.
 
-**Sound.** All generated, so nothing to license. Wind is shaped noise that
-rises with the wind setting. Rain is filtered noise. Chirps play when a
-flock enters, with a cooldown. Sound starts only after a tap on the button
-in the corner.
+- `H` hides or shows the panel; `Space` plays or pauses.
+- Groups cover presets and playback, light and colour, clouds, grass, the
+  man, Juhu, birds, weather, sound and the greeting.
+- Handy buttons: **Call Juhu now**, **Send birds now**, **Greet now**,
+  **Reset to preset**.
+- **Download JSON** saves every setting; **Load JSON** restores them.
 
-## Opening scene and the journey
+**Keeping a look:** download the JSON, then copy its `scene` values into
+that preset in `src/config.js`, and other changed values into
+`createDefaultConfig()`. Anything not copied is lost on reload.
 
-**Opening (default: shuffle).** A fresh visit opens on a random scene. Each
-reload of the same tab opens on the scene after the one that was on screen,
-so reloading steps through the day: Dawn → Daylight → Windy → Rain → Sunset →
-Night. The tab remembers the last scene in `sessionStorage` only; nothing is
-stored beyond the tab or sent anywhere. Story:
-`docs/stories/1.1.shuffle-and-advance-opening.md`.
+## Tests, captures and hosting
 
-After that, each time he walks off the right and comes back in on the left,
-the scene moves to the next one in the same order.
+- `npm test` runs the automated tests. They draw every scene, every control
+  extreme and several screen sizes without a browser, and check the walk,
+  the greeting, Juhu, the sound and the controls.
+- `npm run capture` (with the dev server running) renders every scene, the
+  walk and the greeting into `captures/`, for checking by eye
+  (`npm run capture -- --only greet` for one set).
+- **Hosting:** GitHub Pages, deployed by `.github/workflows/deploy.yml` on
+  every push to `main`, and every 30 minutes to refresh Pala's weather for
+  when live weather is switched back on.
 
-**Other opening modes** (dev panel → **Opening and journey** → opening
-mode):
-- **Live weather:** Kerala's time of day, easing into Pala's current weather
-  from `weather.json` (`docs/product/specs/live-weather.md`). Off for now:
-  - the repository variable `LIVE_WEATHER` is `false`, so the deploy
-    publishes the file switched off;
-  - `?weather=live` previews it.
-- **Time of day:** Kerala's time of day only.
+## Project docs
 
-`?weather=rain` (or `sunny`, `overcast`, `wind`, `dawn`, `twilight`,
-`night`) forces the opening scene. The weather rules (wind thresholds, dawn
-and sunset windows, maximum age, location) are `WEATHER_RULES` in
-`src/config.js`.
-
-## The greeting
-
-Rest the cursor on the man and he slows to a stop (always with both feet on
-the ground), turns to face you head first, looks at you for 3 seconds, then
-slowly smiles. Four seconds later he turns back and walks on. Move the cursor
-off him at any point and he turns back straight away. On a phone, tap him.
-
-How it works: `src/scene/greeting.js` is a small state machine that eases
-his speed, stance, head and body turn, and smile. The drawing turns by
-blending each profile outline (head, hair, beard, neck, shirt) into a
-front-view twin with the same path commands, and by projecting arms, legs,
-eyes and ears from simple 3D positions, so at turn 0 it is exactly the
-profile figure. The mundu's simulated cloth morphs to its front view. Timings
-and an on/off switch are in the dev panel under **Greeting** (with a "Greet
-now" button); `npm run capture -- --only greet` renders the sequence. Spec:
-`docs/product/specs/greeting.md`.
+Product, UX and architecture docs, the decision log and every story live in
+[`docs/`](docs/README.md). Start with
+[`docs/README.md`](docs/README.md): it explains how the docs are organised,
+which story and decision numbers are free, and the rules for working on the
+project.
 
 ## Credits
 
-On the page, one quiet "Credits" link in the bottom-left corner opens a
-list of every recording, plus the weather data while live weather is on
-(D-0.5, story 6.12).
+The on-page Credits link lists every recording, plus the weather data while
+live weather is on.
 
-Live weather: data by [Open-Meteo.com](https://open-meteo.com/), licensed
-CC BY 4.0.
-
-Gait curves are the mean of the unbraced trials in the UCI Machine Learning
-Repository "Multivariate Gait Data"
-(https://archive.ics.uci.edu/dataset/760/multivariate+gait+data),
-licensed CC BY 4.0. The values were averaged and rounded.
+- **Live weather:** data by [Open-Meteo.com](https://open-meteo.com/),
+  CC BY 4.0.
+- **Gait curves:** the mean of the unbraced trials in the UCI Machine
+  Learning Repository "Multivariate Gait Data"
+  (https://archive.ics.uci.edu/dataset/760/multivariate+gait+data),
+  CC BY 4.0, averaged and rounded.
 
 ### Sound credits
 
@@ -255,26 +213,13 @@ Every recording in `public/audio/`, from `public/audio/manifest.json`:
 - [White-throated kingfisher](https://xeno-canto.org/603361) by Sathyan Meppayur, [CC0](https://creativecommons.org/publicdomain/zero/1.0/); cut and levelled. Files: `kingfisher-1`, `kingfisher-2`, `kingfisher-3` (.webm and .m4a).
 <!-- sound-credits:end -->
 
-## Sound
+## Known limits
 
-Recorded sound plays per scene: a looping bed, one-shot birds and thunder in
-the rain. The generated wind and rain fill in while recordings load. How it
-plays together: `docs/bmad/party-mode/2026-10-20-sound-mix.md`.
-
-- The recordings are listed in `audio/sources.json`. Originals go in
-  `audio-src/`, which is git-ignored.
-- `node scripts/build-audio.mjs` makes `public/audio/` and `manifest.json`.
-  It also rewrites the "Sound credits" list above. With `--manifest-only`
-  it rewrites only the manifest and credits, not the audio files.
-- The mix, bird and thunder tables are in `src/config.js` (`AUDIO_MIX`,
-  `AUDIO_EVENTS`, `AUDIO_THUNDER`).
-
-## Notes and known limits
-
-- The painted finish uses a generated grain overlay and gradient glows, not
-  a shader. It is cheaper and works the same on every browser. A shader
-  pass can come later if the look needs it.
-- Mobile works but is not tuned. Quality "low" or "medium" lowers grass
-  count and pixel density.
-- The visitor UI is only the sound button. The site still needs a decision
-  on what else a visitor finds.
+- **Live weather is paused.** It can open the site on Pala's real weather
+  (`?weather=live` previews it), but it is switched off with the repository
+  variable `LIVE_WEATHER`. A review of whether to remove it is due 31 Jan
+  2027.
+- **Mobile works but isn't tuned.** The dev panel's quality setting lowers
+  grass and pixel density on slower devices.
+- **The painted look** uses a grain overlay and soft gradients, not a
+  shader. It's cheaper and looks the same in every browser.
