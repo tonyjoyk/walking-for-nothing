@@ -4,6 +4,7 @@ import { chooseOpeningScene, validateWeather, SCENE_NAMES, chooseShuffleScene, r
 import { Scene } from './scene/Scene.js';
 import { SoundDirector } from './audio/index.js';
 import { createBubble } from './bubble.js';
+import { createGhostTap } from './ghostTap.js';
 import { initSoundControl, initScenePicker, readSceneLock, initSoundCue } from './controls/visitorControls.js';
 import { initCredits } from './credits.js';
 
@@ -112,6 +113,8 @@ function applyQuality() {
 
 const bubbleEl = document.getElementById('bubble');
 const updateBubble = createBubble(bubbleEl, scene);
+// Ghost tap (cue 15): a tap circle on him, once; ?ghost replays it every load
+const updateGhostTap = createGhostTap(document.getElementById('ghost-tap'), scene, { force: params.has('ghost') });
 // Minimal hand cursor while the pointer is on the man himself (D-2.9). Set in
 // the pointer handler as well as each frame: browsers only redraw the cursor
 // when the mouse moves, so a change made a frame later would not show until
@@ -142,6 +145,7 @@ new p5((p) => {
     scene.update(dt);
     scene.render(p.drawingContext, p.width, p.height, p.pixelDensity());
     updateBubble(dt);
+    updateGhostTap(dt);
     scenePicker.update();
     // he walks under a still pointer: keep the hand cursor in step (D-2.9)
     updateHandCursor();
