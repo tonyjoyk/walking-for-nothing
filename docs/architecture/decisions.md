@@ -700,9 +700,11 @@ Added 20 Oct 2026 by the audio chat. Full text:
     the man, or on a click on the speaker. Then the speaker shows on.
     Browsers don't count hover, scroll or mouse movement, so those can't
     start it.
-  - **Remembered off:** a visitor who turns sound off stays silent on later
-    visits (`wfn.sound=off`), as in D-6.14; clicks on the page don't start
-    it, and the cue doesn't show.
+  - **Off lasts one visit (owner's correction, same day):** turning sound
+    off keeps that visit silent, and clicks on the page don't restart it.
+    It isn't remembered: every load starts fresh, with the cue, and any
+    interaction turns sound on again. An old `wfn.sound=off` is cleared. A
+    volume left at zero comes back at half.
   - **The cue:** on every visit while the sound is off, a small dark-glass
     pill beside the speaker, "Click for sound" (or "Tap for sound" on touch
     screens), with two soft rings from the speaker. It fades in after
@@ -713,6 +715,6 @@ Added 20 Oct 2026 by the audio chat. Full text:
   it off by default, with a minimal, on-theme invitation that goes away by
   itself.
 - **Supersedes:** in D-6.14, the speaker showing "on" before sound plays and
-  the first-visit card ("Sound is on…", once per visitor, `wfn.hintSeen`).
-  D-6.14's "remember off" rule stays.
+  the first-visit card ("Sound is on…", once per visitor, `wfn.hintSeen`),
+  and D-6.14's "remember off" rule.
 - **Status:** in force.

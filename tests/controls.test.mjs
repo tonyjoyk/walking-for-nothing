@@ -110,9 +110,12 @@ test('6.19: the sound shows off until it really plays, and the cue wording follo
   assert.equal(cueText(true), 'Click for sound');
   assert.equal(cueText(false), 'Tap for sound');
   const src = readFileSync(new URL('../src/controls/visitorControls.js', import.meta.url), 'utf8');
-  assert.match(src, /let wanted = readSoundOn\(storage\);\s*A\.enabled = false;/, 'off until it starts');
+  assert.match(src, /A\.enabled = false;/, 'off until it starts');
   assert.match(src, /const isOn = \(\) => started && A\.enabled/, 'the speaker shows on only once started');
-  assert.match(src, /if \(started \|\| !wanted\) return;/, 'a remembered "off" keeps clicks on the page silent');
+  assert.match(src, /let wanted = true;/, 'every visit starts fresh: a past "off" is not remembered');
+  assert.match(src, /removeItem\?\.\(SOUND_KEY\)/, 'an old remembered "off" is cleared');
+  assert.match(src, /if \(started \|\| !wanted\) return;/, 'after turning it off on this visit, clicks on the page stay silent');
+  assert.doesNotMatch(src.slice(src.indexOf('export function initSoundControl')), /rememberSoundOn\(/, 'the sound choice is no longer stored');
 });
 
 // The dev panel's scene dropdown now goes through applyScene, so the sound follows it.

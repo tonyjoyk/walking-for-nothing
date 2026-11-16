@@ -5,7 +5,7 @@
 // remembered in this browser so a quiet setting sticks.
 
 export const VOLUME_KEY = 'wfn.volume';
-export const SOUND_KEY = 'wfn.sound'; // 'on' or 'off': the visitor's choice (default on, story 6.15)
+export const SOUND_KEY = 'wfn.sound'; // stories 6.15–6.19 remembered 'off' here; since D-6.20 (rev.) it's ignored and cleared
 
 // The visitor's sound choice: true (on, the default) unless they turned it off.
 export function readSoundOn(storage) {
@@ -38,14 +38,17 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
   const saved = readVolume(storage);
   if (saved !== null) A.master = saved;
   // Browsers only let sound play after the visitor's first click, tap or key,
-  // so it starts then, unless they turned it off before (story 6.15). Until it
-  // really plays, the speaker shows off (story 6.19, D-6.20).
-  let wanted = readSoundOn(storage);
+  // so it starts then. Until it really plays, the speaker shows off (story
+  // 6.19, D-6.20). Turning it off lasts for this visit only: every load starts
+  // fresh, so a "sound off" from an earlier visit (wfn.sound) is cleared.
+  let wanted = true;
+  try { storage?.removeItem?.(SOUND_KEY); } catch { /* nothing to clear */ }
   A.enabled = false;
   A.muted = false;
   let started = false, startedAt = -1e9;
   async function startOnGesture() {
     if (started || !wanted) return;
+    if (A.master <= 0) A.master = 0.5; // a level left at zero comes back at half
     // only events the browser counts as permission to play (a mouse press, the
     // end of a touch, a key), else the start could stall and never retry
     if (navigator.userActivation && !navigator.userActivation.isActive) return;
@@ -96,11 +99,11 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
   btn.addEventListener('click', async () => {
     // the click that started the sound just now isn't also a click to stop it
     if (performance.now() - startedAt < 800) { sync(); return; }
-    if (isOn()) { A.enabled = false; wanted = false; rememberSoundOn(storage, false); }
+    if (isOn()) { A.enabled = false; wanted = false; } // off for this visit only
     else {
-      if (A.master <= 0) { A.master = 0.6; rememberVolume(storage, A.master); }
+      if (A.master <= 0) { A.master = 0.5; rememberVolume(storage, A.master); }
       started = true; startedAt = performance.now();
-      if (await turnOn()) { wanted = true; rememberSoundOn(storage, true); }
+      if (await turnOn()) wanted = true;
     }
     if (lastPointer === 'touch') open(3500);
     sync();
@@ -112,7 +115,7 @@ export function initSoundControl({ config, audio, onChange = () => {}, storage =
     rememberVolume(storage, A.master);
     if (lastPointer === 'touch') open(3500);
     // raising the level while sound is off turns it on (the drag is a user gesture)
-    if (A.master > 0 && !(A.enabled && !A.muted && started)) { started = true; startedAt = performance.now(); if (await turnOn()) { wanted = true; rememberSoundOn(storage, true); } }
+    if (A.master > 0 && !(A.enabled && !A.muted && started)) { started = true; startedAt = performance.now(); if (await turnOn()) wanted = true; }
     sync();
     onChange();
   });

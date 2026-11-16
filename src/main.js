@@ -6,7 +6,6 @@ import { SoundDirector } from './audio/index.js';
 import { createBubble } from './bubble.js';
 import { initSoundControl, initScenePicker, readSceneLock, initSoundCue } from './controls/visitorControls.js';
 import { initCredits } from './credits.js';
-import './styles/main.css';
 
 p5.disableFriendlyErrors = true; // faster; the scene does its own validation
 
